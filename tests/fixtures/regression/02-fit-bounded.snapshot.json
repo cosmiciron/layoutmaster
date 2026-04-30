@@ -1,0 +1,40 @@
+{
+  "content": {
+    "consumed": {
+      "text": "A bounded fit should consume the text ",
+      "length": 38
+    },
+    "remaining": {
+      "text": "that fits, report the remainder, and keep the answer entirely synchronous for callers.",
+      "length": 86
+    },
+    "complete": false,
+    "hyphenated": false,
+    "sourceLength": 124
+  },
+  "pieceCount": 2,
+  "pieces": [
+    {
+      "x": 6,
+      "y": 4,
+      "width": 166.4,
+      "height": 22.4,
+      "lineIndex": 0,
+      "pieceIndex": 1,
+      "kind": "text",
+      "text": "A bounded fit should ",
+      "direction": "ltr"
+    },
+    {
+      "x": 6,
+      "y": 26.4,
+      "width": 145.44,
+      "height": 22.4,
+      "lineIndex": 1,
+      "pieceIndex": 2,
+      "kind": "text",
+      "text": "consume the text ",
+      "direction": "ltr"
+    }
+  ]
+}

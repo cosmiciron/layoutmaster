@@ -1,0 +1,261 @@
+export interface LayoutmasterPiece {
+  [key: string]: unknown;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  baselineY?: number;
+  lineIndex: number;
+  pieceIndex: number;
+  kind: "text";
+  text: string;
+  direction?: "ltr" | "rtl" | string;
+  fontFamily?: string;
+  fontSize?: number;
+  letterSpacing?: number;
+  fontWeight?: string;
+  fontStyle?: string;
+  ascent?: number;
+  descent?: number;
+  color?: string;
+  _sourceId?: string;
+  _sourceStart?: number;
+  _sourceEnd?: number;
+}
+
+export interface LayoutmasterLineGuide {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  baselineY: number;
+  lineIndex: number;
+  direction?: "ltr" | "rtl" | string;
+}
+
+export interface LayoutmasterStructuredTextProperties {
+  sourceId?: string;
+  style?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface LayoutmasterStructuredTextElement {
+  type: string;
+  content?: string;
+  children?: LayoutmasterStructuredTextElement[];
+  properties?: LayoutmasterStructuredTextProperties;
+  [key: string]: unknown;
+}
+
+export interface LayoutmasterStructuredTextContent {
+  elements: LayoutmasterStructuredTextElement[];
+}
+
+export interface LayoutmasterPerformance {
+  layoutMs: number;
+  materializeMs: number;
+  resolveLinesMs: number;
+  buildTokensMs: number;
+  wrapStreamMs: number;
+  bidiMs: number;
+  scriptSplitMs: number;
+  wordSegmentMs: number;
+  actorMeasurementMs: number;
+  actorPlacementMs: number;
+  actorOverflowMs: number;
+  textMeasurementCacheHits: number;
+  textMeasurementCacheMisses: number;
+  colliderFieldQueryCalls: number;
+  colliderFieldNarrowphaseCalls: number;
+}
+
+export interface LayoutmasterMargins {
+  top?: number | string;
+  right?: number | string;
+  bottom?: number | string;
+  left?: number | string;
+}
+
+export type LayoutmasterExclusionKind = "circle" | "rect" | "ellipse" | "polygon" | "assembly";
+
+export interface LayoutmasterExclusion {
+  readonly kind: LayoutmasterExclusionKind;
+  readonly input: Readonly<Record<string, unknown>>;
+}
+
+export interface LayoutmasterExclusionAssembly extends LayoutmasterExclusion {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly parts: {
+    readonly count: number;
+  };
+  toJSON(): object;
+  preview(options?: { scale?: number }): HTMLCanvasElement;
+}
+
+export interface LayoutmasterCircleExclusionOptions {
+  x?: number;
+  y?: number;
+  radius: number;
+  gap?: number;
+}
+
+export interface LayoutmasterRectExclusionOptions {
+  x?: number;
+  y?: number;
+  width: number;
+  height: number;
+  gap?: number;
+}
+
+export interface LayoutmasterEllipseExclusionOptions {
+  x?: number;
+  y?: number;
+  width: number;
+  height: number;
+  gap?: number;
+}
+
+export interface LayoutmasterPolygonPoint {
+  x: number;
+  y: number;
+}
+
+export interface LayoutmasterPolygonExclusionOptions {
+  x?: number;
+  y?: number;
+  points: Array<LayoutmasterPolygonPoint | [number, number]>;
+  gap?: number;
+}
+
+export interface LayoutmasterFromAlphaChannelOptions {
+  x?: number;
+  y?: number;
+  bandHeight?: number;
+  tiers?: 1 | 2 | 3 | 4;
+  gap?: number;
+}
+
+export interface LayoutmasterFromJSONOptions {
+  x?: number;
+  y?: number;
+  gap?: number;
+}
+
+export interface LayoutmasterExclusionNamespace {
+  circle(options: LayoutmasterCircleExclusionOptions): LayoutmasterExclusion;
+  rect(options: LayoutmasterRectExclusionOptions): LayoutmasterExclusion;
+  ellipse(options: LayoutmasterEllipseExclusionOptions): LayoutmasterExclusion;
+  polygon(options: LayoutmasterPolygonExclusionOptions): LayoutmasterExclusion;
+  fromAlphaChannel(
+    alpha: Uint8Array,
+    width: number,
+    height: number,
+    options?: LayoutmasterFromAlphaChannelOptions
+  ): LayoutmasterExclusionAssembly;
+  fromJSON(data: unknown, options?: LayoutmasterFromJSONOptions): LayoutmasterExclusionAssembly;
+}
+
+export interface LayoutmasterRequest {
+  width?: number | string;
+  height?: number | string;
+  format?: "plain";
+  fontFamily?: string;
+  fontSize?: number | string;
+  lineHeight?: number | string;
+  lineHeightMode?: "print" | "css" | "browser";
+  lineHeightAdjustment?: number | string;
+  hyphenation?: "off" | "auto" | "soft";
+  margins?: LayoutmasterMargins;
+  styles?: Record<string, Record<string, unknown>>;
+  exclusions?: LayoutmasterExclusion[];
+}
+
+export type LayoutmasterTargetInput = LayoutmasterRequest;
+export type LayoutmasterContentInput = string;
+
+export interface LayoutmasterContentSlice {
+  text: string;
+  length: number;
+}
+
+export interface LayoutmasterContentReport {
+  consumed: LayoutmasterContentSlice;
+  remaining: LayoutmasterContentSlice;
+  complete: boolean;
+  hyphenated: boolean;
+  sourceLength: number;
+}
+
+export interface FormResult {
+  pieces: LayoutmasterPiece[];
+  lines: LayoutmasterLineGuide[];
+  height: number;
+  performance: LayoutmasterPerformance;
+}
+
+export interface FitResult {
+  pieces: LayoutmasterPiece[];
+  lines: LayoutmasterLineGuide[];
+  height: number;
+  content: LayoutmasterContentReport;
+  performance: LayoutmasterPerformance;
+}
+
+export interface FlowPlacement {
+  index: number;
+  pieces: LayoutmasterPiece[];
+  lines: LayoutmasterLineGuide[];
+  height: number;
+  content: LayoutmasterContentReport;
+}
+
+export interface FlowResult {
+  placements: FlowPlacement[];
+  content: LayoutmasterContentReport;
+  performance: LayoutmasterPerformance;
+}
+
+export interface PourResult {
+  pieces: LayoutmasterPiece[];
+  lines: LayoutmasterLineGuide[];
+  height: number;
+  content: LayoutmasterContentReport;
+  performance: LayoutmasterPerformance;
+}
+
+export interface ProducePage {
+  index: number;
+  width: number;
+  height: number;
+  occupiedHeight: number;
+  pieces: LayoutmasterPiece[];
+  lines: LayoutmasterLineGuide[];
+}
+
+export interface ProduceOptions extends LayoutmasterRequest {}
+
+export interface ProduceResult {
+  pages: ProducePage[];
+  performance: LayoutmasterPerformance;
+}
+
+export type FormResultHandler = (result: FormResult) => void;
+export type FitResultHandler = (result: FitResult) => void;
+export type FlowResultHandler = (result: FlowResult) => void;
+export type PourResultHandler = (result: PourResult) => void;
+export type ProduceResultHandler = (result: ProduceResult) => void;
+
+export declare function form(content?: LayoutmasterContentInput, options?: LayoutmasterTargetInput, handler?: FormResultHandler): FormResult;
+export declare function form(content?: LayoutmasterContentInput, handler?: FormResultHandler): FormResult;
+export declare function fit(content?: LayoutmasterContentInput, options?: LayoutmasterTargetInput, handler?: FitResultHandler): FitResult;
+export declare function fit(content?: LayoutmasterContentInput, handler?: FitResultHandler): FitResult;
+export declare function flow(content?: LayoutmasterContentInput, targets?: LayoutmasterTargetInput[], handler?: FlowResultHandler): FlowResult;
+export declare function pour(content?: LayoutmasterContentInput, shape?: LayoutmasterExclusion, options?: LayoutmasterTargetInput, handler?: PourResultHandler): PourResult;
+export declare function pour(content?: LayoutmasterContentInput, shape?: LayoutmasterExclusion, handler?: PourResultHandler): PourResult;
+export declare function produce(source: unknown, options?: ProduceOptions, handler?: ProduceResultHandler): ProduceResult;
+export declare function produce(source: unknown, handler?: ProduceResultHandler): ProduceResult;
+export declare const exclusion: LayoutmasterExclusionNamespace;
+export declare function debugBuildHiddenDocument(content?: LayoutmasterContentInput, options?: LayoutmasterRequest, mode?: "form" | "fit"): unknown;

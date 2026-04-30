@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster form Demo</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "layoutmaster": "https://esm.sh/layoutmaster@0.1.0"
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: "Times New Roman", Times, serif; background: #faf8f4; color: #181410; }
+    main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 240px 1fr; gap: 16px; }
+    .panel { background: #fff; border: 1px solid #d9d1c7; }
+    .panel { padding: 16px; }
+    #surface { background: #fff; border: 1px solid #d9d1c7; position: relative; overflow: hidden; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    p.desc { margin: 0 0 14px; font-size: 13px; color: #4f4438; line-height: 1.4; }
+    label { display: block; margin-top: 10px; font-size: 13px; }
+    input[type="number"], textarea, select { width: 100%; font: inherit; border: 1px solid #cfc6bc; padding: 7px 9px; margin-top: 4px; background: #fff; }
+    textarea { min-height: 200px; resize: vertical; }
+    .toggle { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; }
+    .toggle input { width: auto; margin: 0; }
+    .status { margin-top: 12px; font-size: 13px; color: #4f4438; min-height: 18px; line-height: 1.4; }
+    .status.error { color: #a03020; }
+    .piece { position: absolute; overflow: visible; user-select: text; }
+    .piece-text { display: inline-block; white-space: pre; overflow: visible; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <h1>form</h1>
+      <p class="desc">Pass the container element and get back positioned pieces. Width comes from the container, and you can override the demo surface width here.</p>
+      <label>Surface Width <input id="surface-width-input" type="number" value="860"></label>
+      <label>Font Family
+        <select id="font-family-input">
+          <option value="Times New Roman, Times, serif" selected>Times New Roman</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Garamond, Baskerville, serif">Garamond</option>
+          <option value="Palatino Linotype, Book Antiqua, Palatino, serif">Palatino</option>
+          <option value="Arial, Helvetica, sans-serif">Arial</option>
+          <option value="Verdana, Geneva, sans-serif">Verdana</option>
+          <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+        </select>
+      </label>
+      <label>Font Size <input id="font-size-input" type="number" value="18"></label>
+      <label>Line Height <input id="line-height-input" type="number" step="0.1" value="1.4"></label>
+      <label>Text <textarea id="text-input">The form mode is the simplest form of layoutmaster. Give it a text fragment and a container, and it returns the solved pieces plus the occupied height.
+
+This is the direct evolution of Pretext's height story, but with actual fragment placement in hand.</textarea></label>
+      <label class="toggle"><input id="show-pieces-input" type="checkbox" checked> Show piece framing</label>
+      <div id="status" class="status">Idle.</div>
+    </section>
+    <section id="surface"></section>
+  </main>
+  <script type="module" src="./form.js"></script>
+</body>
+</html>

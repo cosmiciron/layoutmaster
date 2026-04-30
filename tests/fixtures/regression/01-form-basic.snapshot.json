@@ -1,0 +1,61 @@
+{
+  "height": 112,
+  "pieceCount": 5,
+  "pieces": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 173.44,
+      "height": 22.4,
+      "lineIndex": 0,
+      "pieceIndex": 1,
+      "kind": "text",
+      "text": "Layoutmaster solves ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 22.4,
+      "width": 162.56,
+      "height": 22.4,
+      "lineIndex": 1,
+      "pieceIndex": 2,
+      "kind": "text",
+      "text": "width-bounded text ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 44.8,
+      "width": 190.24,
+      "height": 22.4,
+      "lineIndex": 2,
+      "pieceIndex": 3,
+      "kind": "text",
+      "text": "fragments and reports ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 67.2,
+      "width": 200.32,
+      "height": 22.4,
+      "lineIndex": 3,
+      "pieceIndex": 4,
+      "kind": "text",
+      "text": "guiding pieces instead of ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 89.6,
+      "width": 138.88,
+      "height": 22.4,
+      "lineIndex": 4,
+      "pieceIndex": 5,
+      "kind": "text",
+      "text": "owning rendering.",
+      "direction": "ltr"
+    }
+  ]
+}

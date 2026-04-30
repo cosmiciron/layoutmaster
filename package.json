@@ -1,0 +1,74 @@
+{
+  "name": "@layoutmaster/layoutmaster",
+  "version": "0.1.0",
+  "description": "Fast DOMless layout with solved pieces, continuations, exclusions, and paginated pages.",
+  "author": "cosmiciron",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "src",
+    "engine/dist",
+    "!engine/dist/**/*.map",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run build:engine",
+    "build:engine": "node ./scripts/build-engine.mjs",
+    "clean": "npm run clean:engine",
+    "clean:engine": "rimraf ./engine/dist",
+    "serve": "node ./scripts/serve.mjs",
+    "test": "npm run test:regression",
+    "test:all": "npm run test:regression && npm run test:engine-integrity",
+    "test:engine-integrity": "npm run build:engine && node --test tests/engine-integrity.spec.mjs",
+    "test:regression": "npm run build:engine && node --test tests/regression.spec.mjs",
+    "test:update-regression-snapshots": "npm run build:engine && node --test tests/regression.spec.mjs -- --update-regression-snapshots",
+    "test:performance": "npm run build:engine && node tests/performance-benchmark.mjs",
+    "test:update-performance-baseline": "npm run build:engine && node tests/performance-benchmark.mjs --update-performance-baseline",
+    "prepack": "npm run build",
+    "pack:check": "npm pack --dry-run"
+  },
+  "packageManager": "npm@11.12.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cosmiciron/layoutmaster.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cosmiciron/layoutmaster/issues"
+  },
+  "homepage": "https://github.com/cosmiciron/layoutmaster#readme",
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "bidi-js": "^1.0.3",
+    "rimraf": "^6.1.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3"
+  },
+  "keywords": [
+    "layout",
+    "domless",
+    "generated-ui",
+    "text-layout",
+    "measurement",
+    "pagination",
+    "typography"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

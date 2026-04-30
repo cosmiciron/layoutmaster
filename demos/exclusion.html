@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster Exclusion Demo</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "layoutmaster": "https://esm.sh/layoutmaster@0.1.0"
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: "Times New Roman", Times, serif; background: #faf8f4; color: #181410; }
+    main { max-width: 1240px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 260px 1fr; gap: 16px; }
+    .panel, #surface { background: #fff; border: 1px solid #d9d1c7; }
+    .panel { padding: 16px; }
+    #surface { position: relative; overflow: hidden; min-height: 720px; touch-action: none; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    p.desc { margin: 0 0 14px; font-size: 13px; color: #4f4438; line-height: 1.45; }
+    .legend { display: grid; gap: 8px; margin-top: 14px; }
+    .legend-item { display: grid; grid-template-columns: 18px 1fr; gap: 8px; align-items: center; font-size: 13px; color: #4f4438; }
+    .swatch { width: 18px; height: 18px; border: 1px solid rgba(0, 0, 0, 0.16); }
+    .swatch.circle { border-radius: 999px; background: rgba(102, 146, 227, 0.18); }
+    .swatch.rect { background: rgba(214, 164, 82, 0.2); }
+    .swatch.polygon { background: rgba(106, 168, 120, 0.18); clip-path: polygon(18% 0%, 100% 12%, 78% 100%, 0% 82%); }
+    .toggle { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; }
+    .toggle input { width: auto; margin: 0; }
+    button { width: 100%; margin-top: 14px; padding: 9px 12px; font: inherit; font-weight: 700; background: #eee7dc; color: #181410; border: 1px solid #cfc6bc; cursor: pointer; }
+    button:hover { background: #e4dbd0; }
+    .status { margin-top: 12px; font-size: 13px; color: #4f4438; min-height: 18px; line-height: 1.45; }
+    .status.error { color: #a03020; }
+    .piece { position: absolute; overflow: visible; user-select: text; z-index: 2; }
+    .piece-text { display: inline-block; white-space: pre; overflow: visible; }
+    .field { position: absolute; cursor: grab; border: 1px solid rgba(0, 0, 0, 0.12); z-index: 3; }
+    .field:active, .field.dragging { cursor: grabbing; }
+    .field.circle { border-radius: 999px; background: rgba(102, 146, 227, 0.18); }
+    .field.rect { background: rgba(214, 164, 82, 0.2); }
+    .field.polygon { background: rgba(106, 168, 120, 0.18); }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      #surface { min-height: 640px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <h1>Exclusions</h1>
+      <p class="desc">A single solved passage with three live exclusion fields. Drag the circle, square, or polygon and the page re-solves immediately.</p>
+      <div class="legend">
+        <div class="legend-item"><div class="swatch circle"></div><div>Circle exclusion</div></div>
+        <div class="legend-item"><div class="swatch rect"></div><div>Square exclusion</div></div>
+        <div class="legend-item"><div class="swatch polygon"></div><div>Polygon exclusion</div></div>
+      </div>
+      <label class="toggle"><input id="show-pieces-input" type="checkbox"> Show piece framing</label>
+      <button id="reset-button" type="button">Reset Positions</button>
+      <div id="status" class="status">Idle.</div>
+    </section>
+    <section id="surface"></section>
+  </main>
+  <script type="module" src="./exclusion.js"></script>
+</body>
+</html>

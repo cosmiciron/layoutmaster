@@ -1,0 +1,15 @@
+{
+  "mode": "form",
+  "content": "One paragraph establishes the first lane of prose.\n\nA second paragraph should survive hidden document lowering as a distinct continuation block with its own spacing.",
+  "options": {
+    "width": 240,
+    "fontSize": 15,
+    "lineHeight": 1.5,
+    "styles": {
+      "p": {
+        "marginBottom": 10,
+        "textAlign": "justify"
+      }
+    }
+  }
+}

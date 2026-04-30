@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster - Exclusion Image</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "layoutmaster": "https://esm.sh/layoutmaster@0.1.0"
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: "Times New Roman", Times, serif; background: #faf8f4; color: #181410; }
+    main { max-width: 1240px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .panel, #surface { background: #fff; border: 1px solid #d9d1c7; }
+    .panel { padding: 16px; }
+    #surface { position: relative; overflow: hidden; min-height: 480px; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    p.desc { margin: 0 0 4px; font-size: 13px; color: #4f4438; line-height: 1.45; }
+    .group { margin-top: 16px; padding-top: 12px; border-top: 1px solid #ede7df; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #9a8878; }
+    label { display: block; margin-top: 10px; font-size: 13px; }
+    input[type="number"], input[type="text"], select, textarea { width: 100%; font: inherit; border: 1px solid #cfc6bc; padding: 7px 9px; margin-top: 4px; background: #fff; }
+    textarea { font-size: 12px; resize: vertical; }
+    input[type="file"] { display: block; width: 100%; font: inherit; font-size: 12px; margin-top: 4px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .check-label { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 8px; cursor: pointer; }
+    .check-label input[type="checkbox"] { width: auto; margin: 0; }
+    button { width: 100%; margin-top: 14px; padding: 9px 12px; font: inherit; font-weight: 700; background: #eee7dc; color: #181410; border: 1px solid #cfc6bc; cursor: pointer; }
+    button:hover { background: #e4dbd0; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .status { margin-top: 12px; font-size: 13px; color: #4f4438; min-height: 18px; line-height: 1.45; }
+    .status.error { color: #a03020; }
+    .perf { margin-top: 6px; font-size: 11px; color: #9a8878; font-family: monospace; line-height: 1.7; }
+    .piece { position: absolute; overflow: visible; user-select: text; z-index: 2; }
+    .piece-text { display: inline-block; white-space: pre; overflow: visible; }
+    .field-overlay { position: absolute; cursor: grab; z-index: 1; }
+    .field-overlay.dragging { cursor: grabbing; }
+    .field-overlay img { display: block; width: 100%; height: 100%; pointer-events: none; object-fit: fill; }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <h1>Exclusion Image</h1>
+      <p class="desc">Load an image and Layoutmaster turns its alpha into an exclusion field, then forms text around the silhouette.</p>
+      <p class="desc">Use a PNG or WebP with a real alpha channel for the cleanest silhouette.</p>
+
+      <div class="group">Source</div>
+      <label>File <input type="file" id="file-input" accept="image/*"></label>
+      <label>URL <input type="text" id="url-input" placeholder="or paste a URL"></label>
+
+      <div class="group">Size</div>
+      <div class="row">
+        <label>Width <input type="number" id="width-input" value="200"></label>
+        <label>Height <input type="number" id="height-input" value="240"></label>
+      </div>
+      <label class="check-label">
+        <input type="checkbox" id="ratio-lock" checked> Lock aspect ratio
+      </label>
+
+      <div class="group">Typography</div>
+      <label>Font Family
+        <select id="font-family-input">
+          <option value='"Times New Roman", Times, serif' selected>Times New Roman</option>
+          <option value='Georgia, serif'>Georgia</option>
+          <option value='Arial, Helvetica, sans-serif'>Arial</option>
+          <option value='"Trebuchet MS", Arial, sans-serif'>Trebuchet MS</option>
+          <option value='"Courier New", Courier, monospace'>Courier New</option>
+        </select>
+      </label>
+      <label>Font Size <input type="number" id="font-size-input" value="20" min="8" max="96"></label>
+
+      <div class="group">Text</div>
+      <textarea id="text-input" rows="6"></textarea>
+
+      <div id="status" class="status">Load an image to build an exclusion.</div>
+      <div id="perf" class="perf"></div>
+    </section>
+    <section id="surface"></section>
+  </main>
+  <script type="module" src="./exclusion-image.js"></script>
+</body>
+</html>

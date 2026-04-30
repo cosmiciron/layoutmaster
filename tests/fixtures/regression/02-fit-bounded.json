@@ -1,0 +1,16 @@
+{
+  "mode": "fit",
+  "content": "A bounded fit should consume the text that fits, report the remainder, and keep the answer entirely synchronous for callers.",
+  "options": {
+    "width": 180,
+    "height": 72,
+    "fontSize": 16,
+    "lineHeight": 1.4,
+    "margins": {
+      "top": 4,
+      "right": 6,
+      "bottom": 4,
+      "left": 6
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "mode": "form",
+  "content": "Layoutmaster solves width-bounded text fragments and reports guiding pieces instead of owning rendering.",
+  "options": {
+    "width": 220,
+    "fontSize": 16,
+    "lineHeight": 1.4
+  }
+}

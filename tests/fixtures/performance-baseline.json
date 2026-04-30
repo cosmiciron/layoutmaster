@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "cases": {
+    "01-form-basic.json": {
+      "iterations": 12,
+      "warmupIterations": 3,
+      "maxAverageElapsedMs": 25,
+      "maxPeakElapsedMs": 60
+    },
+    "02-fit-bounded.json": {
+      "iterations": 12,
+      "warmupIterations": 3,
+      "maxAverageElapsedMs": 25,
+      "maxPeakElapsedMs": 60
+    },
+    "03-flow-multi-region.json": {
+      "iterations": 12,
+      "warmupIterations": 3,
+      "maxAverageElapsedMs": 45,
+      "maxPeakElapsedMs": 100
+    },
+    "04-form-paragraph-breaks.json": {
+      "iterations": 12,
+      "warmupIterations": 3,
+      "maxAverageElapsedMs": 25,
+      "maxPeakElapsedMs": 60
+    },
+    "05-fit-soft-hyphen.json": {
+      "iterations": 12,
+      "warmupIterations": 3,
+      "maxAverageElapsedMs": 25,
+      "maxPeakElapsedMs": 60
+    }
+  }
+}

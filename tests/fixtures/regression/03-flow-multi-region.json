@@ -1,0 +1,24 @@
+{
+  "mode": "flow",
+  "content": "Flow should continue content across multiple bounded regions in order, preserving consumed text and leaving a stable remainder when the final region runs out of space.",
+  "targets": [
+    {
+      "width": 180,
+      "height": 66,
+      "fontSize": 16,
+      "lineHeight": 1.4
+    },
+    {
+      "width": 180,
+      "height": 66,
+      "fontSize": 16,
+      "lineHeight": 1.4
+    },
+    {
+      "width": 180,
+      "height": 66,
+      "fontSize": 16,
+      "lineHeight": 1.4
+    }
+  ]
+}

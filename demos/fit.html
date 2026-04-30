@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster Fit Demo</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "layoutmaster": "https://esm.sh/layoutmaster@0.1.0"
+      }
+    }
+  </script>
+  <style>
+    body { margin: 0; font-family: "Times New Roman", Times, serif; background: #faf8f4; color: #181410; }
+    main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .panel, .chain, .region, .result-panel { background: #fff; border: 1px solid #d9d1c7; }
+    .panel { padding: 16px; }
+    .display { display: grid; gap: 16px; align-content: start; }
+    .chain { padding: 16px; display: flex; gap: 16px; align-items: flex-start; align-content: flex-start; flex-wrap: wrap; overflow: auto; box-sizing: border-box; }
+    .region-card { display: grid; gap: 6px; }
+    .region-header { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 1.4; color: #5e5449; }
+    .region { position: relative; overflow: hidden; }
+    .piece { position: absolute; overflow: visible; user-select: text; }
+    .piece-text { display: inline-block; white-space: pre; overflow: visible; }
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    p { margin: 0 0 10px; line-height: 1.4; }
+    label { display: block; margin-top: 8px; font-size: 13px; }
+    input, textarea, select { width: 100%; font: inherit; border: 1px solid #cfc6bc; }
+    input, textarea, select { padding: 8px 10px; margin-top: 4px; background: #fff; box-sizing: border-box; }
+    textarea { min-height: 180px; resize: vertical; }
+    .status { margin-top: 12px; font-size: 13px; color: #4f4438; line-height: 1.4; min-height: 18px; }
+    .status.error { color: #a03020; }
+    .toggle { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; }
+    .toggle input { width: auto; margin: 0; }
+    .result-panel { padding: 16px; display: grid; gap: 12px; }
+    .result-title { font-size: 18px; font-weight: 700; }
+    .result-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .result-stat { padding: 10px 12px; border: 1px solid #e0d8cf; background: #fcfaf7; }
+    .result-stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #7a6e61; }
+    .result-stat-value { margin-top: 4px; font-size: 20px; line-height: 1.1; }
+    .result-texts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .result-text-block { display: grid; gap: 6px; }
+    .result-text-label { font-size: 12px; font-weight: 700; color: #5e5449; }
+    .result-text-value { min-height: 108px; padding: 10px 12px; border: 1px solid #e0d8cf; background: #fcfaf7; white-space: pre-wrap; line-height: 1.45; }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .result-texts { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <h1>Fit</h1>
+      <p>Bound one fragment by width and height and see exactly what fit in this one target. The continuation story stays visible, but the API stays single-target.</p>
+      <label>Region Width <input id="width-input" type="number" value="280"></label>
+      <label>Region Height <input id="height-input" type="number" value="320"></label>
+      <label>Font Family
+        <select id="font-family-input">
+          <option value="Times New Roman, Times, serif" selected>Times New Roman</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Garamond, Baskerville, serif">Garamond</option>
+          <option value="Palatino Linotype, Book Antiqua, Palatino, serif">Palatino</option>
+          <option value="Arial, Helvetica, sans-serif">Arial</option>
+          <option value="Verdana, Geneva, sans-serif">Verdana</option>
+          <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+        </select>
+      </label>
+      <label>Font Size <input id="font-size-input" type="number" value="18"></label>
+      <label>Line Height <input id="line-height-input" type="number" step="0.1" value="1.4"></label>
+      <label>Hyphenation
+        <select id="hyphenation-input">
+          <option value="off" selected>off</option>
+          <option value="auto">auto</option>
+          <option value="soft">soft</option>
+        </select>
+      </label>
+      <label>Text <textarea id="text-input">Fit mode is where layoutmaster becomes unusually powerful. Instead of only telling you height, it tells you what fits inside this bounded region and what remains. That remainder can be passed to another region immediately, which means a developer can build chained tabs, panes, columns, or page-like UI without ever being dragged into a document-layout paradigm.</textarea></label>
+      <label class="toggle"><input id="show-pieces-input" type="checkbox" checked> Show piece framing</label>
+      <div id="status" class="status">Awaiting fit.</div>
+    </section>
+    <section class="display">
+      <section id="chain" class="chain"></section>
+      <section class="result-panel">
+        <div class="result-title">Fit Result</div>
+        <div class="result-grid">
+          <div class="result-stat">
+            <div class="result-stat-label">Complete</div>
+            <div id="result-complete" class="result-stat-value">-</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-label">Consumed</div>
+            <div id="result-consumed" class="result-stat-value">-</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-label">Remaining</div>
+            <div id="result-remaining" class="result-stat-value">-</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-label">Hyphenated</div>
+            <div id="result-hyphenated" class="result-stat-value">-</div>
+          </div>
+        </div>
+        <div class="result-texts">
+          <div class="result-text-block">
+            <div class="result-text-label">Consumed Text</div>
+            <div id="consumed-text" class="result-text-value">Awaiting fit.</div>
+          </div>
+          <div class="result-text-block">
+            <div class="result-text-label">Remaining Text</div>
+            <div id="remaining-text" class="result-text-value">Awaiting fit.</div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="./fit.js"></script>
+</body>
+</html>

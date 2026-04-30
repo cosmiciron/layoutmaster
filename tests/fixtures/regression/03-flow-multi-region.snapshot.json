@@ -1,0 +1,141 @@
+{
+  "content": {
+    "consumed": {
+      "text": "Flow should continue content across multiple bounded regions in order, preserving consumed text and leaving a ",
+      "length": 110
+    },
+    "remaining": {
+      "text": "stable remainder when the final region runs out of space.",
+      "length": 57
+    },
+    "complete": false,
+    "hyphenated": false,
+    "sourceLength": 167
+  },
+  "placementCount": 3,
+  "placements": [
+    {
+      "index": 0,
+      "content": {
+        "consumed": {
+          "text": "Flow should continue content across ",
+          "length": 36
+        },
+        "remaining": {
+          "text": "multiple bounded regions in order, preserving consumed text and leaving a stable remainder when the final region runs out of space.",
+          "length": 131
+        },
+        "complete": false,
+        "hyphenated": false,
+        "sourceLength": 167
+      },
+      "pieceCount": 2,
+      "pieces": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 169.76,
+          "height": 22.4,
+          "lineIndex": 0,
+          "pieceIndex": 1,
+          "kind": "text",
+          "text": "Flow should continue ",
+          "direction": "ltr"
+        },
+        {
+          "x": 0,
+          "y": 22.4,
+          "width": 127.04,
+          "height": 22.4,
+          "lineIndex": 1,
+          "pieceIndex": 2,
+          "kind": "text",
+          "text": "content across ",
+          "direction": "ltr"
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "content": {
+        "consumed": {
+          "text": "multiple bounded regions in order, ",
+          "length": 35
+        },
+        "remaining": {
+          "text": "preserving consumed text and leaving a stable remainder when the final region runs out of space.",
+          "length": 96
+        },
+        "complete": false,
+        "hyphenated": false,
+        "sourceLength": 131
+      },
+      "pieceCount": 2,
+      "pieces": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 135.68,
+          "height": 22.4,
+          "lineIndex": 0,
+          "pieceIndex": 1,
+          "kind": "text",
+          "text": "multiple bounded ",
+          "direction": "ltr"
+        },
+        {
+          "x": 0,
+          "y": 22.4,
+          "width": 136.32,
+          "height": 22.4,
+          "lineIndex": 1,
+          "pieceIndex": 2,
+          "kind": "text",
+          "text": "regions in order, ",
+          "direction": "ltr"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "content": {
+        "consumed": {
+          "text": "preserving consumed text and leaving a ",
+          "length": 39
+        },
+        "remaining": {
+          "text": "stable remainder when the final region runs out of space.",
+          "length": 57
+        },
+        "complete": false,
+        "hyphenated": false,
+        "sourceLength": 96
+      },
+      "pieceCount": 2,
+      "pieces": [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 171.52,
+          "height": 22.4,
+          "lineIndex": 0,
+          "pieceIndex": 1,
+          "kind": "text",
+          "text": "preserving consumed ",
+          "direction": "ltr"
+        },
+        {
+          "x": 0,
+          "y": 22.4,
+          "width": 146.56,
+          "height": 22.4,
+          "lineIndex": 1,
+          "pieceIndex": 2,
+          "kind": "text",
+          "text": "text and leaving a ",
+          "direction": "ltr"
+        }
+      ]
+    }
+  ]
+}

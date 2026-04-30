@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster Demos</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    :root {
+      color-scheme: light;
+      --paper: #fbfaf7;
+      --wash: #f2eee7;
+      --ink: #211914;
+      --muted: #675d53;
+      --line: #d8d0c6;
+      --accent: #9c4927;
+      --accent-soft: #f4e2d6;
+      --shadow: 0 18px 52px rgba(39, 30, 22, 0.08);
+    }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 248, 243, 0.92)),
+        var(--wash);
+      color: var(--ink);
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 46px 22px 64px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 94px;
+      line-height: 0.92;
+      font-weight: 800;
+    }
+    h2 {
+      margin: 46px 0 14px;
+      font-size: 18px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      color: #8a7a68;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 800;
+    }
+    .lede {
+      max-width: 850px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 34px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+    .sublede {
+      max-width: 800px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.55;
+    }
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 28px 0 0;
+    }
+    .quick-links a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.64);
+      color: var(--accent);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .demo-card {
+      display: block;
+      min-height: 190px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: var(--shadow);
+      color: inherit;
+      text-decoration: none;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+    .demo-card:hover {
+      transform: translateY(-2px);
+      border-color: #c3ad9b;
+      background: #fff;
+    }
+    .demo-card:focus-visible {
+      outline: 3px solid rgba(156, 73, 39, 0.35);
+      outline-offset: 3px;
+    }
+    .demo-card strong {
+      display: block;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 36px;
+      line-height: 1.08;
+      font-weight: 900;
+    }
+    .demo-card p {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 18px;
+      line-height: 1.48;
+      font-weight: 650;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 5px 9px;
+      border-radius: 8px;
+      background: var(--accent-soft);
+      color: #7b351d;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .demo-card.featured {
+      grid-column: span 2;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      gap: 28px;
+      align-items: center;
+      min-height: 260px;
+      overflow: hidden;
+    }
+    .demo-card.featured .preview {
+      min-height: 170px;
+      border: 1px solid rgba(156, 73, 39, 0.18);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 246, 238, 0.58)),
+        url("./assets/men-dance.gif") center / cover;
+    }
+    .demo-card.wide {
+      grid-column: span 2;
+      min-height: 170px;
+    }
+    @media (max-width: 820px) {
+      main {
+        padding: 34px 16px 46px;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .demo-card,
+      .demo-card.featured {
+        min-height: auto;
+      }
+      .demo-card.featured {
+        grid-column: span 1;
+        grid-template-columns: 1fr;
+      }
+      .demo-card.wide {
+        grid-column: span 1;
+      }
+      .demo-card.featured .preview {
+        min-height: 160px;
+      }
+      h1 {
+        font-size: 52px;
+      }
+      .lede {
+        font-size: 23px;
+      }
+      .demo-card strong {
+        font-size: 29px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Demos</h1>
+    <p class="lede">
+      Browser demos for the frontend work Layoutmaster unlocks: text size,
+      continuation, shaped text, paginated surfaces, and live effects without
+      DOM measurement loops.
+    </p>
+    <p class="sublede">
+      Every page below renders from data returned by Layoutmaster. The browser is
+      the painter, not the secret layout oracle.
+    </p>
+
+    <nav class="quick-links" aria-label="Demo shortcuts">
+      <a href="./form.html">form()</a>
+      <a href="./fit.html">fit()</a>
+      <a href="./flow.html">flow()</a>
+      <a href="./pour.html">pour()</a>
+      <a href="./html-atlas.html">produce()</a>
+    </nav>
+
+    <h2>Start With Text As Data</h2>
+    <section class="grid" aria-label="Core text layout demos">
+      <a class="demo-card" href="./form.html">
+        <strong>form()</strong>
+        <p>Ask how tall a text fragment becomes and get positioned pieces back before anything renders.</p>
+        <span class="tags"><span class="tag">height</span><span class="tag">pieces</span><span class="tag">baselines</span></span>
+      </a>
+      <a class="demo-card" href="./pieces.html">
+        <strong>Pieces</strong>
+        <p>Inspect the raw piece contract: coordinates, sizes, baselines, line guides, and selectable text fragments.</p>
+        <span class="tags"><span class="tag">contract</span><span class="tag">debug</span><span class="tag">painting</span></span>
+      </a>
+      <a class="demo-card" href="./fit.html">
+        <strong>fit()</strong>
+        <p>Fill a bounded box, stop exactly at overflow, and get both consumed and remaining content.</p>
+        <span class="tags"><span class="tag">overflow</span><span class="tag">bounded UI</span><span class="tag">remaining text</span></span>
+      </a>
+      <a class="demo-card" href="./flow.html">
+        <strong>flow()</strong>
+        <p>Move one passage through several regions while preserving continuation data across each target.</p>
+        <span class="tags"><span class="tag">continuation</span><span class="tag">regions</span><span class="tag">panels</span></span>
+      </a>
+    </section>
+
+    <h2>Shape The Reading Surface</h2>
+    <section class="grid" aria-label="Shape and exclusion demos">
+      <a class="demo-card" href="./pour.html">
+        <strong>pour()</strong>
+        <p>Pour text into primitive shapes and get only the fragments that genuinely fit inside the contour.</p>
+        <span class="tags"><span class="tag">circles</span><span class="tag">polygons</span><span class="tag">containment</span></span>
+      </a>
+      <a class="demo-card" href="./pour-image.html">
+        <strong>pour() Image</strong>
+        <p>Turn a PNG alpha silhouette into a readable container, then pour authored text into that interior.</p>
+        <span class="tags"><span class="tag">alpha</span><span class="tag">image shape</span><span class="tag">editorial</span></span>
+      </a>
+      <a class="demo-card" href="./exclusion.html">
+        <strong>Exclusion</strong>
+        <p>Drag live exclusion fields through text and watch returned line geometry update around the obstacle.</p>
+        <span class="tags"><span class="tag">wrap</span><span class="tag">drag</span><span class="tag">spatial field</span></span>
+      </a>
+      <a class="demo-card" href="./exclusion-image.html">
+        <strong>Exclusion Image</strong>
+        <p>Sample an image alpha channel into a compact wrap field and move that silhouette without re-sampling.</p>
+        <span class="tags"><span class="tag">PNG/WebP</span><span class="tag">alpha mask</span><span class="tag">wrap geometry</span></span>
+      </a>
+    </section>
+
+    <h2>Scale And Motion</h2>
+    <section class="grid" aria-label="Advanced demos">
+      <a class="demo-card featured" href="./dancing-text.html">
+        <span>
+          <strong>Dancing Text</strong>
+          <p>Extract moving video silhouettes into cached spatial fields, then drive live text around each frame.</p>
+          <span class="tags"><span class="tag">video</span><span class="tag">animation</span><span class="tag">live layout</span></span>
+        </span>
+        <span class="preview" aria-hidden="true"></span>
+      </a>
+      <a class="demo-card wide" href="./html-atlas.html">
+        <strong>produce() HTML Atlas</strong>
+        <p>Paginate a long manuscript once, then render hundreds of searchable, selectable pages as ordinary HTML.</p>
+        <span class="tags"><span class="tag">produce()</span><span class="tag">pagination</span><span class="tag">HTML</span></span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>

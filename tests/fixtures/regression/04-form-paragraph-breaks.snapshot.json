@@ -1,0 +1,83 @@
+{
+  "height": 167.5,
+  "pieceCount": 7,
+  "pieces": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 231.6,
+      "height": 22.5,
+      "lineIndex": 0,
+      "pieceIndex": 1,
+      "kind": "text",
+      "text": "One paragraph establishes the ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 22.5,
+      "width": 144.6,
+      "height": 22.5,
+      "lineIndex": 1,
+      "pieceIndex": 2,
+      "kind": "text",
+      "text": "first lane of prose.",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 55,
+      "width": 202.2,
+      "height": 22.5,
+      "lineIndex": 0,
+      "pieceIndex": 1,
+      "kind": "text",
+      "text": "A second paragraph should ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 77.5,
+      "width": 186.75,
+      "height": 22.5,
+      "lineIndex": 1,
+      "pieceIndex": 2,
+      "kind": "text",
+      "text": "survive hidden document ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 100,
+      "width": 166.5,
+      "height": 22.5,
+      "lineIndex": 2,
+      "pieceIndex": 3,
+      "kind": "text",
+      "text": "lowering as a distinct ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 122.5,
+      "width": 238.35,
+      "height": 22.5,
+      "lineIndex": 3,
+      "pieceIndex": 4,
+      "kind": "text",
+      "text": "continuation block with its own ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 145,
+      "width": 58.35,
+      "height": 22.5,
+      "lineIndex": 4,
+      "pieceIndex": 5,
+      "kind": "text",
+      "text": "spacing.",
+      "direction": "ltr"
+    }
+  ]
+}

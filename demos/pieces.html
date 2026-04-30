@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster Pieces</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "layoutmaster": "https://esm.sh/layoutmaster@0.1.0"
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f0eb;
+      color: #211914;
+    }
+    main {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    header {
+      border-bottom: 1px solid #d8cec1;
+      background: #fffaf3;
+      padding: 16px 20px;
+    }
+    h1 {
+      margin: 0;
+      font: 700 24px/1.1 Georgia, "Times New Roman", serif;
+    }
+    .subtitle {
+      margin: 6px 0 0;
+      max-width: 74ch;
+      color: #625448;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.72fr) minmax(260px, 0.72fr) minmax(420px, 1.18fr);
+      gap: 14px;
+      padding: 14px;
+    }
+    .panel {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      border: 1px solid #d8cec1;
+      background: #fffdf9;
+    }
+    .panel h2 {
+      margin: 0;
+      border-bottom: 1px solid #e3dbd0;
+      padding: 10px 12px;
+      color: #57483c;
+      font: 700 12px/1.2 Arial, sans-serif;
+      text-transform: uppercase;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #e3dbd0;
+      padding: 10px 12px;
+    }
+    .panel-header h2 {
+      border: 0;
+      padding: 0;
+    }
+    .toggles {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #57483c;
+      font: 700 12px/1 Arial, sans-serif;
+    }
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .toggle input {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      accent-color: #7a5a44;
+    }
+    pre {
+      margin: 0;
+      overflow: auto;
+      background: #211914;
+      color: #f8efe3;
+      padding: 14px;
+      font: 12px/1.5 Consolas, "Courier New", monospace;
+      tab-size: 2;
+    }
+    .surface-wrap {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 24px;
+      background:
+        linear-gradient(90deg, rgba(33, 25, 20, 0.04) 1px, transparent 1px),
+        linear-gradient(rgba(33, 25, 20, 0.04) 1px, transparent 1px),
+        #fff;
+      background-size: 24px 24px;
+    }
+    .surface {
+      position: relative;
+      background: #fffdf9;
+      box-shadow: 0 0 0 1px #e2d8cb;
+    }
+    .piece-box {
+      fill: rgba(126, 95, 62, 0.045);
+      stroke: rgba(126, 95, 62, 0.48);
+      stroke-dasharray: 5 3;
+      vector-effect: non-scaling-stroke;
+    }
+    .piece-baseline {
+      stroke: rgba(164, 40, 29, 0.72);
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    .piece-chrome {
+      position: absolute;
+      inset: 0;
+      display: block;
+      overflow: visible;
+      pointer-events: none;
+    }
+    .piece {
+      position: absolute;
+      overflow: visible;
+      user-select: text;
+    }
+    .piece-text {
+      display: inline-block;
+      overflow: visible;
+      white-space: pre;
+    }
+    @media (max-width: 840px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+      pre {
+        max-height: 42vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Pieces</h1>
+      <p class="subtitle">
+        A minimal structured content string lowered into the hidden AST, solved into pieces, then rendered directly as positioned HTML.
+      </p>
+    </header>
+    <section class="workspace">
+      <section class="panel">
+        <h2>Hidden AST</h2>
+        <pre id="hidden-ast-data"></pre>
+      </section>
+      <section class="panel">
+        <h2>Generated pieces</h2>
+        <pre id="piece-data"></pre>
+      </section>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Direct render</h2>
+          <div class="toggles" aria-label="Render overlays">
+            <label class="toggle">
+              <input id="show-boxes" type="checkbox" checked>
+              Boxes
+            </label>
+            <label class="toggle">
+              <input id="show-baselines" type="checkbox" checked>
+              Baselines
+            </label>
+          </div>
+        </div>
+        <div class="surface-wrap">
+          <div id="surface" class="surface"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="./pieces.js"></script>
+</body>
+</html>

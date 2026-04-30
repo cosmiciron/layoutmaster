@@ -1,0 +1,51 @@
+{
+  "content": {
+    "consumed": {
+      "text": "Soft hyphen handling should remain stable for ",
+      "length": 46
+    },
+    "remaining": {
+      "text": "electro­magnetic experiments that need a visible break opportunity in narrow regions.",
+      "length": 85
+    },
+    "complete": false,
+    "hyphenated": false,
+    "sourceLength": 131
+  },
+  "pieceCount": 3,
+  "pieces": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 102.08,
+      "height": 21.6,
+      "lineIndex": 0,
+      "pieceIndex": 1,
+      "kind": "text",
+      "text": "Soft hyphen ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 21.6,
+      "width": 122.56,
+      "height": 21.6,
+      "lineIndex": 1,
+      "pieceIndex": 2,
+      "kind": "text",
+      "text": "handling should ",
+      "direction": "ltr"
+    },
+    {
+      "x": 0,
+      "y": 43.2,
+      "width": 145.44,
+      "height": 21.6,
+      "lineIndex": 2,
+      "pieceIndex": 3,
+      "kind": "text",
+      "text": "remain stable for ",
+      "direction": "ltr"
+    }
+  ]
+}

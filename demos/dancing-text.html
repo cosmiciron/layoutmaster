@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster - Dancing Text</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "layoutmaster": "https://esm.sh/layoutmaster@0.1.0"
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: "Times New Roman", Times, serif; background: #faf8f4; color: #181410; }
+    main { max-width: 1380px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 320px 1fr; gap: 16px; }
+    .panel, .stage-shell { background: #fff; border: 1px solid #d9d1c7; }
+    .panel { padding: 18px; }
+    .stage-shell { padding: 16px; }
+    .stage-wrap { display: grid; gap: 12px; align-content: start; }
+    h1 { margin: 0 0 10px; font-size: 32px; }
+    p.desc { margin: 0; font-size: 16px; line-height: 1.45; color: #5b4f43; }
+    p.desc + p.desc { margin-top: 8px; }
+    .group { margin-top: 18px; padding-top: 12px; border-top: 1px solid #ede7df; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #9a8878; }
+    label { display: block; margin-top: 10px; font-size: 13px; }
+    input[type="range"], input[type="number"], select, textarea { width: 100%; font: inherit; border: 1px solid #cfc6bc; padding: 8px 10px; margin-top: 4px; background: #fff; }
+    input[type="file"] { display: block; width: 100%; font: inherit; font-size: 12px; margin-top: 4px; }
+    textarea { min-height: 240px; resize: vertical; line-height: 1.45; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-top: 10px; }
+    .row:first-of-type { margin-top: 0; }
+    .value { min-width: 52px; text-align: right; font-size: 12px; color: #6a5d4f; font-variant-numeric: tabular-nums; }
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    button { width: 100%; height: 40px; padding: 0 12px; font: inherit; font-weight: 700; background: #eee7dc; color: #181410; border: 1px solid #cfc6bc; cursor: pointer; }
+    button:hover { background: #e4dbd0; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .status { min-height: 18px; font-size: 13px; color: #4f4438; line-height: 1.45; margin-top: 12px; }
+    .status.error { color: #a03020; }
+    .progress { margin-top: 10px; display: none; }
+    .progress.active { display: block; }
+    .progress-meta { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: #6a5d4f; }
+    .progress-track { margin-top: 7px; height: 10px; border: 1px solid #d9d1c7; background: #f6f1ea; }
+    .progress-fill { height: 100%; width: 0%; background: #c96a58; transition: width 120ms ease-out; }
+    .perf { margin-top: 10px; font-size: 11px; color: #9a8878; font-family: monospace; line-height: 1.6; white-space: pre-wrap; }
+    .toolbar { padding-bottom: 12px; border-bottom: 1px solid #ede7df; }
+    .toolbar-grid { display: flex; align-items: center; gap: 12px; min-height: 40px; }
+    .toolbar-main { display: flex; flex: 0 0 auto; gap: 12px; align-items: center; min-width: 0; }
+    .toolbar-control { min-width: 0; display: flex; align-items: center; }
+    .toolbar-control select,
+    .toolbar-control input[type="number"] { height: 40px; margin-top: 0; }
+    .toolbar-control.font-control { flex: 0 1 220px; width: 220px; }
+    .toolbar-control.compact { width: 88px; }
+    .mode-switch { display: inline-flex; height: 40px; border: 1px solid #cfc6bc; }
+    .mode-switch input { position: absolute; opacity: 0; pointer-events: none; }
+    .mode-switch label { margin: 0; min-width: 88px; padding: 0 14px; font-size: 13px; text-align: center; cursor: pointer; background: #f7f2ea; border-left: 1px solid #cfc6bc; white-space: nowrap; display: flex; align-items: center; justify-content: center; }
+    .mode-switch label:first-of-type { border-left: 0; }
+    .mode-switch input:checked + label { background: #e8ddd0; color: #181410; font-weight: 700; }
+    .toolbar-status { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 11px; color: #7a6e61; font-family: monospace; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #stage { position: relative; overflow: hidden; min-height: 760px; border: 1px solid #d9d1c7; background: linear-gradient(180deg, #fffdfa, #f7efe6); }
+    #stage::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 20% 16%, rgba(255, 213, 164, 0.18), transparent 26%), radial-gradient(circle at 84% 20%, rgba(255, 176, 176, 0.12), transparent 22%); }
+    .hero-glow { position: absolute; width: 420px; height: 420px; border-radius: 999px; pointer-events: none; background: radial-gradient(circle, rgba(255, 201, 144, 0.22), rgba(255, 201, 144, 0.06) 46%, rgba(255, 201, 144, 0) 70%); transform: translate(-50%, -50%); z-index: 1; }
+    .sparkle { position: absolute; width: 14px; height: 14px; border-radius: 999px; background: radial-gradient(circle, rgba(255, 255, 255, 0.94), rgba(156, 227, 255, 0.65) 52%, rgba(156, 227, 255, 0) 72%); opacity: 0.75; pointer-events: none; animation: shimmer 2.7s ease-in-out infinite; z-index: 1; }
+    .sparkle::before, .sparkle::after { content: ""; position: absolute; inset: 0; margin: auto; background: rgba(255, 255, 255, 0.82); border-radius: 999px; }
+    .sparkle::before { width: 2px; height: 100%; }
+    .sparkle::after { width: 100%; height: 2px; }
+    .piece { position: absolute; overflow: visible; z-index: 2; transform-origin: 0 0; }
+    .piece-text { display: inline-block; white-space: pre; overflow: visible; }
+    .dancer { position: absolute; z-index: 3; cursor: grab; transform-origin: center bottom; will-change: transform; }
+    .dancer.dragging { cursor: grabbing; }
+    .dancer img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; user-select: none; }
+    .dancer.pour-mode img { opacity: 0.21; filter: grayscale(1) brightness(1.35) contrast(0.88); }
+    .empty-state { position: absolute; inset: 0; display: grid; place-items: center; padding: 28px; text-align: center; color: #7d6257; z-index: 4; }
+    @keyframes piece-appear { from { opacity: 0.55; } to { opacity: 1; } }
+    .piece-entering { animation: piece-appear 90ms ease-out; }
+    @keyframes shimmer { 0%, 100% { transform: scale(0.92); opacity: 0.44; } 50% { transform: scale(1.16); opacity: 0.95; } }
+    @media (max-width: 1120px) {
+      main { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .toolbar-grid { flex-wrap: wrap; align-items: stretch; min-height: 0; }
+      .toolbar-main { gap: 10px; flex-wrap: wrap; }
+      .mode-switch { width: 100%; }
+      .mode-switch label { flex: 1 1 0; min-width: 0; }
+      .toolbar-control.font-control,
+      .toolbar-control.compact { flex: 1 1 0; width: auto; min-width: 0; }
+      .toolbar-status { flex-basis: 100%; white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="panel">
+      <h1>Dancing Text</h1>
+      <p class="desc">Build a moving figure from an mp4, drag it around, and switch between <code>form()</code> and <code>pour()</code> as the text tracks each cached frame.</p>
+      <p class="desc">Best results come from videos with a solid, high-contrast background behind the subject.</p>
+
+      <div class="group">Video</div>
+      <label>MP4 file <input id="video-input" type="file" accept="video/mp4,video/*"></label>
+      <div class="group">Build</div>
+      <div class="row">
+        <label for="smoothness-input">Smoothness</label>
+        <span id="smoothness-value" class="value">60%</span>
+      </div>
+      <input id="smoothness-input" type="range" min="0" max="100" step="5" value="60">
+
+      <div class="row">
+        <label for="figure-size-input">Figure height</label>
+        <span id="figure-size-value" class="value">440 px</span>
+      </div>
+      <input id="figure-size-input" type="range" min="260" max="620" step="10" value="440">
+      <div class="button-row">
+        <button id="build-button" type="button">Build</button>
+        <button id="play-button" type="button" disabled>Pause</button>
+      </div>
+      <div id="status" class="status"></div>
+      <div id="progress" class="progress" aria-live="polite">
+        <div class="progress-meta">
+          <span id="progress-label">Waiting to start</span>
+          <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-track">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="group">Text</div>
+      <textarea id="text-input"></textarea>
+    </section>
+
+    <section class="stage-wrap">
+      <section class="stage-shell">
+        <div class="toolbar">
+          <div class="toolbar-grid">
+            <div class="toolbar-main">
+              <div class="toolbar-control">
+                <div class="mode-switch" role="radiogroup" aria-label="Layout mode">
+                  <input id="form-mode-input" type="radio" name="layout-mode" value="form" checked>
+                  <label for="form-mode-input">form()</label>
+                  <input id="pour-mode-input" type="radio" name="layout-mode" value="pour">
+                  <label for="pour-mode-input">pour()</label>
+                </div>
+              </div>
+              <div class="toolbar-control font-control">
+                <select id="font-family-input" aria-label="Font family">
+                  <option value="Times New Roman, Times, serif">Times New Roman</option>
+                  <option value="Georgia, serif" selected>Georgia</option>
+                  <option value="Garamond, Baskerville, serif">Garamond</option>
+                  <option value="Palatino Linotype, Book Antiqua, Palatino, serif">Palatino</option>
+                  <option value="Arial, Helvetica, sans-serif">Arial</option>
+                  <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                  <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+                </select>
+              </div>
+              <div class="toolbar-control compact">
+                <input id="font-size-input" type="number" value="16" min="8" max="48" step="1" aria-label="Font size">
+              </div>
+            </div>
+            <div id="perf" class="toolbar-status">No frames loaded yet.</div>
+          </div>
+        </div>
+        <div id="stage">
+          <div class="empty-state">Build the figure from the uploaded video.</div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="./dancing-text.js"></script>
+</body>
+</html>

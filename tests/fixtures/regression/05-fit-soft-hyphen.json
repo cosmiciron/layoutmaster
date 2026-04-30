@@ -1,0 +1,11 @@
+{
+  "mode": "fit",
+  "content": "Soft hyphen handling should remain stable for electro\u00ADmagnetic experiments that need a visible break opportunity in narrow regions.",
+  "options": {
+    "width": 150,
+    "height": 70,
+    "fontSize": 16,
+    "lineHeight": 1.35,
+    "hyphenation": "soft"
+  }
+}
