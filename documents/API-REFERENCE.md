@@ -343,15 +343,31 @@ const stickMan = exclusion.assembly({
   parts: [
     { kind: "circle", x: 42, y: 0, radius: 18 },
     { kind: "rect", x: 56, y: 36, width: 8, height: 58 },
-    { kind: "rect", x: 24, y: 48, width: 72, height: 8 }
+    { kind: "capsule", x: 60, y: 48, length: 46, angle: -35, thickness: 8 }
   ],
   gap: 3
 });
 ```
 
-`parts` accepts `rect`, `circle`, `ellipse`, and `polygon`. Low-level VMPrint
-style `members` and compact `layers` are also accepted for replay and generated
-data.
+`parts` accepts `rect`, `circle`, `ellipse`, `polygon`, `line`, and `capsule`.
+`line` and `capsule` are authoring conveniences that lower to polygon members
+before layout. Low-level VMPrint style `members` and compact `layers` are also
+accepted for replay and generated data.
+
+Line and capsule parts can be described with explicit endpoints:
+
+```js
+{ kind: "capsule", x1: 24, y1: 48, x2: 96, y2: 68, thickness: 10 }
+```
+
+or with an origin, length, and angle in degrees:
+
+```js
+{ kind: "line", x: 24, y: 48, length: 72, angle: 18, thickness: 6 }
+```
+
+They are useful for limbs, connectors, rods, arrows, and other rotated pieces
+without adding rotation support to the engine collider primitives.
 
 Alpha assemblies can be serialized with `toJSON()`, replayed with
 `exclusion.fromJSON(...)`, and previewed with `assembly.preview({ scale })`.

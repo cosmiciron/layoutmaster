@@ -22,7 +22,7 @@ const LINE_HEIGHT = 1.38;
 
 const TEXT = `An exclusion assembly can be a tiny rig. It does not need a perfect outline or a computer vision pipeline. A developer can author a head, torso, arms, and legs as ordinary primitive parts, then rebuild the current pose whenever the interface changes.
 
-Here the waving arm is only a polygon capsule. The other limbs are the same kind of crude geometry. Layoutmaster receives one assembly token and solves the text around that current field. No browser wrap is involved, and no hidden collision layer is painted over the result.
+Here the waving arm is a capsule part that Layoutmaster lowers into polygon geometry. The other limbs use the same crude helper. Layoutmaster receives one assembly token and solves the text around that current field. No browser wrap is involved, and no hidden collision layer is painted over the result.
 
 That makes this model useful for playful interfaces, animated reading surfaces, game-like editorial tools, diagrams, mascots, and fast prototypes. The authored shape can be rough. What matters is that the text negotiates with the real primitive assembly the app provided for this frame.
 
@@ -39,31 +39,14 @@ let animationId = 0;
 let dragState = null;
 let startTime = performance.now();
 
-function degToRad(value) {
-  return value * Math.PI / 180;
-}
-
-function capsulePolygon(x1, y1, x2, y2, thickness) {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const length = Math.hypot(dx, dy) || 1;
-  const nx = (-dy / length) * thickness / 2;
-  const ny = (dx / length) * thickness / 2;
-  return [
-    [x1 + nx, y1 + ny],
-    [x2 + nx, y2 + ny],
-    [x2 - nx, y2 - ny],
-    [x1 - nx, y1 - ny]
-  ];
-}
-
 function limb(anchorX, anchorY, length, angleDeg, thickness) {
-  const angle = degToRad(angleDeg);
-  const x2 = anchorX + Math.cos(angle) * length;
-  const y2 = anchorY + Math.sin(angle) * length;
   return {
-    kind: "polygon",
-    points: capsulePolygon(anchorX, anchorY, x2, y2, thickness)
+    kind: "capsule",
+    x: anchorX,
+    y: anchorY,
+    length,
+    angle: angleDeg,
+    thickness
   };
 }
 
@@ -76,10 +59,13 @@ function getPose() {
   const wave = playInput.checked
     ? -22 + Math.sin(t * 4.2) * 48
     : manualWave;
+  const counterWave = playInput.checked
+    ? 200 + Math.sin(t * 2.8 + 1.1) * 24
+    : 202;
   if (playInput.checked) {
     waveInput.value = String(Math.round(wave));
   }
-  return { bodyX, bodyY, wave };
+  return { bodyX, bodyY, wave, counterWave };
 }
 
 function getSurfaceWidth() {
@@ -98,14 +84,13 @@ function clampBodyY(value) {
 }
 
 // -- Layoutmaster: Author primitive parts for the assembly --
-// Parts are plain geometry descriptors — circle, rect, or polygon. The engine
-// never sees the individual parts; it receives a single assembled token built
-// from this list.
-function buildStickManParts(wave) {
+// Parts are plain geometry descriptors. Capsule is authoring sugar; the public
+// builder lowers it into polygon geometry before the engine sees the assembly.
+function buildStickManParts(wave, counterWave) {
   return [
     { kind: "circle", x: 54, y: 0, radius: 19 },
     { kind: "rect", x: 68, y: 38, width: 10, height: 64 },
-    limb(73, 50, 58, 202, 10),
+    limb(73, 50, 58, counterWave, 10),
     limb(73, 50, 66, wave, 10),  // waving arm — angle changes each frame
     limb(73, 100, 68, 118, 11),
     limb(73, 100, 68, 62, 11)
@@ -118,7 +103,7 @@ function buildStickManParts(wave) {
 // the gap expands each part outward so text never crowds the figure.
 function buildAssembly() {
   const pose = getPose();
-  const parts = buildStickManParts(pose.wave);
+  const parts = buildStickManParts(pose.wave, pose.counterWave);
   return {
     pose,
     parts,
@@ -176,7 +161,9 @@ function drawRig(parts, originX, originY) {
       ? svg("ellipse")
       : part.kind === "rect"
         ? svg("rect")
-        : svg("polygon");
+        : (part.kind === "capsule" || part.kind === "line")
+          ? svg("line")
+          : svg("polygon");
     node.classList.add("rig-part");
     if (part.kind === "circle") {
       const radius = Number(part.radius);
@@ -189,6 +176,17 @@ function drawRig(parts, originX, originY) {
       node.setAttribute("y", String(originY + part.y));
       node.setAttribute("width", String(part.width));
       node.setAttribute("height", String(part.height));
+    } else if (part.kind === "capsule" || part.kind === "line") {
+      const radians = Number(part.angle || 0) * Math.PI / 180;
+      const x2 = Number(part.x) + Math.cos(radians) * Number(part.length || 0);
+      const y2 = Number(part.y) + Math.sin(radians) * Number(part.length || 0);
+      const thickness = Number(part.thickness || part.strokeWidth || part.width || part.w || 1);
+      node.setAttribute("x1", String(originX + Number(part.x || 0)));
+      node.setAttribute("y1", String(originY + Number(part.y || 0)));
+      node.setAttribute("x2", String(originX + x2));
+      node.setAttribute("y2", String(originY + y2));
+      node.setAttribute("stroke-linecap", "round");
+      node.style.strokeWidth = `${Number.isFinite(thickness) ? Math.max(1, thickness) : 1}px`;
     } else {
       node.setAttribute("points", part.points.map(([x, y]) => `${originX + x},${originY + y}`).join(" "));
     }

@@ -290,7 +290,8 @@ test("layoutmaster builds authored primitive exclusion assemblies", () => {
       { kind: "circle", x: 0, y: 42, radius: 28 },
       { kind: "rect", x: 38, y: 50, width: 88, height: 30 },
       { kind: "circle", x: 102, y: 18, width: 72, height: 72 },
-      { kind: "polygon", points: [[152, 50], [206, 26], [198, 86]] }
+      { kind: "polygon", points: [[152, 50], [206, 26], [198, 86]] },
+      { kind: "capsule", x: 88, y: 96, length: 74, angle: 28, thickness: 10 }
     ]
   });
   const saved = shape.toJSON();
@@ -306,9 +307,11 @@ test("layoutmaster builds authored primitive exclusion assemblies", () => {
   );
 
   assert.equal(shape.kind, "assembly");
-  assert.equal(shape.parts.count, 4);
-  assert.equal(saved.members.length, 4);
+  assert.equal(shape.parts.count, 5);
+  assert.equal(saved.members.length, 5);
   assert.equal(saved.members[0].shape, "circle");
+  assert.equal(saved.members[4].shape, "polygon");
+  assert.match(saved.members[4].path, /^M/);
   assert.ok(shape.width >= 206, "expected assembly width to be inferred from primitive bounds");
   assert.ok(shape.height >= 98, "expected assembly height to be inferred from primitive bounds");
   assert.ok(result.pieces.length > 0, "expected authored assembly to participate in form layout");

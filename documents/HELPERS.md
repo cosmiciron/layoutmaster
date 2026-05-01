@@ -183,6 +183,12 @@ Return value:
 - replayable with `exclusion.fromJSON(...)`
 - previewable with `assembly.preview({ scale })`
 
+Manual assemblies do not need the helper shelf. Core Layoutmaster also exposes
+`exclusion.assembly(...)` for authored primitive rigs made from `rect`, `circle`,
+`ellipse`, `polygon`, `line`, and `capsule` parts. Use the helper when the source
+is an image/video alpha channel; use the core builder when the shape is ordinary
+application data.
+
 Example:
 
 ```js

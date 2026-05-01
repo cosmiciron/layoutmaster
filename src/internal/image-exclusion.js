@@ -71,6 +71,83 @@ function buildPolygonPath(points, offsetX, offsetY) {
   return commands.join(" ");
 }
 
+function buildCapsulePoints(x1, y1, x2, y2, thickness) {
+  const radius = thickness / 2;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const length = Math.hypot(dx, dy);
+  const segments = 6;
+  if (length <= 0.0001) {
+    return Array.from({ length: segments * 2 }, (_, index) => {
+      const angle = (index / (segments * 2)) * Math.PI * 2;
+      return [
+        x1 + Math.cos(angle) * radius,
+        y1 + Math.sin(angle) * radius
+      ];
+    });
+  }
+
+  const angle = Math.atan2(dy, dx);
+  const points = [];
+  for (let i = 0; i <= segments; i++) {
+    const a = angle - Math.PI / 2 + (i / segments) * Math.PI;
+    points.push([x2 + Math.cos(a) * radius, y2 + Math.sin(a) * radius]);
+  }
+  for (let i = 0; i <= segments; i++) {
+    const a = angle + Math.PI / 2 + (i / segments) * Math.PI;
+    points.push([x1 + Math.cos(a) * radius, y1 + Math.sin(a) * radius]);
+  }
+  return points;
+}
+
+function resolveSegmentEndpoints(part, index) {
+  if (
+    part.x1 !== undefined
+    || part.y1 !== undefined
+    || part.x2 !== undefined
+    || part.y2 !== undefined
+  ) {
+    const x1 = Number(part.x1);
+    const y1 = Number(part.y1);
+    const x2 = Number(part.x2);
+    const y2 = Number(part.y2);
+    if (![x1, y1, x2, y2].every(Number.isFinite)) {
+      throw new Error(`[layoutmaster] exclusion.assembly parts[${index}] line endpoints must be finite x1, y1, x2, and y2 values.`);
+    }
+    return { x1, y1, x2, y2 };
+  }
+
+  const x = Number(part.x);
+  const y = Number(part.y);
+  const length = Number(part.length);
+  const angle = Number(part.angle ?? part.degrees ?? 0);
+  if (![x, y, length, angle].every(Number.isFinite) || length <= 0) {
+    throw new Error(`[layoutmaster] exclusion.assembly parts[${index}] line parts require either x1/y1/x2/y2 or x/y/length/angle.`);
+  }
+  const radians = angle * Math.PI / 180;
+  return {
+    x1: x,
+    y1: y,
+    x2: x + Math.cos(radians) * length,
+    y2: y + Math.sin(radians) * length
+  };
+}
+
+function polygonMemberFromPoints(points, resistance) {
+  const normalizedPoints = normalizePolygonPoints(points);
+  const bounds = getPointBounds(normalizedPoints);
+  const member = {
+    shape: "polygon",
+    x: bounds.minX,
+    y: bounds.minY,
+    w: Math.max(1, bounds.maxX - bounds.minX),
+    h: Math.max(1, bounds.maxY - bounds.minY),
+    path: buildPolygonPath(normalizedPoints, bounds.minX, bounds.minY)
+  };
+  if (resistance !== undefined && resistance < 1) member.resistance = resistance;
+  return member;
+}
+
 function normalizeResistance(value) {
   if (value === undefined || value === null) return undefined;
   const numeric = Number(value);
@@ -125,15 +202,22 @@ function normalizeAssemblyPart(part, index) {
     member.w = normalizePositiveDimension(part.width ?? part.w, `exclusion.assembly parts[${index}].width`);
     member.h = normalizePositiveDimension(part.height ?? part.h, `exclusion.assembly parts[${index}].height`);
   } else if (kind === "polygon") {
-    const points = normalizePolygonPoints(part.points, x, y);
-    const bounds = getPointBounds(points);
-    member.x = bounds.minX;
-    member.y = bounds.minY;
-    member.w = Math.max(1, bounds.maxX - bounds.minX);
-    member.h = Math.max(1, bounds.maxY - bounds.minY);
-    member.path = buildPolygonPath(points, bounds.minX, bounds.minY);
+    return polygonMemberFromPoints(
+      normalizePolygonPoints(part.points, x, y).map((point) => [point.x, point.y]),
+      resistance
+    );
+  } else if (kind === "line" || kind === "capsule") {
+    const { x1, y1, x2, y2 } = resolveSegmentEndpoints(part, index);
+    const thickness = normalizePositiveDimension(
+      part.thickness ?? part.strokeWidth ?? part.width ?? part.w ?? 1,
+      `exclusion.assembly parts[${index}].thickness`
+    );
+    return polygonMemberFromPoints(
+      buildCapsulePoints(x1, y1, x2, y2, thickness),
+      resistance
+    );
   } else {
-    throw new Error(`[layoutmaster] exclusion.assembly parts[${index}].kind must be rect, circle, ellipse, or polygon.`);
+    throw new Error(`[layoutmaster] exclusion.assembly parts[${index}].kind must be rect, circle, ellipse, polygon, line, or capsule.`);
   }
 
   if (resistance !== undefined && resistance < 1) member.resistance = resistance;

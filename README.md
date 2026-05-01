@@ -189,10 +189,10 @@ exclusion.fromAlphaChannel(alpha, width, height, options);
 exclusion.fromJSON(savedData, options);
 ```
 
-Assemblies are crude composed fields: circles, rectangles, ellipses, and
-polygons merged into one obstacle. That makes them a good fit for stick figures,
-mascots, diagrams, dragons, and other programmable shapes where speed matters
-more than perfect contours.
+Assemblies are crude composed fields: circles, rectangles, ellipses, polygons,
+and line/capsule helpers merged into one obstacle. That makes them a good fit
+for stick figures, mascots, diagrams, dragons, and other programmable shapes
+where speed matters more than perfect contours.
 
 The dancing text demo builds exclusion assemblies from video frames -
 671 cached frames from a single mp4 - and animates them through `form()` at
@@ -281,6 +281,7 @@ Current demos:
 - `pour-image`: text contained inside image-derived alpha geometry
 - `pieces`: minimal piece and baseline inspection
 - `exclusion`: live primitive exclusion fields
+- `exclusion-assembly`: animated primitive assembly rig with hideable visual layer
 - `exclusion-image`: image alpha as wrap geometry
 - `html-atlas`: `produce()` rendered as a searchable, selectable paginated atlas
 - `dancing-text`: animated exclusion fields from video frames

@@ -145,10 +145,11 @@ export interface LayoutmasterFromJSONOptions {
 }
 
 export type LayoutmasterAssemblyPartKind = "rect" | "circle" | "ellipse" | "polygon";
+export type LayoutmasterAssemblyAuthorPartKind = LayoutmasterAssemblyPartKind | "line" | "capsule";
 
 export interface LayoutmasterAssemblyBasePart {
-  kind?: LayoutmasterAssemblyPartKind;
-  shape?: LayoutmasterAssemblyPartKind;
+  kind?: LayoutmasterAssemblyAuthorPartKind;
+  shape?: LayoutmasterAssemblyAuthorPartKind;
   x?: number;
   y?: number;
   resistance?: number;
@@ -189,11 +190,28 @@ export interface LayoutmasterAssemblyPolygonPart extends LayoutmasterAssemblyBas
   points: Array<LayoutmasterPolygonPoint | [number, number]>;
 }
 
+export interface LayoutmasterAssemblyLinePart extends LayoutmasterAssemblyBasePart {
+  kind: "line" | "capsule";
+  shape?: "line" | "capsule";
+  x1?: number;
+  y1?: number;
+  x2?: number;
+  y2?: number;
+  length?: number;
+  angle?: number;
+  degrees?: number;
+  thickness?: number;
+  strokeWidth?: number;
+  width?: number;
+  w?: number;
+}
+
 export type LayoutmasterAssemblyPart =
   | LayoutmasterAssemblyRectPart
   | LayoutmasterAssemblyCirclePart
   | LayoutmasterAssemblyEllipsePart
-  | LayoutmasterAssemblyPolygonPart;
+  | LayoutmasterAssemblyPolygonPart
+  | LayoutmasterAssemblyLinePart;
 
 export interface LayoutmasterAssemblyMember {
   shape?: LayoutmasterAssemblyPartKind;
