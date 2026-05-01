@@ -12,6 +12,17 @@ and surfaces have to compose themselves on the fly, is overwhelmed.
 
 Enter Layoutmaster.
 
+![Dancing text demo: live text layout dodging animated video silhouettes](https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/men-dance.gif)
+
+> **Try it live:** [cosmiciron.github.io/layoutmaster](https://cosmiciron.github.io/layoutmaster/)
+>
+> **Watch the full demo UI:**
+>
+> <a href="https://youtu.be/UwooKHDp6hs"><img src="https://img.youtube.com/vi/UwooKHDp6hs/maxresdefault.jpg" alt="Anime Girl Dancing With Texts: Layoutmaster demo UI with live text wrapping around animated video silhouettes" width="260"></a>
+> <a href="https://youtu.be/eQcJLhVWBeU"><img src="https://img.youtube.com/vi/eQcJLhVWBeU/maxresdefault.jpg" alt="Man Dancing With Texts: Layoutmaster text layout demo wrapping text around a dancing figure" width="260"></a>
+>
+> [Anime Girl Dancing With Texts](https://youtu.be/UwooKHDp6hs) · [Man Dancing With Texts](https://youtu.be/eQcJLhVWBeU)
+
 While the browser's chef is still taking orders one at a time, Layoutmaster is like
 SpongeBob going absolutely mad in the kitchen. For example, it takes a novel with more than
 80,000 words and creates 370 pages from it. Not just any pages, but desktop-publishing-grade layout
@@ -42,8 +53,6 @@ Content enters a "world", collides with constraints, flows through regions, avoi
 splits across viewports, and settles into exact coordinates.
 
 And that - is where the master gets its superpowers.
-
-![Dancing text demo: live text layout dodging animated video silhouettes](https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/men-dance.gif)
 
 ## The Five Mantras
 
@@ -218,9 +227,6 @@ the embedded engine included. No other dependencies.
 
 So like the master (another one) says: Smaller in number are we, but larger in mind.
 
-Try the live browser demos:
-[cosmiciron.github.io/layoutmaster](https://cosmiciron.github.io/layoutmaster/).
-
 ## Install
 
 ```bash
@@ -272,23 +278,6 @@ Current demos:
 - `exclusion-image`: image alpha as wrap geometry
 - `html-atlas`: `produce()` rendered as a searchable, selectable paginated atlas
 - `dancing-text`: animated exclusion fields from video frames
-
-Not too long ago, some demos showing dragons swimming through a pool of text
-took the internet by storm. Those dragons were hand-built illusions - primitive
-shapes stitched together, text pre-measured to fit. Impressive? Yes, but it's
-still just a choreography inside a controlled dojo.
-
-What you are about to watch is the master walking into an unrehearsed,
-no-holds-barred cage fight and dominating:
-
-[![Anime Girl Dancing With Texts: Layoutmaster demo UI with live text wrapping around animated video silhouettes](https://img.youtube.com/vi/UwooKHDp6hs/maxresdefault.jpg)](https://youtu.be/UwooKHDp6hs)
-
-[Anime Girl Dancing With Texts](https://youtu.be/UwooKHDp6hs) - the full demo
-UI, sliders and all.
-
-[![Man Dancing With Texts: Layoutmaster text layout demo wrapping text around a dancing figure](https://img.youtube.com/vi/eQcJLhVWBeU/maxresdefault.jpg)](https://youtu.be/eQcJLhVWBeU)
-
-[Man Dancing With Texts](https://youtu.be/eQcJLhVWBeU) - same demo, different energy.
 
 The demos use browser import maps, so serve them from the repo root. Opening
 the files directly from disk is an excellent way to meet the less charming parts
