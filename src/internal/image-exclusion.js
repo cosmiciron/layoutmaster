@@ -22,6 +22,134 @@ function normalizePositiveDimension(value, fieldName) {
   return numeric;
 }
 
+function normalizeAssemblyDimension(value, fallback, fieldName) {
+  if (value === undefined || value === null) {
+    return Math.max(1, fallback);
+  }
+  return normalizePositiveDimension(value, fieldName);
+}
+
+function getPointBounds(points) {
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const point of points) {
+    minX = Math.min(minX, point.x);
+    minY = Math.min(minY, point.y);
+    maxX = Math.max(maxX, point.x);
+    maxY = Math.max(maxY, point.y);
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+function normalizePolygonPoints(points, offsetX = 0, offsetY = 0) {
+  if (!Array.isArray(points) || points.length < 3) {
+    throw new Error("[layoutmaster] exclusion.assembly polygon parts require at least three points.");
+  }
+  return points.map((point, index) => {
+    const source = Array.isArray(point)
+      ? { x: point[0], y: point[1] }
+      : point;
+    if (!isPlainObject(source)) {
+      throw new Error(`[layoutmaster] exclusion.assembly polygon point at index ${index} must be [x, y] or { x, y }.`);
+    }
+    const x = Number(source.x);
+    const y = Number(source.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      throw new Error(`[layoutmaster] exclusion.assembly polygon point at index ${index} must contain finite x and y values.`);
+    }
+    return { x: x + offsetX, y: y + offsetY };
+  });
+}
+
+function buildPolygonPath(points, offsetX, offsetY) {
+  const commands = points.map((point, index) =>
+    `${index === 0 ? "M" : "L"} ${point.x - offsetX} ${point.y - offsetY}`
+  );
+  commands.push("Z");
+  return commands.join(" ");
+}
+
+function normalizeResistance(value) {
+  if (value === undefined || value === null) return undefined;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    throw new Error("[layoutmaster] exclusion.assembly resistance must be a finite number when provided.");
+  }
+  return Math.max(0, Math.min(1, numeric));
+}
+
+function normalizeLowLevelMember(member, index) {
+  if (!isPlainObject(member)) {
+    throw new Error(`[layoutmaster] exclusion.assembly members[${index}] must be an object.`);
+  }
+  const shape = String(member.shape || member.kind || "rect");
+  if (!["rect", "circle", "ellipse", "polygon"].includes(shape)) {
+    throw new Error(`[layoutmaster] exclusion.assembly members[${index}].shape must be rect, circle, ellipse, or polygon.`);
+  }
+  const normalized = {
+    shape,
+    x: normalizeFiniteNumber(member.x, 0),
+    y: normalizeFiniteNumber(member.y, 0),
+    w: normalizePositiveDimension(member.w ?? member.width, `exclusion.assembly members[${index}].w`),
+    h: normalizePositiveDimension(member.h ?? member.height, `exclusion.assembly members[${index}].h`)
+  };
+  if (shape === "polygon" && member.path !== undefined) {
+    normalized.path = String(member.path);
+  }
+  const resistance = normalizeResistance(member.resistance ?? member.r);
+  if (resistance !== undefined && resistance < 1) normalized.resistance = resistance;
+  return normalized;
+}
+
+function normalizeAssemblyPart(part, index) {
+  if (!isPlainObject(part)) {
+    throw new Error(`[layoutmaster] exclusion.assembly parts[${index}] must be an object.`);
+  }
+  const kind = String(part.kind || part.shape || "rect");
+  const x = normalizeFiniteNumber(part.x, 0);
+  const y = normalizeFiniteNumber(part.y, 0);
+  const resistance = normalizeResistance(part.resistance ?? part.r);
+  const member = { shape: kind, x, y, w: 0, h: 0 };
+
+  if (kind === "circle") {
+    const diameter = part.radius !== undefined
+      ? normalizePositiveDimension(part.radius, `exclusion.assembly parts[${index}].radius`) * 2
+      : normalizePositiveDimension(part.width ?? part.w, `exclusion.assembly parts[${index}].width`);
+    member.w = diameter;
+    member.h = part.height ?? part.h
+      ? normalizePositiveDimension(part.height ?? part.h, `exclusion.assembly parts[${index}].height`)
+      : diameter;
+  } else if (kind === "rect" || kind === "ellipse") {
+    member.w = normalizePositiveDimension(part.width ?? part.w, `exclusion.assembly parts[${index}].width`);
+    member.h = normalizePositiveDimension(part.height ?? part.h, `exclusion.assembly parts[${index}].height`);
+  } else if (kind === "polygon") {
+    const points = normalizePolygonPoints(part.points, x, y);
+    const bounds = getPointBounds(points);
+    member.x = bounds.minX;
+    member.y = bounds.minY;
+    member.w = Math.max(1, bounds.maxX - bounds.minX);
+    member.h = Math.max(1, bounds.maxY - bounds.minY);
+    member.path = buildPolygonPath(points, bounds.minX, bounds.minY);
+  } else {
+    throw new Error(`[layoutmaster] exclusion.assembly parts[${index}].kind must be rect, circle, ellipse, or polygon.`);
+  }
+
+  if (resistance !== undefined && resistance < 1) member.resistance = resistance;
+  return member;
+}
+
+function getMembersBounds(members) {
+  let maxX = 0;
+  let maxY = 0;
+  for (const member of members) {
+    maxX = Math.max(maxX, member.x + member.w);
+    maxY = Math.max(maxY, member.y + member.h);
+  }
+  return { width: maxX, height: maxY };
+}
+
 function scanAlphaBand(alpha, width, yBand, bandH, height) {
   const result = new Float32Array(width);
   const yEnd = Math.min(yBand + bandH, height);
@@ -107,6 +235,28 @@ function assemblyMembersToCompactLayers(members, width, height) {
   return { width, height, layers };
 }
 
+function assemblyMembersToPortableData(members, width, height) {
+  const canUseLayers = members.every((member) =>
+    (member.shape || "rect") === "rect" && !member.path
+  );
+  if (canUseLayers) {
+    return assemblyMembersToCompactLayers(members, width, height);
+  }
+  return {
+    width,
+    height,
+    members: members.map((member) => ({
+      shape: member.shape || "rect",
+      x: member.x,
+      y: member.y,
+      w: member.w,
+      h: member.h,
+      ...(member.path ? { path: member.path } : {}),
+      ...(member.resistance !== undefined ? { resistance: member.resistance } : {})
+    }))
+  };
+}
+
 function membersFromCompactLayers(data) {
   const members = [];
   for (const layer of data.layers) {
@@ -125,6 +275,19 @@ function membersFromCompactLayers(data) {
   return members;
 }
 
+function normalizeAssemblyMembers(data) {
+  if (Array.isArray(data.parts)) {
+    return data.parts.map((part, index) => normalizeAssemblyPart(part, index));
+  }
+  if (Array.isArray(data.members)) {
+    return data.members.map((member, index) => normalizeLowLevelMember(member, index));
+  }
+  if (Array.isArray(data.layers)) {
+    return membersFromCompactLayers(data);
+  }
+  throw new Error("[layoutmaster] exclusion.assembly requires parts, members, or layers.");
+}
+
 function renderAssemblyPreviewCanvas(members, width, height, scale) {
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(width * scale);
@@ -135,12 +298,19 @@ function renderAssemblyPreviewCanvas(members, width, height, scale) {
   for (const member of sorted) {
     const gray = Math.round(255 * (1 - (member.resistance ?? 1)));
     ctx.fillStyle = `rgb(${gray},${gray},${gray})`;
-    ctx.fillRect(
-      Math.round(member.x * scale),
-      Math.round(member.y * scale),
-      Math.round(member.w * scale),
-      Math.round(member.h * scale)
-    );
+    ctx.save();
+    ctx.translate(member.x * scale, member.y * scale);
+    ctx.scale(scale, scale);
+    if (member.shape === "circle" || member.shape === "ellipse") {
+      ctx.beginPath();
+      ctx.ellipse(member.w / 2, member.h / 2, member.w / 2, member.h / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (member.shape === "polygon" && member.path && typeof Path2D !== "undefined") {
+      ctx.fill(new Path2D(member.path));
+    } else {
+      ctx.fillRect(0, 0, member.w, member.h);
+    }
+    ctx.restore();
   }
   return canvas;
 }
@@ -156,7 +326,7 @@ function createAssemblyExclusionToken(x, y, width, height, members, gap) {
     height,
     parts: Object.freeze({ count: frozenMembers.length }),
     toJSON() {
-      return assemblyMembersToCompactLayers(frozenMembers, width, height);
+      return assemblyMembersToPortableData(frozenMembers, width, height);
     },
     preview(options) {
       const scale = Math.max(1, normalizeFiniteNumber(options?.scale, 1));
@@ -184,7 +354,7 @@ export function createExclusionFromAlphaChannel(alpha, width, height, options = 
 }
 
 export function createExclusionFromJSON(data, options = {}) {
-  if (!isPlainObject(data) || !Array.isArray(data.layers)) {
+  if (!isPlainObject(data) || (!Array.isArray(data.layers) && !Array.isArray(data.members) && !Array.isArray(data.parts))) {
     throw new Error("[layoutmaster] exclusion.fromJSON: data must be a value returned by LayoutmasterExclusionAssembly.toJSON().");
   }
   const width = normalizePositiveDimension(data.width, "width");
@@ -192,6 +362,23 @@ export function createExclusionFromJSON(data, options = {}) {
   const x = normalizeFiniteNumber(options.x, 0);
   const y = normalizeFiniteNumber(options.y, 0);
   const gap = Math.max(0, normalizeFiniteNumber(options.gap, 0));
-  const members = membersFromCompactLayers(data);
+  const members = normalizeAssemblyMembers(data);
+  return createAssemblyExclusionToken(x, y, width, height, members, gap);
+}
+
+export function createExclusionFromAssembly(data = {}) {
+  if (!isPlainObject(data)) {
+    throw new Error("[layoutmaster] exclusion.assembly options must be an object.");
+  }
+  const members = normalizeAssemblyMembers(data);
+  if (members.length === 0) {
+    throw new Error("[layoutmaster] exclusion.assembly requires at least one part or member.");
+  }
+  const bounds = getMembersBounds(members);
+  const x = normalizeFiniteNumber(data.x, 0);
+  const y = normalizeFiniteNumber(data.y, 0);
+  const gap = Math.max(0, normalizeFiniteNumber(data.gap, 0));
+  const width = normalizeAssemblyDimension(data.width, bounds.width, "width");
+  const height = normalizeAssemblyDimension(data.height, bounds.height, "height");
   return createAssemblyExclusionToken(x, y, width, height, members, gap);
 }

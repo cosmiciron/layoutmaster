@@ -281,6 +281,39 @@ test("layoutmaster pour stops grapheme fallback before alpha assembly bottom", (
   );
 });
 
+test("layoutmaster builds authored primitive exclusion assemblies", () => {
+  const shape = exclusion.assembly({
+    x: 76,
+    y: 36,
+    gap: 2,
+    parts: [
+      { kind: "circle", x: 0, y: 42, radius: 28 },
+      { kind: "rect", x: 38, y: 50, width: 88, height: 30 },
+      { kind: "circle", x: 102, y: 18, width: 72, height: 72 },
+      { kind: "polygon", points: [[152, 50], [206, 26], [198, 86]] }
+    ]
+  });
+  const saved = shape.toJSON();
+  const result = form(
+    "Authored primitive assemblies let one logical obstacle publish several crude lobes. ".repeat(8),
+    {
+      width: 360,
+      fontFamily: "Times New Roman",
+      fontSize: 18,
+      lineHeight: 1.35,
+      exclusions: [shape]
+    }
+  );
+
+  assert.equal(shape.kind, "assembly");
+  assert.equal(shape.parts.count, 4);
+  assert.equal(saved.members.length, 4);
+  assert.equal(saved.members[0].shape, "circle");
+  assert.ok(shape.width >= 206, "expected assembly width to be inferred from primitive bounds");
+  assert.ok(shape.height >= 98, "expected assembly height to be inferred from primitive bounds");
+  assert.ok(result.pieces.length > 0, "expected authored assembly to participate in form layout");
+});
+
 test("layoutmaster pour keeps returned circle pieces inside the primitive", () => {
   const radius = 210;
   const text = "Pour flips the polarity. Instead of routing around a spatial field, text occupies the inside of the shape itself. That makes primitive geometry usable as a direct editorial container instead of just an obstacle.";

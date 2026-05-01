@@ -1,4 +1,5 @@
 import {
+  createExclusionFromAssembly,
   createExclusionFromAlphaChannel,
   createExclusionFromJSON
 } from "./image-exclusion.js";
@@ -254,6 +255,7 @@ export const exclusion = Object.freeze({
   rect: createRectExclusion,
   ellipse: createEllipseExclusion,
   polygon: createPolygonExclusion,
+  assembly: createExclusionFromAssembly,
   fromAlphaChannel: createExclusionFromAlphaChannel,
   fromJSON: createExclusionFromJSON
 });

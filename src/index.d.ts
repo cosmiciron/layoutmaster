@@ -144,11 +144,93 @@ export interface LayoutmasterFromJSONOptions {
   gap?: number;
 }
 
+export type LayoutmasterAssemblyPartKind = "rect" | "circle" | "ellipse" | "polygon";
+
+export interface LayoutmasterAssemblyBasePart {
+  kind?: LayoutmasterAssemblyPartKind;
+  shape?: LayoutmasterAssemblyPartKind;
+  x?: number;
+  y?: number;
+  resistance?: number;
+  r?: number;
+}
+
+export interface LayoutmasterAssemblyRectPart extends LayoutmasterAssemblyBasePart {
+  kind?: "rect";
+  shape?: "rect";
+  width?: number;
+  height?: number;
+  w?: number;
+  h?: number;
+}
+
+export interface LayoutmasterAssemblyCirclePart extends LayoutmasterAssemblyBasePart {
+  kind: "circle";
+  shape?: "circle";
+  radius?: number;
+  width?: number;
+  height?: number;
+  w?: number;
+  h?: number;
+}
+
+export interface LayoutmasterAssemblyEllipsePart extends LayoutmasterAssemblyBasePart {
+  kind: "ellipse";
+  shape?: "ellipse";
+  width?: number;
+  height?: number;
+  w?: number;
+  h?: number;
+}
+
+export interface LayoutmasterAssemblyPolygonPart extends LayoutmasterAssemblyBasePart {
+  kind: "polygon";
+  shape?: "polygon";
+  points: Array<LayoutmasterPolygonPoint | [number, number]>;
+}
+
+export type LayoutmasterAssemblyPart =
+  | LayoutmasterAssemblyRectPart
+  | LayoutmasterAssemblyCirclePart
+  | LayoutmasterAssemblyEllipsePart
+  | LayoutmasterAssemblyPolygonPart;
+
+export interface LayoutmasterAssemblyMember {
+  shape?: LayoutmasterAssemblyPartKind;
+  kind?: LayoutmasterAssemblyPartKind;
+  x: number;
+  y: number;
+  w?: number;
+  h?: number;
+  width?: number;
+  height?: number;
+  path?: string;
+  resistance?: number;
+  r?: number;
+}
+
+export interface LayoutmasterAssemblyLayer {
+  r?: number;
+  rects: Array<[number, number, number, number]>;
+}
+
+export interface LayoutmasterAssemblyOptions {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  gap?: number;
+  parts?: LayoutmasterAssemblyPart[];
+  members?: LayoutmasterAssemblyMember[];
+  layers?: LayoutmasterAssemblyLayer[];
+}
+
 export interface LayoutmasterExclusionNamespace {
   circle(options: LayoutmasterCircleExclusionOptions): LayoutmasterExclusion;
   rect(options: LayoutmasterRectExclusionOptions): LayoutmasterExclusion;
   ellipse(options: LayoutmasterEllipseExclusionOptions): LayoutmasterExclusion;
   polygon(options: LayoutmasterPolygonExclusionOptions): LayoutmasterExclusion;
+  assembly(options: LayoutmasterAssemblyOptions): LayoutmasterExclusionAssembly;
   fromAlphaChannel(
     alpha: Uint8Array,
     width: number,

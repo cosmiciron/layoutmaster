@@ -35,17 +35,27 @@ function resolveFilePath(urlPathname) {
   }
 
   const requestedPath = toSafePath(urlPathname);
-  if (!requestedPath || !existsSync(requestedPath)) {
+  if (!requestedPath) {
     return null;
   }
 
-  const stats = statSync(requestedPath);
+  let resolvedPath = requestedPath;
+  if (!existsSync(resolvedPath)) {
+    const trimmed = decodeURIComponent(urlPathname.split("?")[0] || "").replace(/^\/+/, "");
+    const demoPath = resolve(root, "demos", normalize(trimmed));
+    if (!demoPath.startsWith(join(root, "demos")) || !existsSync(demoPath)) {
+      return null;
+    }
+    resolvedPath = demoPath;
+  }
+
+  const stats = statSync(resolvedPath);
   if (stats.isDirectory()) {
-    const indexPath = join(requestedPath, "index.html");
+    const indexPath = join(resolvedPath, "index.html");
     return existsSync(indexPath) ? indexPath : null;
   }
 
-  return requestedPath;
+  return resolvedPath;
 }
 
 function sendNotFound(response) {

@@ -327,9 +327,31 @@ exclusion.circle({ x, y, radius, gap });
 exclusion.rect({ x, y, width, height, gap });
 exclusion.ellipse({ x, y, width, height, gap });
 exclusion.polygon({ x, y, points, gap });
+exclusion.assembly({ x, y, width, height, parts, members, layers, gap });
 exclusion.fromAlphaChannel(alpha, width, height, options);
 exclusion.fromJSON(savedData, options);
 ```
+
+`exclusion.assembly(...)` is the manual primitive-composition builder. Use it
+when a character, mascot, diagram, or rig is easier to describe as several crude
+lobes than as one exact outline:
+
+```js
+const stickMan = exclusion.assembly({
+  x: 90,
+  y: 30,
+  parts: [
+    { kind: "circle", x: 42, y: 0, radius: 18 },
+    { kind: "rect", x: 56, y: 36, width: 8, height: 58 },
+    { kind: "rect", x: 24, y: 48, width: 72, height: 8 }
+  ],
+  gap: 3
+});
+```
+
+`parts` accepts `rect`, `circle`, `ellipse`, and `polygon`. Low-level VMPrint
+style `members` and compact `layers` are also accepted for replay and generated
+data.
 
 Alpha assemblies can be serialized with `toJSON()`, replayed with
 `exclusion.fromJSON(...)`, and previewed with `assembly.preview({ scale })`.

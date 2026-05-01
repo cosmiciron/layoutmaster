@@ -184,9 +184,15 @@ exclusion.circle({ x, y, radius, gap });
 exclusion.rect({ x, y, width, height, gap });
 exclusion.ellipse({ x, y, width, height, gap });
 exclusion.polygon({ x, y, points, gap });
+exclusion.assembly({ x, y, parts, gap });
 exclusion.fromAlphaChannel(alpha, width, height, options);
 exclusion.fromJSON(savedData, options);
 ```
+
+Assemblies are crude composed fields: circles, rectangles, ellipses, and
+polygons merged into one obstacle. That makes them a good fit for stick figures,
+mascots, diagrams, dragons, and other programmable shapes where speed matters
+more than perfect contours.
 
 The dancing text demo builds exclusion assemblies from video frames -
 671 cached frames from a single mp4 - and animates them through `form()` at
