@@ -1,56 +1,59 @@
-# layoutmaster
+# Layoutmaster
 
-`layoutmaster` gives you DOMless layout before you paint.
+Layout is one of the essential substrates of the computing world. It is also
+one of the hardest to get right.
 
-That is the whole trick, and it is a useful one. Browsers are great at drawing
-text after the DOM has had its say. Layoutmaster is for the moments when you need
-the answer first: where the text lands, what fit, what overflowed, which page it
-belongs to, and what shape it had to dodge on the way there.
+For decades, developers have depended on browsers to handle it. But browser layout
+technology has not seen a significant upgrade in decades. Everything else got faster,
+but the part that handles layout remains a single chef working the kitchen alone.
+
+And that chef, in the age of AI generative UIs, where content arrives without warning
+and surfaces have to compose themselves on the fly, is overwhelmed.
+
+Enter Layoutmaster.
+
+While the browser's chef is still taking orders one at a time, Layoutmaster is like
+SpongeBob going absolutely mad in the kitchen. For example, it takes a novel with more than
+80,000 words and creates 370 pages from it. Not just any pages, but desktop-publishing-grade layout
+with advanced typography, widow/orphan control, and dynamically generated headers and footers. And it
+does this in 755ms and places the fully searchable, selectable text on a single HTML "wall" in
+31ms on a...
+
+base Pixel phone!
+
+Try this with your browser and DOM on your shiny MacBook Pro, you will still fry it. So don't.
+
+Let the master handle layout, and your browser **will** thank you.
+
+Now you ask - how?
+
+Two words: *game engines*.
+
+For decades, while layout technology stayed pretty much stale, game engine technology
+advanced enormously. Layoutmaster comes from that lineage. It is the world's first layout engine
+with game engine DNA - and that is where the insane speed comes from.
+
+Put simply, the master does not see text as sequential streams of characters or layout as a
+pile of complex conditionals. It sees actors, collisions, terrain, constraints, viewports,
+and deterministic updates.
+
+Under its tiny browser API is a deterministic 2D spatial simulation engine for layout -
+Content enters a "world", collides with constraints, flows through regions, avoids terrain,
+splits across viewports, and settles into exact coordinates.
+
+And that - is where the master gets its superpowers.
 
 ![Dancing text demo: live text layout dodging animated video silhouettes](https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/men-dance.gif)
 
-Try the browser demos at
-[cosmiciron.github.io/layoutmaster](https://cosmiciron.github.io/layoutmaster/).
+## The Five Mantras
 
-The backstory: I have been building the VMPrint engine mostly with automated
-desktop publishing and serious live editing surfaces in mind. Then `chenglou`'s
-`pretext` showed up and made a very clever point: developers want text answers
-before rendering, not after a pile of DOM work. The only catch is that you
-cannot build a house with just a measuring tape.
+`form()`, `fit()`, `flow()`, `pour()`, and `produce()`
 
-VMPrint is the bulldozer, forklift, and concrete mixer: a real DTP engine that
-happens to be blazing fast and small. So `layoutmaster` wraps that engine in
-`pretext`-inspired APIs that stay deliberately simple, headless, and stateless,
-but stop a few steps later: not just measuring, not just asking "how big?", but
-returning the actual layout pieces, continuations, shapes, and pages developers
-deserve.
-
-## Install
-
-```bash
-npm install @layoutmaster/layoutmaster
-```
-
-The package is `@layoutmaster/layoutmaster` because we believe in symmetry,
-directness, questionable taste, and not fighting npm ghosts before breakfast.
-
-## What You Get
-
-The package returns engine-authored data:
-
-- text pieces with `x`, `y`, `width`, `height`, text, baseline, and paint fields
-- line guides for overlays and inspection
-- occupied heights
-- consumed and remaining text reports
-- reusable exclusion shapes
-- paginated pages from `produce()`
-
-It does not ship a renderer. Your app can paint the results in HTML, canvas,
-SVG, WebGL, native UI, or whatever contraption you are building this week. The
-important part is that the layout answer came from the engine, not from a DOM
-node quietly improvising in the corner.
-
-## The API
+These are the five mantras (APIs if you like, but the master prefers mantras) of the
+Layoutmaster. Do not be deceived by their overwhelming simplicity. These five verbs can
+solve a world of complex layout challenges and unlock possibilities you could only dream
+before - precisely none of which browsers could do without rebuilding DOMs, thrashing
+layout, and making everyone miserable.
 
 ```js
 import {
@@ -63,33 +66,13 @@ import {
 } from "@layoutmaster/layoutmaster";
 ```
 
-- `form(content, options)`: lay out a fragment and tell me how tall it is.
-- `fit(content, options)`: lay out one bounded box and tell me what remains.
-- `flow(content, targets)`: carry content through several bounded boxes.
-- `pour(content, shape, options)`: fill text inside a shape.
-- `produce(source, options)`: paginate a document or structured element payload.
-- `exclusion`: build circles, rectangles, ellipses, polygons, alpha masks, and
-  replayable exclusion assemblies.
+I know, you count six. We will get to that later. Just trust the master.
 
-Most text APIs take strings. Plain strings are plain text. Mixed-style text is a
-structured JSON string. `produce()` is the page-minded one: it can also take a
-full document object, an elements object, an elements array, or a JSON string
-containing those shapes.
+### `form` - given space, how does this lay out, and how tall does it get?
 
-## Runtime
-
-Layoutmaster is headless, but it is not currently server-runtime-free. The engine
-uses browser text measurement, so layout calls need a browser-like environment
-with Canvas text APIs. `OffscreenCanvas` is enough for basic measurement;
-browser DOM font probes are used when CSS line-height metrics need them.
-
-Importing the package in Node is fine, but calling `form()`, `fit()`, `flow()`,
-`pour()`, or `produce()` in plain Node without browser canvas APIs will throw
-`[layoutmaster] Browser canvas APIs are unavailable.`
-
-## Tiny Examples
-
-Ask how a fragment lays out:
+The most fundamental question in layout. You have content and a width. You want
+to know what happens. `form()` gives you the pieces and the height. No
+rendering required. No DOM consulted. No feelings hurt.
 
 ```js
 const result = form("Layout is data.", {
@@ -99,28 +82,68 @@ const result = form("Layout is data.", {
   lineHeight: 1.4
 });
 
-for (const piece of result.pieces) {
-  console.log(piece.text, piece.x, piece.y, piece.width, piece.height);
-}
+console.log(result.height);
+console.log(result.pieces);
 ```
 
-Fit text into a bounded region:
+### `fit` - given bounded space, what fits, and what remains?
+
+Boxes have lids. `fit()` is for when overflow matters: what consumed the space,
+what could not, and what needs to go somewhere else. The master accounts for
+every character. Nothing disappears quietly.
 
 ```js
 const result = fit(longText, {
   width: 360,
-  height: 240,
-  hyphenation: "soft"
+  height: 240
 });
 
 console.log(result.content.consumed.text);
 console.log(result.content.remaining.text);
 ```
 
-Make pages:
+### `flow` - given content that overflows, where does it continue?
+
+Magazines and newspapers have known for centuries that content does not always
+fit in one box. `flow()` carries text through multiple regions and tells you
+exactly what landed where. Multi-column layouts, split panels, magazine spreads
+- the master handles the handoff.
 
 ```js
-const pageResult = produce({
+const result = flow(longText, [
+  { width: 260, height: 320 },
+  { width: 260, height: 320 }
+]);
+
+console.log(result.placements.map((p) => p.pieces));
+```
+
+### `pour` - given a shape instead of a rectangle, fill it.
+
+Not every layout surface is a box. `pour()` fills text inside any shape - circles,
+polygons, image silhouettes, arbitrary geometry. Hand it a shape, hand it text.
+The engine solves it. You paint it.
+
+```js
+const shape = exclusion.circle({ x: 40, y: 40, radius: 140 });
+const result = pour(longText, shape, {
+  width: 360,
+  height: 360,
+  fontSize: 16
+});
+
+console.log(result.pieces);
+```
+
+### `produce` - given a document, give me pages.
+
+This is the big one. Hand the master a document and it comes back with
+publishing-grade pages, each carrying its own pieces, line guides, and occupied
+height. One call. Every page solved. The HTML Atlas demo - 370 pages of a
+novel, laid out and painted as real HTML - runs on this single function.
+
+```js
+const result = produce({
   elements: [
     { type: "p", content: "A document can become engine-authored pages." }
   ]
@@ -130,63 +153,83 @@ const pageResult = produce({
   margins: { top: 72, right: 72, bottom: 72, left: 72 }
 });
 
-console.log(pageResult.pages.length);
+console.log(result.pages.length);
 ```
 
-## Why Bother?
+## Be Water, My Friend
 
-Because some interfaces need text layout as data, not as a side effect:
+Here is that "sixth" element.
 
-- editor overlays and source mapping
-- selectable generated text
-- paginated previews and document thumbnails
-- shaped reading surfaces
-- text that wraps around image or video silhouettes
-- multi-panel flows where continuation matters
-- infinite scrolling masonry, chat, feeds, timelines, and generated UI
+Remember, the highest virtue is like water. Text in Layoutmaster is like water. It fills,
+it bends, it flows, and it navigates around any obstacle you place in its path.
+Those obstacles are called exclusions - and they are one of the master's finest tricks.
 
-The DOM can still paint the glyphs. We love the DOM. We just do not want it to
-be the secret layout authority when the app needs exact answers.
+Exclusions are reusable spatial geometry. Build them from primitives or sample
+them directly from image and video alpha channels. Pass them as obstacles to
+`form()` and `fit()`, or flip them inside out and use them as containers for
+`pour()`. They are serializable and replayable - compile the geometry once, use
+it everywhere, store it as JSON, replay it without the original source.
 
-## Performance
+```js
+exclusion.circle({ x, y, radius, gap });
+exclusion.rect({ x, y, width, height, gap });
+exclusion.ellipse({ x, y, width, height, gap });
+exclusion.polygon({ x, y, points, gap });
+exclusion.fromAlphaChannel(alpha, width, height, options);
+exclusion.fromJSON(savedData, options);
+```
 
-This also attacks a classic frontend tax: DOM thrashing. If the only way to
-learn text size is to render, measure, mutate, render again, measure again, and
-hope the browser is still speaking to you, the UI pays for it in layout
-invalidations and frame drops. Layoutmaster lets you ask the engine for the layout
-up front, then paint once. That is a big deal for infinite lists, masonry grids,
-chat transcripts, live editors, and anything trying to stay smooth while content
-keeps arriving.
+The dancing text demo builds exclusion assemblies from video frames -
+671 cached frames from a single mp4 - and animates them through `form()` at
+24fps. The text renegotiates its path on every frame around the actual shape
+of the figure in motion.
 
-The performance is the fun part. The HTML Atlas demo lays out a 334-page book,
-with publishing-grade pagination, in about 600ms on a Surface Pro 11 tablet and
-around 300ms on an M4 Max MacBook. The whole wall of pages then renders as plain
-HTML in about 20ms and 10ms respectively. Trying to discover that same layout by
-shoving hundreds of pages through DOM measurement would be a very efficient way
-to make the browser reconsider its life choices.
+No CSS tricks. No pre-authored columns. No browser screaming at you in distress.
 
-The smaller interactive cases are just as telling. Moving irregular exclusion
-shapes through a sea of text can take around 0.5ms to lay out on the Mac, with
-rendering in the same neighborhood. So yes: the delightful "dragon swimming
-through text" sort of demo is absolutely in reach here too, with a fraction of
-the code and CPU. The difference is that nothing has to be hardcoded. The shape
-moves, the engine solves, the UI paints.
+## Performance and Footprint
 
-## Footprint
+A dancing figure moves smoothly through a sea of live selectable text. Text parts
+like water. Layout happens in ~1ms. The browser sleeps at 1.5% CPU. The master barely
+keeps its eyes open.
 
-The package stays small, too. A clean launch build currently packs to about
-245 KiB on npm, unpacking to about 1.29 MiB across 18 files. The shipped runtime
-JavaScript is about 1.11 MiB raw, 213 KiB gzip, or 164 KiB Brotli. That includes
-the embedded layout engine. The declarations add about 175 KiB raw, or 30 KiB
-gzip. Not bad for the bulldozer, forklift, concrete mixer, and a few useful
-clipboards.
+Not a canvas trick. Not a pre-baked animation. No GPU involved.
 
-It matters even more for the next wave of interfaces. AI-generated UI and
-generative interactions produce content on the fly: cards, answers, annotations,
-summaries, previews, weird little custom surfaces nobody planned at design time.
-Those systems need cheap, deterministic layout data before they decide what to
-mount, recycle, stream, or animate. Layoutmaster gives them the answer without
-making the DOM do the whole audition first.
+It's pure math. The master solves fresh layout on every frame as the silhouette moves,
+the text renegotiates around it, and the result gets passed to you like job tickets
+handed down by a skilled foreman. You just place them as simple HTML and take the
+credit.
+
+Then the big number tells the same story at a different scale. The HTML Atlas demo
+lays out a 370-page novel - publishing-grade pagination, correct baselines,
+real typography - in 755ms on a base Pixel phone. The wall of pages renders
+in 31ms. Not onto a canvas. Actual HTML:
+
+370 real pages on screen simultaneously, every word selectable, highlightable,
+copyable. The pages are smaller than the sliver of white at the tip of your thumbnail.
+Each one is a complete typeset page. Each one is live text -- so tiny you will need
+a microscope to see them, but they are there nevertheless.
+
+At this point you probably picture the master as a burly man holding a Gatling gun
+torn from a tank. Nope. A two-foot-tall humanoid with green skin, large eyes, pointy ears, and
+wearing a robe - that's more like it.
+
+Seriously, the package packs to about 245 KiB on npm - 213 KiB gzip at runtime,
+the embedded engine included. No other dependencies.
+
+So like the master (another one) says: Smaller in number are we, but larger in mind.
+
+Try the live browser demos:
+[cosmiciron.github.io/layoutmaster](https://cosmiciron.github.io/layoutmaster/).
+
+## Install
+
+```bash
+npm install @layoutmaster/layoutmaster
+```
+
+*Layoutmaster is specifically built for the browser so it requires the Canvas
+API to be available. If you need non-browser solutions, head over to the sibling
+project VMPrint.*
 
 ## Repo Map
 
@@ -211,12 +254,11 @@ Useful reading:
 npm run serve
 ```
 
-The server starts at `http://127.0.0.1:4173/`.
-
-Open `http://127.0.0.1:4173/demos/` for the demo index.
+The server starts at `http://127.0.0.1:4173/`. Open
+`http://127.0.0.1:4173/demos/` for the demo index.
 
 The public demo site runs the published npm package through an ESM CDN, so it
-matches the package consumers install rather than importing private repo paths.
+matches what package consumers actually install.
 
 Current demos:
 
@@ -231,15 +273,22 @@ Current demos:
 - `html-atlas`: `produce()` rendered as a searchable, selectable paginated atlas
 - `dancing-text`: animated exclusion fields from video frames
 
-Showcase clips:
+Not too long ago, some demos showing dragons swimming through a pool of text
+took the internet by storm. Those dragons were hand-built illusions - primitive
+shapes stitched together, text pre-measured to fit. Impressive? Yes, but it's
+still just a choreography inside a controlled dojo.
+
+What you are about to watch is the master walking into an unrehearsed,
+no-holds-barred cage fight and dominating:
 
 [![Anime Girl Dancing With Texts: Layoutmaster demo UI with live text wrapping around animated video silhouettes](https://img.youtube.com/vi/UwooKHDp6hs/maxresdefault.jpg)](https://youtu.be/UwooKHDp6hs)
 
-[Anime Girl Dancing With Texts](https://youtu.be/UwooKHDp6hs): the full demo UI, sliders and all.
+[Anime Girl Dancing With Texts](https://youtu.be/UwooKHDp6hs) - the full demo
+UI, sliders and all.
 
 [![Man Dancing With Texts: Layoutmaster text layout demo wrapping text around a dancing figure](https://img.youtube.com/vi/eQcJLhVWBeU/maxresdefault.jpg)](https://youtu.be/eQcJLhVWBeU)
 
-[Man Dancing With Texts](https://youtu.be/eQcJLhVWBeU): the funny one, because layout engines deserve jokes too.
+[Man Dancing With Texts](https://youtu.be/eQcJLhVWBeU) - same demo, different energy.
 
 The demos use browser import maps, so serve them from the repo root. Opening
 the files directly from disk is an excellent way to meet the less charming parts
@@ -247,21 +296,18 @@ of browser module loading.
 
 ## Helpers
 
-The npm package stays small. Browser image sampling, video frame extraction, and
-HTML piece painting live as source files under
+The master keeps its package small. Browser image sampling, video frame
+extraction, and HTML piece painting live as source files under
 [demos/helpers](https://github.com/cosmiciron/layoutmaster/tree/main/demos/helpers).
-They are official examples, but not package exports.
+They are official examples, not package exports.
 
-Copy them when they help. Change them when your app needs something slightly
-different. The deal is simple: helpers may prepare explicit inputs or paint
-returned results; they do not get to make up layout geometry.
+Copy them when they help. Change them when your app needs something different.
+The deal is simple: helpers may prepare explicit inputs or paint returned
+results. They do not get to make up layout geometry. That is the master's job.
 
 ## The One Rule
 
-Layoutmaster is a thin wrapper around the engine. Every layout decision belongs to
-the engine.
-
-The short version:
+Every layout decision belongs to the engine.
 
 - engine owns layout
 - wrapper owns normalization and result projection
