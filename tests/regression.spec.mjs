@@ -108,6 +108,21 @@ test("layoutmaster plan reuses solved layouts for repeated constraints", () => {
   assert.ok(Object.isFrozen(second.pieces));
 });
 
+test("layoutmaster plan bounds cached solved layouts", () => {
+  const planned = plan("Measure many times without hoarding every answer. ".repeat(8), {
+    fontFamily: "Arial",
+    fontSize: 14,
+    lineHeight: 1.35,
+    lineHeightMode: "css"
+  });
+
+  for (let index = 0; index < 160; index += 1) {
+    planned.form({ width: 180 + index });
+  }
+
+  assert.equal(planned.size, 128);
+});
+
 test("layoutmaster exclusions alter the returned wrap plan", () => {
   const content = "The quick brown fox jumps over the lazy dog. ".repeat(18);
   const base = form(content, { width: 220 });

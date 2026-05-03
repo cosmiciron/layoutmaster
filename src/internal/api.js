@@ -25,6 +25,8 @@ function isPlainObject(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
+const PLANNED_RESULT_CACHE_LIMIT = 128;
+
 function parseProduceSource(source) {
   if (typeof source === "string") {
     const trimmed = source.trim();
@@ -119,13 +121,29 @@ function resolvePlannedCallArguments(baseOptions, optionsOrHandler, maybeHandler
 function createPlannedContent(content, baseOptions) {
   const cache = new Map();
 
+  const readCachedResult = (key) => {
+    if (!cache.has(key)) return undefined;
+    const cached = cache.get(key);
+    cache.delete(key);
+    cache.set(key, cached);
+    return cached;
+  };
+
+  const writeCachedResult = (key, result) => {
+    cache.set(key, result);
+    while (cache.size > PLANNED_RESULT_CACHE_LIMIT) {
+      const oldestKey = cache.keys().next().value;
+      cache.delete(oldestKey);
+    }
+  };
+
   const getCachedResult = (mode, options, factory) => {
     const key = `${mode}:${stableCacheKey(options)}`;
-    const cached = cache.get(key);
+    const cached = readCachedResult(key);
     if (cached) return cached;
     const result = factory();
     const frozenResult = freezePlannedResult(result);
-    cache.set(key, frozenResult);
+    writeCachedResult(key, frozenResult);
     return frozenResult;
   };
 
@@ -149,10 +167,7 @@ function createPlannedContent(content, baseOptions) {
         throw new Error("[layoutmaster] planned flow() expects an array of bounded targets.");
       }
       const targets = rawTargets.map((target) => ({ ...baseOptions, ...target }));
-      const key = stableCacheKey(targets);
-      const cached = cache.get(`flow:${key}`);
-      const result = cached || freezePlannedResult(flow(content, targets));
-      if (!cached) cache.set(`flow:${key}`, result);
+      const result = getCachedResult("flow", targets, () => flow(content, targets));
       invokeResultHandler(result, handler);
       return result;
     },
