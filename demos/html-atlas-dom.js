@@ -1,4 +1,4 @@
-const SAMPLE_ASSET_URL = "./assets/html-atlas-big-326-pages.json";
+import sampleDocument from "./assets/html-atlas-big-326-pages.js";
 
 const searchInput = document.getElementById("search-input");
 const widowOrphanToggle = document.getElementById("widow-orphan-toggle");
@@ -76,17 +76,13 @@ new ResizeObserver(() => renderAtlas()).observe(atlasNode);
 
 async function loadSampleAsset() {
   statusNode.textContent = "Loading sample atlas...";
-  const response = await fetch(SAMPLE_ASSET_URL);
-  if (!response.ok) {
-    throw new Error(`[layoutmaster-demo] Could not load sample atlas: ${response.status}`);
-  }
-  paginateText(await response.text());
+  paginateText(sampleDocument);
 }
 
-function paginateText(sourceText) {
-  currentSourceText = sourceText;
+function paginateText(source) {
+  currentSourceText = source;
   const startedAt = performance.now();
-  const documentInput = JSON.parse(sourceText);
+  const documentInput = cloneDocument(source);
   const parseMs = performance.now() - startedAt;
   currentDocumentFontFamily = normalizeDemoFontFamily(documentInput?.layout?.fontFamily);
   currentHeaderTemplate = resolveHeaderTemplate(documentInput);
@@ -921,6 +917,13 @@ function setStatus() {
 
 function truncate(text, maxLength) {
   return text.length <= maxLength ? text : `${text.slice(0, maxLength - 1)}…`;
+}
+
+function cloneDocument(source) {
+  if (typeof structuredClone === "function") {
+    return structuredClone(source);
+  }
+  return JSON.parse(JSON.stringify(source));
 }
 
 function normalizeDemoFontFamily(fontFamily) {

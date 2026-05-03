@@ -1,6 +1,6 @@
 import { plan } from "@layoutmaster/layoutmaster";
+import sampleDocument from "./assets/html-atlas-big-326-pages.js";
 
-const SAMPLE_ASSET_URL = "./assets/html-atlas-big-326-pages.json";
 const MIN_CARD_WIDTH = 230;
 const MAX_CARD_WIDTH = 320;
 const CARD_GAP = 18;
@@ -94,12 +94,7 @@ function renderLayoutmasterMode(cards, totalStartedAt, statusPrefix = "") {
 
 async function loadChapters() {
   if (sourceChapters) return sourceChapters;
-  const response = await fetch(SAMPLE_ASSET_URL);
-  if (!response.ok) {
-    throw new Error(`[layoutmaster-demo] Could not load sample atlas: ${response.status}`);
-  }
-  const documentInput = await response.json();
-  sourceChapters = extractChapters(documentInput.elements || []);
+  sourceChapters = extractChapters(sampleDocument.elements || []);
   return sourceChapters;
 }
 

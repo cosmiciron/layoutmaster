@@ -1,6 +1,5 @@
 import { produce } from "@layoutmaster/layoutmaster";
-
-const SAMPLE_ASSET_URL = "./assets/html-atlas-big-326-pages.json";
+import sampleDocument from "./assets/html-atlas-big-326-pages.js";
 
 const searchInput = document.getElementById("search-input");
 const statusNode = document.getElementById("status");
@@ -57,17 +56,13 @@ new ResizeObserver(() => renderAtlas()).observe(atlasNode);
 
 async function loadSampleAsset() {
   statusNode.textContent = "Loading sample atlas...";
-  const response = await fetch(SAMPLE_ASSET_URL);
-  if (!response.ok) {
-    throw new Error(`[layoutmaster-demo] Could not load sample atlas: ${response.status}`);
-  }
-  loadText(await response.text(), "Oasis: The Fabric of Fate");
+  loadText(sampleDocument, "Oasis: The Fabric of Fate");
 }
 
-function loadText(text, fileName) {
+function loadText(source, fileName) {
   const startedAt = performance.now();
-  currentDocumentFontFamily = resolveDocumentFontFamily(text);
-  const result = produce(text);
+  currentDocumentFontFamily = resolveDocumentFontFamily(source);
+  const result = produce(source);
   currentResult = result;
   currentFileName = fileName;
   zoomedPage = null;
@@ -405,9 +400,9 @@ function applyTextPaint(node, piece) {
   setStyle(node, "color", piece?.color);
 }
 
-function resolveDocumentFontFamily(sourceText) {
+function resolveDocumentFontFamily(source) {
   try {
-    const documentInput = JSON.parse(sourceText);
+    const documentInput = typeof source === "string" ? JSON.parse(source) : source;
     return normalizeDemoFontFamily(documentInput?.layout?.fontFamily);
   } catch {
     return '"Times New Roman", Times, serif';
