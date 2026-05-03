@@ -63734,7 +63734,7 @@
       "elements": [
         {
           "type": "paragraph",
-          "content": "Z.T. / OASIS / {pageNumber}",
+          "content": "Z.T. / OASIS / Page {pageNumber} of {totalPages}",
           "properties": {
             "style": {
               "textAlign": "right",

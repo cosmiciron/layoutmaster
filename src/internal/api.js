@@ -68,6 +68,145 @@ function normalizeFullDocumentSource(source) {
   };
 }
 
+function stableCacheKey(value) {
+  if (value == null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(stableCacheKey).join(",")}]`;
+  }
+  const entries = Object.keys(value)
+    .sort()
+    .filter((key) => typeof value[key] !== "undefined")
+    .map((key) => `${JSON.stringify(key)}:${stableCacheKey(value[key])}`);
+  return `{${entries.join(",")}}`;
+}
+
+function freezePlannedResult(result, seen = new WeakSet()) {
+  if (result == null || typeof result !== "object" || seen.has(result)) {
+    return result;
+  }
+  seen.add(result);
+  for (const value of Object.values(result)) {
+    freezePlannedResult(value, seen);
+  }
+  return Object.freeze(result);
+}
+
+function resolvePlanOptions(options) {
+  if (options == null) return {};
+  if (!isPlainObject(options)) {
+    throw new Error("[layoutmaster] plan() options must be a plain object when provided.");
+  }
+  return { ...options };
+}
+
+function resolvePlannedCallArguments(baseOptions, optionsOrHandler, maybeHandler) {
+  const handler = typeof optionsOrHandler === "function" ? optionsOrHandler : maybeHandler;
+  const callOptions = typeof optionsOrHandler === "function" ? {} : (optionsOrHandler || {});
+  if (callOptions != null && !isPlainObject(callOptions)) {
+    throw new Error("[layoutmaster] planned layout options must be a plain object when provided.");
+  }
+  return {
+    options: {
+      ...baseOptions,
+      ...callOptions
+    },
+    handler
+  };
+}
+
+function createPlannedContent(content, baseOptions) {
+  const cache = new Map();
+
+  const getCachedResult = (mode, options, factory) => {
+    const key = `${mode}:${stableCacheKey(options)}`;
+    const cached = cache.get(key);
+    if (cached) return cached;
+    const result = factory();
+    const frozenResult = freezePlannedResult(result);
+    cache.set(key, frozenResult);
+    return frozenResult;
+  };
+
+  return {
+    form(optionsOrHandler, maybeHandler) {
+      const { options, handler } = resolvePlannedCallArguments(baseOptions, optionsOrHandler, maybeHandler);
+      const result = getCachedResult("form", options, () => form(content, options));
+      invokeResultHandler(result, handler);
+      return result;
+    },
+    fit(optionsOrHandler, maybeHandler) {
+      const { options, handler } = resolvePlannedCallArguments(baseOptions, optionsOrHandler, maybeHandler);
+      const result = getCachedResult("fit", options, () => fit(content, options));
+      invokeResultHandler(result, handler);
+      return result;
+    },
+    flow(targetsOrHandler, maybeHandler) {
+      const handler = typeof targetsOrHandler === "function" ? targetsOrHandler : maybeHandler;
+      const rawTargets = typeof targetsOrHandler === "function" ? [] : targetsOrHandler;
+      if (!Array.isArray(rawTargets)) {
+        throw new Error("[layoutmaster] planned flow() expects an array of bounded targets.");
+      }
+      const targets = rawTargets.map((target) => ({ ...baseOptions, ...target }));
+      const key = stableCacheKey(targets);
+      const cached = cache.get(`flow:${key}`);
+      const result = cached || freezePlannedResult(flow(content, targets));
+      if (!cached) cache.set(`flow:${key}`, result);
+      invokeResultHandler(result, handler);
+      return result;
+    },
+    clear() {
+      cache.clear();
+    },
+    get size() {
+      return cache.size;
+    }
+  };
+}
+
+function createPlannedCollection(contents, baseOptions) {
+  const items = contents.map((content, index) => {
+    if (typeof content !== "string") {
+      throw new Error(`[layoutmaster] plan() collection item at index ${index} must be a string.`);
+    }
+    return createPlannedContent(content, baseOptions);
+  });
+
+  return {
+    items,
+    formAll(optionsOrHandler, maybeHandler) {
+      const { handler, options } = resolvePlannedCallArguments(baseOptions, optionsOrHandler, maybeHandler);
+      const results = items.map((item) => item.form(options));
+      invokeResultHandler(results, handler);
+      return results;
+    },
+    fitAll(optionsOrHandler, maybeHandler) {
+      const { handler, options } = resolvePlannedCallArguments(baseOptions, optionsOrHandler, maybeHandler);
+      const results = items.map((item) => item.fit(options));
+      invokeResultHandler(results, handler);
+      return results;
+    },
+    clear() {
+      for (const item of items) item.clear();
+    },
+    get size() {
+      return items.reduce((total, item) => total + item.size, 0);
+    }
+  };
+}
+
+export function plan(content = "", options = {}) {
+  const baseOptions = resolvePlanOptions(options);
+  if (Array.isArray(content)) {
+    return createPlannedCollection(content, baseOptions);
+  }
+  if (typeof content !== "string") {
+    throw new Error("[layoutmaster] plan() content must be a string or an array of strings.");
+  }
+  return createPlannedContent(content, baseOptions);
+}
+
 export function form(content = "", optionsOrHandler, maybeHandler) {
   const { request, handler } = resolveCallArguments(content, optionsOrHandler, maybeHandler, "form");
   const result = createFormResult(computeSnapshotSync("form", request));

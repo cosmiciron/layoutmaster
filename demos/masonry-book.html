@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster Masonry Book</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "@layoutmaster/layoutmaster": "../src/index.js"
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #e8e4dc;
+      color: #211914;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .toolbar {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: auto minmax(180px, 360px) auto auto auto auto;
+      align-items: center;
+      gap: 10px 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(51, 40, 31, 0.12);
+      background: #f7f2ea;
+      box-shadow: 0 4px 24px rgba(45, 34, 25, 0.08);
+    }
+    h1 {
+      margin: 0;
+      white-space: nowrap;
+      font: 700 28px/1 Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+    }
+    .search,
+    .select {
+      min-width: 0;
+      height: 40px;
+      border: 1px solid rgba(51, 40, 31, 0.16);
+      border-radius: 6px;
+      background: #fffaf3;
+      color: #211914;
+      padding: 0 12px;
+      font: 14px/40px Arial, sans-serif;
+    }
+    .button {
+      height: 40px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 14px;
+      background: #9a512f;
+      color: #fffaf3;
+      font: 700 14px/1 Arial, sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .button.secondary { background: #2f5f64; }
+    .toggle {
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      border: 1px solid rgba(51, 40, 31, 0.16);
+      border-radius: 6px;
+      background: #fffaf3;
+      color: #3f342b;
+      font: 700 13px/1 Arial, sans-serif;
+      white-space: nowrap;
+    }
+    .toggle input {
+      width: 16px;
+      height: 16px;
+      accent-color: #9a512f;
+      margin: 0;
+    }
+    .status {
+      grid-column: 1 / -1;
+      min-width: 0;
+      justify-self: stretch;
+      color: #5f554b;
+      font: 14px/1.35 Georgia, "Times New Roman", serif;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stage {
+      min-width: 0;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 28px 32px 40px;
+      user-select: text;
+    }
+    .wall {
+      position: relative;
+      width: 100%;
+      min-height: 100%;
+    }
+    .empty {
+      min-height: calc(100vh - 112px);
+      display: grid;
+      place-items: center;
+      color: #6a5c50;
+      font: 18px/1.45 Arial, sans-serif;
+      text-align: center;
+    }
+    .empty strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #211914;
+      font: 700 38px/1.05 Georgia, "Times New Roman", serif;
+    }
+    .card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(51, 40, 31, 0.12);
+      border-radius: 8px;
+      background: #fffaf3;
+      box-shadow: 0 2px 10px rgba(31, 26, 21, 0.08);
+      color: #241b15;
+    }
+    .layoutmaster-card {
+      position: absolute;
+    }
+    .piece {
+      position: absolute;
+      display: block;
+      white-space: pre;
+      overflow: visible;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      z-index: 3;
+    }
+    .layoutmaster-wall.show-piece-frames .piece {
+      outline: 1px solid rgba(47, 95, 100, 0.42);
+      background: rgba(47, 95, 100, 0.035);
+    }
+    .card {
+      outline: 2px solid rgba(154, 81, 47, 0.45);
+      outline-offset: -2px;
+    }
+    .card-map-label {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      z-index: 8;
+      max-width: calc(100% - 16px);
+      padding: 3px 5px;
+      border-radius: 4px;
+      background: rgba(154, 81, 47, 0.88);
+      color: #fffaf3;
+      font: 700 10px/1.25 Arial, sans-serif;
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card.has-search-hit {
+      box-shadow:
+        0 0 0 1px rgba(181, 130, 28, 0.72),
+        0 0 0 4px rgba(181, 130, 28, 0.12),
+        0 2px 10px rgba(31, 26, 21, 0.08);
+    }
+    mark {
+      background: rgba(195, 152, 56, 0.45);
+      color: inherit;
+    }
+    @media (max-width: 1180px) {
+      .toolbar {
+        grid-template-columns: auto minmax(160px, 1fr) auto auto;
+      }
+      h1,
+      .search,
+      .status {
+        grid-column: 1 / -1;
+        justify-self: start;
+      }
+      .status { text-align: left; }
+    }
+    @media (max-width: 720px) {
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+      .button,
+      .select,
+      .toggle {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="toolbar">
+      <h1>Book Masonry</h1>
+      <input id="search-input" class="search" type="search" placeholder="Search chapter cards">
+      <select id="repeat-select" class="select" aria-label="Card count">
+        <option value="1">76 cards</option>
+        <option value="2">152 cards</option>
+        <option value="4">304 cards</option>
+      </select>
+      <label class="toggle">
+        <input id="piece-frame-toggle" type="checkbox">
+        Frames
+      </label>
+      <div id="status" class="status">Ready.</div>
+    </header>
+    <main id="stage" class="stage">
+      <div id="wall" class="wall">
+        <div class="empty">
+          <div>
+            <strong>Chapter cards, packed as masonry.</strong>
+            Resize the window and inspect the solved piece geometry.
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script type="module" src="./masonry-book.js"></script>
+</body>
+</html>

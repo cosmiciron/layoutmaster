@@ -22,6 +22,7 @@ const {
   form,
   fit,
   flow,
+  plan,
   produce,
   pour,
   exclusion,
@@ -84,6 +85,27 @@ test("layoutmaster accepts exclusion descriptors across form, fit, and flow targ
   assert.ok(Array.isArray(flowResult.placements));
   assert.equal(typeof flowResult.content.consumed.text, "string");
   assert.equal(typeof flowResult.placements[0].content.consumed.text, "string");
+});
+
+test("layoutmaster plan reuses solved layouts for repeated constraints", () => {
+  const planned = plan("Measure twice, layout once. ".repeat(12), {
+    fontFamily: "Arial",
+    fontSize: 14,
+    lineHeight: 1.35,
+    lineHeightMode: "css"
+  });
+
+  const first = planned.fit({ width: 180, height: 400 });
+  const second = planned.fit({ height: 400, width: 180 });
+
+  assert.equal(planned.size, 1);
+  assert.deepEqual(
+    second.pieces.map((piece) => piece.text),
+    first.pieces.map((piece) => piece.text)
+  );
+  assert.equal(second, first, "expected repeated planned constraints to reuse the same read-only result");
+  assert.ok(Object.isFrozen(second));
+  assert.ok(Object.isFrozen(second.pieces));
 });
 
 test("layoutmaster exclusions alter the returned wrap plan", () => {

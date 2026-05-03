@@ -347,6 +347,28 @@ export type FitResultHandler = (result: FitResult) => void;
 export type FlowResultHandler = (result: FlowResult) => void;
 export type PourResultHandler = (result: PourResult) => void;
 export type ProduceResultHandler = (result: ProduceResult) => void;
+export type PlannedFormAllResultHandler = (result: FormResult[]) => void;
+export type PlannedFitAllResultHandler = (result: FitResult[]) => void;
+
+export interface PlannedLayout {
+  readonly size: number;
+  form(options?: LayoutmasterTargetInput, handler?: FormResultHandler): FormResult;
+  form(handler?: FormResultHandler): FormResult;
+  fit(options?: LayoutmasterTargetInput, handler?: FitResultHandler): FitResult;
+  fit(handler?: FitResultHandler): FitResult;
+  flow(targets?: LayoutmasterTargetInput[], handler?: FlowResultHandler): FlowResult;
+  clear(): void;
+}
+
+export interface PlannedLayoutCollection {
+  readonly items: PlannedLayout[];
+  readonly size: number;
+  formAll(options?: LayoutmasterTargetInput, handler?: PlannedFormAllResultHandler): FormResult[];
+  formAll(handler?: PlannedFormAllResultHandler): FormResult[];
+  fitAll(options?: LayoutmasterTargetInput, handler?: PlannedFitAllResultHandler): FitResult[];
+  fitAll(handler?: PlannedFitAllResultHandler): FitResult[];
+  clear(): void;
+}
 
 export declare function form(content?: LayoutmasterContentInput, options?: LayoutmasterTargetInput, handler?: FormResultHandler): FormResult;
 export declare function form(content?: LayoutmasterContentInput, handler?: FormResultHandler): FormResult;
@@ -355,6 +377,8 @@ export declare function fit(content?: LayoutmasterContentInput, handler?: FitRes
 export declare function flow(content?: LayoutmasterContentInput, targets?: LayoutmasterTargetInput[], handler?: FlowResultHandler): FlowResult;
 export declare function pour(content?: LayoutmasterContentInput, shape?: LayoutmasterExclusion, options?: LayoutmasterTargetInput, handler?: PourResultHandler): PourResult;
 export declare function pour(content?: LayoutmasterContentInput, shape?: LayoutmasterExclusion, handler?: PourResultHandler): PourResult;
+export declare function plan(content?: LayoutmasterContentInput, options?: LayoutmasterTargetInput): PlannedLayout;
+export declare function plan(content: LayoutmasterContentInput[], options?: LayoutmasterTargetInput): PlannedLayoutCollection;
 export declare function produce(source: unknown, options?: ProduceOptions, handler?: ProduceResultHandler): ProduceResult;
 export declare function produce(source: unknown, handler?: ProduceResultHandler): ProduceResult;
 export declare const exclusion: LayoutmasterExclusionNamespace;

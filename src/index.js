@@ -2,6 +2,7 @@ export {
   fit,
   form,
   flow,
+  plan,
   produce,
   pour
 } from "./internal/api.js";

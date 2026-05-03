@@ -34,7 +34,7 @@ base Pixel phone!
 
 Try this with your browser and DOM on your shiny MacBook Pro, you will still fry it. So don't.
 
-Let the master handle layout, and your browser **will** thank you.
+Let the master handle layout, and your browser *will* thank you.
 
 Now you ask - how?
 
@@ -54,12 +54,12 @@ splits across viewports, and settles into exact coordinates.
 
 And that - is where the master gets its superpowers.
 
-## The Five Mantras
+## The Six Mantras
 
-`form()`, `fit()`, `flow()`, `pour()`, and `produce()`
+`form()`, `fit()`, `plan()`, `flow()`, `pour()`, and `produce()`
 
-These are the five mantras (APIs if you like, but the master prefers mantras) of the
-Layoutmaster. Do not be deceived by their overwhelming simplicity. These five verbs can
+These are the six mantras (APIs if you like, but the master prefers mantras) of the
+Layoutmaster. Do not be deceived by their overwhelming simplicity. These six verbs can
 solve a world of complex layout challenges and unlock possibilities you could only dream
 before - precisely none of which browsers could do without rebuilding DOMs, thrashing
 layout, and making everyone miserable.
@@ -68,6 +68,7 @@ layout, and making everyone miserable.
 import {
   form,
   fit,
+  plan,
   flow,
   pour,
   produce,
@@ -75,7 +76,7 @@ import {
 } from "@layoutmaster/layoutmaster";
 ```
 
-I know, you count six. We will get to that later. Just trust the master.
+I know, you count seven. We will get to that later. Just trust the master.
 
 ### `form` - given space, how does this lay out, and how tall does it get?
 
@@ -110,6 +111,28 @@ const result = fit(longText, {
 console.log(result.content.consumed.text);
 console.log(result.content.remaining.text);
 ```
+
+### `plan` - given repeated intent, solve it without starting over.
+
+Sometimes you are not asking one layout question. You are asking the same layout
+question again and again at different widths, heights, or targets. `plan()`
+captures the content and base intent once, then lets you call `form()`, `fit()`,
+or `flow()` from that plan.
+
+```js
+const chapter = plan(longText, {
+  fontFamily: "Georgia, serif",
+  fontSize: 14,
+  lineHeight: 1.45
+});
+
+const narrow = chapter.form({ width: 260 });
+const wide = chapter.form({ width: 420 });
+```
+
+That is what the Book Masonry demo uses. Each card's title and body become planned
+layout intent; resize the wall, and the master solves fresh geometry without
+re-authoring the same content from scratch.
 
 ### `flow` - given content that overflows, where does it continue?
 
@@ -167,7 +190,7 @@ console.log(result.pages.length);
 
 ## Be Water, My Friend
 
-Here is that "sixth" element.
+Here is that "seventh" element.
 
 Remember, the highest virtue is like water. Text in Layoutmaster is like water. It fills,
 it bends, it flows, and it navigates around any obstacle you place in its path.
@@ -203,35 +226,80 @@ No CSS tricks. No pre-authored columns. No browser screaming at you in distress.
 
 ## Performance and Footprint
 
-A dancing figure moves smoothly through a sea of live selectable text. Text parts
-like water. Layout happens in ~1ms. The browser sleeps at 1.5% CPU. The master barely
-keeps its eyes open.
+Browser layout is fast, very fast. The people who claim their stuff is 600 times faster are lying, big time.
 
-Not a canvas trick. Not a pre-baked animation. No GPU involved.
+But Layoutmaster is just as fast, creating usual layouts just as beautifully and quickly as the browser would, so
+you can use it as a replacement for browser DOM-based layout on regular stuff without guilt. Mind you,
+the browser's layout engine is written in C++ with direct access to font machinery and rendering internals. So the mere
+fact that the master hangs with it nicely tells you it is punching above its weight.
 
-It's pure math. The master solves fresh layout on every frame as the silhouette moves,
-the text renegotiates around it, and the result gets passed to you like job tickets
-handed down by a skilled foreman. You just place them as simple HTML and take the
-credit.
+But David would not have become a legend if all he had done was throw one rock.
 
-Then the big number tells the same story at a different scale. The HTML Atlas demo
-lays out a 370-page novel - publishing-grade pagination, correct baselines,
-real typography - in 755ms on a base Pixel phone. The wall of pages renders
-in 31ms. Not onto a canvas. Actual HTML:
+### The Atlas Test
 
-370 real pages on screen simultaneously, every word selectable, highlightable,
-copyable. The pages are smaller than the sliver of white at the tip of your thumbnail.
-Each one is a complete typeset page. Each one is live text -- so tiny you will need
-a microscope to see them, but they are there nevertheless.
+The HTML Atlas demo takes a long manuscript (~80,000 words) and turns it into a wall of real HTML
+pages. Not canvas. Not screenshots. Searchable, selectable, highlightable text.
 
-At this point you probably picture the master as a burly man holding a Gatling gun
-torn from a tank. Nope. A two-foot-tall humanoid with green skin, large eyes, pointy ears, and
-wearing a robe - that's more like it.
+Measured on a MacBook Pro M4 in Safari:
 
-Seriously, the package packs to about 245 KiB on npm - 213 KiB gzip at runtime,
-the embedded engine included. No other dependencies.
+```txt
+Layoutmaster:
+Oasis: The Fabric of Fate | 334 page(s) | 6838 piece(s) | produce 363.0 ms | render 10.0 ms
 
-So like the master (another one) says: Smaller in number are we, but larger in mind.
+DOM + W/O:
+364 pages | 6484 piece(s) | parse 3.0 ms | paginate 3115.0 ms | wall 17.0 ms
+```
+
+What you are looking at is what happens when the task becomes a little more serious than just
+wrapping text into paragraphs: pagination, headers and footers, widow/orphan control, and
+on-the-fly page number calculations.
+
+The master is already more than 8 times faster. And it is barely in second gear. Its VMPrint
+engine is made for stuff ten times more complicated than this, but let's not go there - it
+would turn into an unfair fight.
+
+### The Resize Test
+
+The second test is not about a benchmark table. It is about what happens when the
+layout has to keep changing while the user is changing the available space. So we
+recorded it.
+
+> **Watch the resize stress test:**
+>
+> <a href="https://youtu.be/qy0HDfbuthw"><img src="https://i.ytimg.com/vi/qy0HDfbuthw/hqdefault.jpg" alt="Layoutmaster versus DOM masonry resize stress test" width="260"></a>
+>
+> [Layoutmaster vs DOM Masonry Resize Stress Test](https://youtu.be/qy0HDfbuthw)
+
+The test is a masonry wall made from the same book content. Each chapter becomes
+a live card.
+
+Layoutmaster uses `fit()` to solve the text pieces, packs the cards,
+and paints the returned geometry. The browser version uses ordinary DOM/CSS flow.
+
+As shown in the video, Layoutmaster keeps recomputing the whole wall in
+roughly the same bounded range - around 400ms for the 300+ card
+case - and snaps into the new geometry as the window changes. Resize it slowly,
+resize it quickly, resize it violently: the solve remains explicit. Given a width,
+the engine returns a wall.
+
+The browser version does it in 4,000ms, which isn't so bad. Then it falls apart
+when you grab its window and resize. The layout goes into a frenzy and cannot settle
+until some 20+ seconds later. Try harder, it can take even minutes to recover.
+
+That's the whole point -- when layout becomes highly dynamic and intense, it can overwhelm the
+browser. That's why we propose a different kind of solution:
+
+Leave the job to the specialist -- let Layoutmaster handle the layout for the browser, and
+let the browser handle everything else.
+
+At this point you probably picture the master as a burly man holding a Gatling gun torn from
+a tank. Nope. A two-foot-tall humanoid with green skin, large eyes, pointy ears, and wearing
+a robe - that's more like it.
+
+Seriously, the package packs to about 257 kB on npm - 193 KiB gzip at runtime, the embedded
+engine included. No other dependencies.
+
+So like the master (the other one) says: *Smaller in number are we, but larger in mind*.
 
 ## Install
 
@@ -284,6 +352,8 @@ Current demos:
 - `exclusion-assembly`: animated primitive assembly rig with hideable visual layer
 - `exclusion-image`: image alpha as wrap geometry
 - `html-atlas`: `produce()` rendered as a searchable, selectable paginated atlas
+- `html-atlas-dom`: DOM pagination baseline with widow/orphan pass enabled
+- `masonry-book`: chapter cards packed from Layoutmaster `fit()` pieces
 - `dancing-text`: animated exclusion fields from video frames
 
 The demos use browser import maps, so serve them from the repo root. Opening

@@ -3,14 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Layoutmaster HTML Atlas</title>
-  <script type="importmap">
-    {
-      "imports": {
-        "@layoutmaster/layoutmaster": "../src/index.js"
-      }
-    }
-  </script>
+  <title>Layoutmaster DOM Atlas Baseline</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -29,7 +22,7 @@
     .toolbar {
       min-width: 0;
       display: grid;
-      grid-template-columns: auto minmax(160px, 300px) minmax(0, 1fr);
+      grid-template-columns: auto minmax(160px, 300px) auto minmax(0, 1fr);
       align-items: center;
       gap: 16px;
       padding: 14px 18px;
@@ -62,6 +55,20 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .options {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #5f554b;
+      font: 700 13px/1 Arial, sans-serif;
+      white-space: nowrap;
+    }
+    .options input {
+      width: 16px;
+      height: 16px;
+      accent-color: #9a512f;
     }
     .atlas {
       min-width: 0;
@@ -176,11 +183,75 @@
       background: #0067ff;
       color: #fff;
     }
-    .piece mark {
-      background: rgba(195, 152, 56, 0.5);
-      color: inherit;
-      padding: 0;
-    }
+      .piece mark {
+        background: rgba(195, 152, 56, 0.5);
+        color: inherit;
+        padding: 0;
+      }
+      .dom-page-header,
+      .dom-page-body {
+        position: absolute;
+        left: 72px;
+        width: 468px;
+      }
+      .dom-page-header {
+        top: 36px;
+        height: 28px;
+        overflow: hidden;
+        text-align: right;
+        font: 12px/1.2 "Times New Roman", Times, serif;
+      }
+      .dom-page-body {
+        top: 72px;
+        height: 648px;
+        overflow: hidden;
+        color: #111;
+        font: 12px/2 "Times New Roman", Times, serif;
+      }
+      .dom-block {
+        margin: 0 0 12px;
+        white-space: pre-wrap;
+      }
+      .dom-paragraph-first {
+        margin-top: 0;
+      }
+      .dom-chapter-heading {
+        margin: 216px 0 22px;
+        text-align: center;
+        font-weight: 700;
+      }
+      .dom-blockquote {
+        margin: 0 28px 14px;
+        font-style: italic;
+      }
+      .dom-scene-break {
+        margin: 20px 0;
+        text-align: center;
+      }
+      .dom-cover-title {
+        margin: 120px 0 26px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .dom-cover-line {
+        margin: 0 0 6px;
+        text-align: center;
+      }
+      .dom-cover-table {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        margin: 0 0 6px;
+      }
+      .dom-cover-table > span:last-child {
+        text-align: right;
+      }
+      .dom-page-body mark {
+        background: rgba(195, 152, 56, 0.5);
+        color: inherit;
+        padding: 0;
+      }
     .selection-panel {
       position: absolute;
       right: 20px;
@@ -259,7 +330,7 @@
         grid-template-columns: 1fr auto;
       }
       h1 { font-size: 22px; }
-      .search, .status {
+      .search, .options, .status {
         grid-column: 1 / -1;
         justify-self: stretch;
         text-align: left;
@@ -270,30 +341,34 @@
 <body>
   <main class="app">
     <header class="toolbar">
-      <h1>HTML Atlas</h1>
+      <h1>DOM Atlas</h1>
       <input id="search-input" class="search" type="search" placeholder="Try Fu Yuan, fate, freedom" list="search-hints">
+      <label class="options">
+        <input id="widow-orphan-toggle" type="checkbox" checked>
+        Widow/orphan pass
+      </label>
       <datalist id="search-hints">
         <option value="Fu Yuan"></option>
         <option value="fate"></option>
         <option value="freedom"></option>
       </datalist>
-      <div id="status" class="status">Ready to produce the sample atlas.</div>
+      <div id="status" class="status">Ready to paginate the sample with DOM measurement.</div>
     </header>
     <section id="atlas" class="atlas">
       <div id="wall" class="wall">
         <div class="empty">
           <div class="intro">
-            <h2>Oasis, as living HTML.</h2>
+            <h2>Oasis, paginated by DOM.</h2>
             <p>
               The sample is <em>Oasis: The Fabric of Fate</em>, an unpublished philosophical novel about fate, freedom, politics, power, and human nature.
             </p>
             <p>
-              Layoutmaster asks the engine to paginate the whole manuscript, then projects the returned page pieces into ordinary HTML. At atlas scale it feels like a dense canvas; up close it is still selectable, searchable, highlightable text that the browser understands.
+              This baseline parses the same manuscript JSON, builds ordinary DOM blocks, measures page overflow, and splits text until the browser has created a paginated wall.
             </p>
             <p>
-              That split is the point: huge solved spatial surfaces without giving up native text interaction. A novel becomes the proof object for a stranger class of frontend interfaces.
+              It intentionally uses the kind of straightforward measuring loop a frontend developer might write in a hurry: no clever layout engine, no canvas, no iframes.
             </p>
-            <button id="load-sample" class="sample-action" type="button">Produce the atlas</button>
+            <button id="load-sample" class="sample-action" type="button">Run DOM pagination</button>
           </div>
         </div>
       </div>
@@ -311,6 +386,6 @@
       <button id="zoom-next" class="zoom-control" type="button" aria-label="Next page">›</button>
     </div>
   </div>
-  <script type="module" src="./html-atlas.js"></script>
+  <script type="module" src="./html-atlas-dom.js"></script>
 </body>
 </html>
