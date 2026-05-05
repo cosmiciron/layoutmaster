@@ -1,13 +1,12 @@
 import {
+  computeFlowSnapshotSync,
   computeProduceSnapshotSync,
   computePourSnapshotSync,
   computeSnapshotSync,
   createDocumentFromProduceElements,
-  createEmptyPerformance,
   createFitResult,
   createFormResult,
   invokeResultHandler,
-  sumPerformance
 } from "./runtime-core.js";
 import {
   isLayoutmasterExclusion,
@@ -264,69 +263,41 @@ export function flow(content = "", targetsOrHandler, maybeHandler) {
     throw new Error("[layoutmaster] content must be a string. Pass structured text as JSON content.");
   }
 
-  const sourceIsStructured = isStructuredContentString(content);
-  let remainingSourceText = sourceIsStructured ? "" : normalizeInputText(content);
-  let useOriginalStructuredSource = sourceIsStructured;
-  let consumedSourceText = "";
-  let consumedSourceLength = 0;
-  let lastHyphenated = false;
-  let performance = createEmptyPerformance();
-
-  const placements = targets.map((target, index) => {
-    if (!useOriginalStructuredSource && remainingSourceText.length === 0) {
-      return {
-        index,
-        pieces: [],
-        lines: [],
-        height: 0,
-        content: {
-          consumed: { text: "", length: 0 },
-          remaining: { text: "", length: 0 },
-          complete: true,
-          hyphenated: false,
-          sourceLength: 0
-        }
-      };
-    }
-
-    const request = useOriginalStructuredSource
-      ? normalizeRequest(content, targetOptions[index], "fit")
-      : {
-        ...target,
-        format: "plain",
-        content: remainingSourceText,
-        rawContent: remainingSourceText
-      };
-    useOriginalStructuredSource = false;
-    const snapshot = computeSnapshotSync("fit", request);
-    const result = createFitResult(snapshot);
-    const contentReport = result.content;
-    performance = sumPerformance(performance, result.performance);
-    consumedSourceText += contentReport.consumed.text;
-    consumedSourceLength += contentReport.consumed.length;
-    remainingSourceText = contentReport.remaining.text;
-    lastHyphenated = contentReport.hyphenated;
-
-    return {
-      index,
-      pieces: result.pieces,
-      lines: result.lines || [],
-      height: result.height,
-      content: contentReport
+  if (targets.length === 0) {
+    const remainingSourceText = isStructuredContentString(content) ? "" : normalizeInputText(content);
+    const result = {
+      placements: [],
+      content: {
+        consumed: { text: "", length: 0 },
+        remaining: { text: remainingSourceText, length: remainingSourceText.length },
+        complete: remainingSourceText.length === 0,
+        hyphenated: false,
+        sourceLength: remainingSourceText.length
+      },
+      performance: {
+        layoutMs: 0,
+        materializeMs: 0,
+        resolveLinesMs: 0,
+        buildTokensMs: 0,
+        wrapStreamMs: 0,
+        bidiMs: 0,
+        scriptSplitMs: 0,
+        wordSegmentMs: 0,
+        actorMeasurementMs: 0,
+        actorPlacementMs: 0,
+        actorOverflowMs: 0,
+        textMeasurementCacheHits: 0,
+        textMeasurementCacheMisses: 0,
+        colliderFieldQueryCalls: 0,
+        colliderFieldNarrowphaseCalls: 0
+      }
     };
-  });
+    invokeResultHandler(result, handler);
+    return result;
+  }
 
-  const result = {
-    placements,
-    content: {
-      consumed: { text: consumedSourceText, length: consumedSourceLength },
-      remaining: { text: remainingSourceText, length: remainingSourceText.length },
-      complete: remainingSourceText.length === 0,
-      hyphenated: lastHyphenated,
-      sourceLength: consumedSourceLength + remainingSourceText.length
-    },
-    performance
-  };
+  const sourceRequest = normalizeRequest(content, targetOptions[0], "fit");
+  const result = computeFlowSnapshotSync(sourceRequest, targets);
   invokeResultHandler(result, handler);
   return result;
 }

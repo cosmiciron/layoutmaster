@@ -87,6 +87,42 @@ test("layoutmaster accepts exclusion descriptors across form, fit, and flow targ
   assert.equal(typeof flowResult.placements[0].content.consumed.text, "string");
 });
 
+test("layoutmaster flow uses variable target pages as one continuous document", () => {
+  const text = [
+    "A narrow opening frame starts the story with English and numbers 12345.",
+    "第二个区域更宽，可以容纳更多连续文本和标点。",
+    "日本語と 한국어 fragments continue without resetting the story.",
+    "Arabic مثال قصير should keep flowing into the later region.",
+    "The final paragraph keeps enough words available for the last target."
+  ].join(" ");
+  const result = flow(text.repeat(3), [
+    { width: 135, height: 52, fontSize: 12, lineHeight: 1.25 },
+    { width: 245, height: 94, fontSize: 12, lineHeight: 1.25 },
+    { width: 170, height: 72, fontSize: 12, lineHeight: 1.25 }
+  ]);
+
+  assert.equal(result.placements.length, 3);
+  assert.ok(result.placements.every((placement) => placement.pieces.length > 0));
+  assert.ok(result.placements[1].content.consumed.length > result.placements[0].content.consumed.length);
+  assert.equal(
+    result.content.consumed.text,
+    result.placements.map((placement) => placement.content.consumed.text).join("")
+  );
+  assert.equal(
+    result.placements[1].content.sourceLength,
+    result.placements[1].content.consumed.length + result.placements[1].content.remaining.length
+  );
+  for (const placement of result.placements) {
+    const target = [
+      { width: 135, height: 52 },
+      { width: 245, height: 94 },
+      { width: 170, height: 72 }
+    ][placement.index];
+    const maxRight = Math.max(0, ...placement.pieces.map((piece) => Number(piece.x || 0) + Number(piece.width || 0)));
+    assert.ok(maxRight <= target.width + 0.5, `expected placement ${placement.index} to reflow within its target width`);
+  }
+});
+
 test("layoutmaster plan reuses solved layouts for repeated constraints", () => {
   const planned = plan("Measure twice, layout once. ".repeat(12), {
     fontFamily: "Arial",

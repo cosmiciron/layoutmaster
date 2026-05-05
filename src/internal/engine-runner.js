@@ -148,8 +148,8 @@ export function createEmbeddedEngineRunner(documentInput) {
 
   return {
     config,
-    run() {
-      const pages = engine.simulate(layout.elements);
+    run(options = {}) {
+      const pages = engine.simulate(layout.elements, options);
       return {
         pages,
         engineReport: readEmbeddedEngineReport(engine)

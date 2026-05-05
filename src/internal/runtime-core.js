@@ -240,6 +240,35 @@ function createEngineInputsForRequest(mode, input = {}) {
   return createEngineInputBundle(request, fragment, layout, fonts, styles, elements);
 }
 
+function createEngineInputsForFlowRequest(sourceRequest, targetRequests) {
+  const prepared = createEngineInputsForRequest("fit", sourceRequest);
+  const pageTemplates = targetRequests.map((target, pageIndex) => ({
+    pageIndex,
+    pageSize: {
+      width: target.width,
+      height: target.height
+    },
+    margins: target.margins
+  }));
+  const firstTarget = targetRequests[0] || sourceRequest;
+
+  return {
+    ...prepared,
+    document: {
+      ...prepared.document,
+      layout: {
+        ...prepared.document.layout,
+        pageSize: {
+          width: firstTarget.width,
+          height: firstTarget.height
+        },
+        margins: firstTarget.margins,
+        pageTemplates
+      }
+    }
+  };
+}
+
 function createEngineInputsForPourRequest(input = {}, field) {
   const request = input;
   const styles = buildParagraphStyles(request);
@@ -349,6 +378,70 @@ export function computeSnapshotSync(mode, request) {
   });
   result.performance = toPerformanceSummary(engineReport.profile);
   return result;
+}
+
+export function computeFlowSnapshotSync(sourceRequest, targetRequests) {
+  const prepared = createEngineInputsForFlowRequest(sourceRequest, targetRequests);
+  const fragment = prepared.fragment;
+  const runner = createEmbeddedEngineRunner(prepared.document);
+
+  const { pages, engineReport } = runner.run({
+    stopAtPage: Math.max(0, targetRequests.length - 1)
+  });
+  const regions = extractRegionResults(pages, engineReport.interactionMap, fragment, {
+    includeContentReport: true
+  });
+  const fullText = String(fragment?.normalizedText || "");
+  let remainingText = fullText;
+
+  const placements = targetRequests.map((target, index) => {
+    const region = regions[index];
+    if (region?.content) {
+      const content = {
+        ...region.content,
+        sourceLength: region.content.consumed.length + region.content.remaining.length
+      };
+      remainingText = content.remaining.text;
+      return {
+        index,
+        pieces: region.pieces,
+        lines: region.lines || [],
+        height: region.height,
+        content
+      };
+    }
+
+    return {
+      index,
+      pieces: [],
+      lines: [],
+      height: 0,
+      content: {
+        consumed: { text: "", length: 0 },
+        remaining: { text: remainingText, length: remainingText.length },
+        complete: remainingText.length === 0,
+        hyphenated: false,
+        sourceLength: fullText.length
+      }
+    };
+  });
+  const consumedText = placements.map((placement) => placement.content.consumed.text).join("");
+  const lastContent = placements[placements.length - 1]?.content;
+
+  return {
+    placements,
+    content: {
+      consumed: { text: consumedText, length: consumedText.length },
+      remaining: {
+        text: lastContent?.remaining.text ?? fullText,
+        length: lastContent?.remaining.length ?? fullText.length
+      },
+      complete: lastContent?.complete ?? fullText.length === 0,
+      hyphenated: lastContent?.hyphenated ?? false,
+      sourceLength: fullText.length
+    },
+    performance: toPerformanceSummary(engineReport.profile)
+  };
 }
 
 export function computePourSnapshotSync(field, request) {
