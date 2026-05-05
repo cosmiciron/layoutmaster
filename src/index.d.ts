@@ -7,9 +7,13 @@ export interface LayoutmasterPiece {
   baselineY?: number;
   lineIndex: number;
   pieceIndex: number;
-  kind: "text";
+  kind: "text" | "inline-box" | "inline-image";
   text: string;
+  visualText?: string;
   direction?: "ltr" | "rtl" | string;
+  lineDirection?: "ltr" | "rtl" | string;
+  logicalSegmentIndex?: number;
+  visualSegmentIndex?: number;
   fontFamily?: string;
   fontSize?: number;
   letterSpacing?: number;
@@ -267,6 +271,8 @@ export interface LayoutmasterRequest {
   lineHeight?: number | string;
   lineHeightMode?: "print" | "css" | "browser";
   lineHeightAdjustment?: number | string;
+  lang?: string;
+  direction?: "auto" | "ltr" | "rtl";
   hyphenation?: "off" | "auto" | "soft";
   margins?: LayoutmasterMargins;
   styles?: Record<string, Record<string, unknown>>;

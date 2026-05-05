@@ -40,6 +40,8 @@ A piece already contains the layout answer:
 - `height`
 - `baselineY`
 - `text`
+- BIDI fields like `direction`, `lineDirection`, `visualText`,
+  `logicalSegmentIndex`, and `visualSegmentIndex`
 - paint fields like `fontFamily`, `fontSize`, `fontWeight`, `fontStyle`,
   `letterSpacing`, and `color`
 - optional metrics like `ascent` and `descent`
@@ -159,13 +161,15 @@ function paintTextPiece(piece) {
   node.style.boxSizing = "border-box";
 
   copyTextPaint(node, piece);
-  if (piece.direction) {
-    node.dir = piece.direction === "rtl" ? "rtl" : "ltr";
+  const paintDirection = piece.lineDirection || piece.direction;
+  if (paintDirection) {
+    node.dir = paintDirection === "rtl" ? "rtl" : "ltr";
+    node.style.direction = paintDirection === "rtl" ? "rtl" : "ltr";
   }
 
   const text = document.createElement("span");
   text.style.whiteSpace = "pre";
-  text.textContent = piece.text;
+  text.textContent = piece.visualText || piece.text;
   node.append(text);
   return node;
 }
@@ -226,6 +230,12 @@ Why bother with `baselineY`, `ascent`, and `descent`? Because mixed-size text,
 CJK, Latin, RTL, and LTR can all share a line. Layoutmaster solved that baseline.
 CSS defaults are not invited to solve it again.
 
+For mixed-direction text, use `piece.lineDirection || piece.direction` as the
+paint direction for the positioned node, and use `piece.visualText ||
+piece.text` as the painted text. `piece.text` remains the logical source slice;
+`visualText` only appears when isolated piece painting needs line-context help
+to match browser BIDI behavior.
+
 ## Debug Chrome
 
 Debug overlays should also come from returned data.
@@ -272,9 +282,10 @@ function paintPiecesToCanvas(ctx, pieces) {
     ctx.font = cssFont(piece);
     ctx.fillStyle = piece.color || "#000";
     ctx.textBaseline = "alphabetic";
-    ctx.direction = piece.direction === "rtl" ? "rtl" : "ltr";
+    const paintDirection = piece.lineDirection || piece.direction;
+    ctx.direction = paintDirection === "rtl" ? "rtl" : "ltr";
 
-    ctx.fillText(piece.text, piece.x, piece.baselineY);
+    ctx.fillText(piece.visualText || piece.text, piece.x, piece.baselineY);
     ctx.restore();
   }
 }

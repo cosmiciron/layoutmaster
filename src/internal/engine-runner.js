@@ -129,7 +129,7 @@ function ensureSynchronousBrowserRuntime(config) {
 function createEmbeddedLayout(documentInput) {
   const document = loadDocument(documentInput, "layoutmaster");
   const config = toLayoutConfig(document, false);
-  config.layout.emitInteractionMap = true;
+  config.layout.emitInteractionMap = false;
   config.runtimeHints = {
     ...(config.runtimeHints || {}),
     collectObserverArtifacts: false

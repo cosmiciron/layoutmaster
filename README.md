@@ -89,7 +89,9 @@ const result = form("Layout is data.", {
   width: 320,
   fontFamily: "Georgia, serif",
   fontSize: 18,
-  lineHeight: 1.4
+  lineHeight: 1.4,
+  direction: "auto",
+  lang: "en"
 });
 
 console.log(result.height);
@@ -345,6 +347,7 @@ Current demos:
 - `form`: width-bounded fragments and returned pieces
 - `fit`: bounded layout with consumed and remaining content
 - `flow`: continuation through multiple targets
+- `bidi`: native browser BIDI rendering beside Layoutmaster's solved pieces
 - `pour`: text contained inside a primitive shape
 - `pour-image`: text contained inside image-derived alpha geometry
 - `pieces`: minimal piece and baseline inspection

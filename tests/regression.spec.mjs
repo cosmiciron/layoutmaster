@@ -123,6 +123,94 @@ test("layoutmaster flow uses variable target pages as one continuous document", 
   }
 });
 
+test("layoutmaster keeps mixed Arabic bidi pieces inside the solved width", () => {
+  const fixture = fixtures.find((item) => item.name === "06-form-bidi-arabic-mixed.json");
+  assert.ok(fixture, "expected bidi Arabic regression fixture to be present");
+
+  const { actual } = runFixture(fixture);
+  const targetWidth = Number(fixture.payload.options.width);
+  const directions = new Set(actual.pieces.map((piece) => piece.direction));
+
+  assert.ok(directions.has("rtl"), "expected RTL Arabic pieces");
+  assert.ok(directions.has("ltr"), "expected LTR English and numeric islands");
+
+  for (const piece of actual.pieces) {
+    assert.ok(piece.x >= -0.001, `expected "${piece.text}" to stay inside the left edge`);
+    assert.ok(
+      piece.x + piece.width <= targetWidth + 0.5,
+      `expected "${piece.text}" to stay inside the right edge`
+    );
+  }
+
+  for (const text of ["VMPrint", "0.1.0", "PDF", "100%", "123,456"]) {
+    const piece = actual.pieces.find((item) => item.text === text);
+    assert.ok(piece, `expected "${text}" to remain a distinct bidi island`);
+    assert.equal(piece.direction, "ltr", `expected "${text}" to keep LTR direction`);
+  }
+
+  const percentPiece = form(
+    "تتطلب نسبة 100% من المشاريع دقة في الأرقام",
+    {
+      width: targetWidth,
+      fontSize: 20,
+      lineHeight: 1.45,
+      direction: "rtl",
+      lang: "ar"
+    }
+  ).pieces.find((piece) => piece.text === "100%");
+  assert.ok(percentPiece, "expected percent number to remain a logical piece");
+  assert.equal(percentPiece.lineDirection, "rtl");
+  assert.equal(percentPiece.visualText, "%100");
+
+  const ltrBase = form(
+    "The word للنشر means 'for publishing' and مرحبا means 'welcome' in Arabic.",
+    {
+      width: targetWidth,
+      fontSize: 20,
+      lineHeight: 1.45,
+      direction: "ltr",
+      lang: "en"
+    }
+  );
+  const ltrPieces = ltrBase.pieces;
+  const firstEnglishPiece = ltrPieces.find((piece) => piece.text === "The word ");
+  const arabicPiece = ltrPieces.find((piece) => piece.text === "للنشر");
+  assert.ok(firstEnglishPiece, "expected LTR base text to begin with English");
+  assert.ok(arabicPiece, "expected Arabic word to stay distinct inside LTR base text");
+  assert.equal(arabicPiece.direction, "rtl");
+  assert.ok(
+    firstEnglishPiece.x < arabicPiece.x,
+    "expected Arabic island to appear after the opening English run in LTR base text"
+  );
+});
+
+test("layoutmaster lowers direction and lang options into the engine document", () => {
+  const hidden = debugBuildHiddenDocument("English مرحبا", {
+    width: 220,
+    fontSize: 20,
+    lineHeight: 1.45,
+    direction: "rtl",
+    lang: "ar"
+  }, "form");
+  assert.equal(hidden.layout.direction, "rtl");
+  assert.equal(hidden.layout.lang, "ar");
+  assert.equal(hidden.elements[0].properties._layoutmasterBidiScope, "dom-block");
+
+  const result = form("English مرحبا", {
+    width: 220,
+    fontSize: 20,
+    lineHeight: 1.45,
+    direction: "rtl",
+    lang: "ar"
+  });
+  assert.ok(result.lines.length > 0, "expected at least one solved line");
+  assert.equal(result.lines[0].direction, "rtl");
+  assert.ok(
+    result.pieces.some((piece) => piece.lineDirection === "rtl"),
+    "expected pieces to carry the lowered RTL line context"
+  );
+});
+
 test("layoutmaster plan reuses solved layouts for repeated constraints", () => {
   const planned = plan("Measure twice, layout once. ".repeat(12), {
     fontFamily: "Arial",

@@ -85,6 +85,9 @@ the resolved paint fields, such as:
 - `fontWeight`
 - `fontStyle`
 - `color`
+- `direction`
+- `lineDirection`
+- `visualText`
 
 A renderer can copy those fields while painting. It should not replace the
 returned geometry.
@@ -139,7 +142,9 @@ for (const piece of result.pieces) {
   node.style.top = `${piece.y}px`;
   node.style.width = `${piece.width}px`;
   node.style.height = `${piece.height}px`;
-  node.textContent = piece.text || "";
+  const paintDirection = piece.lineDirection || piece.direction;
+  if (paintDirection) node.dir = paintDirection === "rtl" ? "rtl" : "ltr";
+  node.textContent = piece.visualText || piece.text || "";
 
   if (piece._annotationId) {
     node.dataset.annotationId = piece._annotationId;

@@ -142,6 +142,10 @@ for (const piece of result.pieces) {
 Chrome uses `piece.x`, `piece.y`, `piece.width`, `piece.height`, and optionally
 `piece.baselineY`. It is a debug overlay, not a geometry repair kit.
 
+For mixed-direction text, the helper follows the same rule as the core docs:
+paint `piece.visualText || piece.text`, and use `piece.lineDirection ||
+piece.direction` for the positioned node's direction.
+
 ## `image-to-exclusion.js`
 
 This helper samples an image's alpha channel in the browser and returns a normal

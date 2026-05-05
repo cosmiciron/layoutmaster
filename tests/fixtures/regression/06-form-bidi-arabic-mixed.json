@@ -1,0 +1,11 @@
+{
+  "mode": "form",
+  "content": "مرحبا بك في عالم الطباعة المبرمجة.\nThe word للنشر means 'for publishing' and مرحبا means 'welcome' in Arabic.\nتم تصميم VMPrint 0.1.0 لإنتاج مستندات PDF بدقة متناهية.\nتتطلب نسبة 100% من المشاريع دقة في الأرقام مثل 123,456 وعلامات الترقيم؟ نعم، بالتأكيد!",
+  "options": {
+    "width": 420,
+    "fontSize": 20,
+    "lineHeight": 1.45,
+    "direction": "auto",
+    "lang": "ar"
+  }
+}

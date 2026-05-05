@@ -335,6 +335,8 @@ interface LayoutmasterRequest {
   lineHeight?: number | string;
   lineHeightMode?: "print" | "css" | "browser";
   lineHeightAdjustment?: number | string;
+  lang?: string;
+  direction?: "auto" | "ltr" | "rtl";
   hyphenation?: "off" | "auto" | "soft";
   margins?: {
     top?: number | string;
@@ -354,6 +356,8 @@ Defaults:
 - `fontSize`: `16`
 - `lineHeight`: `1.4`
 - `lineHeightMode`: `"css"`; `"browser"` aliases to `"css"`
+- `lang`: `""`
+- `direction`: `"auto"`
 - `hyphenation`: `"off"`
 - `margins`: all `0`
 - `exclusions`: `[]`
@@ -463,9 +467,13 @@ interface LayoutmasterPiece {
   baselineY?: number;
   lineIndex: number;
   pieceIndex: number;
-  kind: "text";
+  kind: "text" | "inline-box" | "inline-image";
   text: string;
+  visualText?: string;
   direction?: "ltr" | "rtl" | string;
+  lineDirection?: "ltr" | "rtl" | string;
+  logicalSegmentIndex?: number;
+  visualSegmentIndex?: number;
   fontFamily?: string;
   fontSize?: number;
   letterSpacing?: number;
@@ -482,8 +490,9 @@ interface LayoutmasterPiece {
 
 The important bit: `x`, `y`, `width`, `height`, and `baselineY` are engine
 answers. Treat them as layout truth. Paint fields help you draw text with the
-same metrics the engine used. Underscore fields are for source mapping and app
-metadata.
+same metrics the engine used. BIDI-aware renderers should use `lineDirection`
+for isolated piece painting and `visualText` when present. Underscore fields are
+for source mapping and app metadata.
 
 See [PIECE-CONTRACT.md](./PIECE-CONTRACT.md) and
 [PAINTING-PIECES.md](./PAINTING-PIECES.md).

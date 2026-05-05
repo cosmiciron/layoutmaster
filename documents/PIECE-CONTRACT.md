@@ -32,9 +32,13 @@ interface LayoutmasterPiece {
   baselineY?: number;
   lineIndex: number;
   pieceIndex: number;
-  kind: "text";
+  kind: "text" | "inline-box" | "inline-image";
   text: string;
+  visualText?: string;
   direction?: "ltr" | "rtl" | string;
+  lineDirection?: "ltr" | "rtl" | string;
+  logicalSegmentIndex?: number;
+  visualSegmentIndex?: number;
   fontFamily?: string;
   fontSize?: number;
   letterSpacing?: number;
@@ -73,7 +77,8 @@ layout theory on top of it.
 
 ## Text
 
-`kind` is `"text"` for public pieces.
+`kind` is usually `"text"`. Inline rich objects can appear as `"inline-box"` or
+`"inline-image"` pieces when structured content asks for them.
 
 `text` is the exact text slice represented by this piece. Render that text
 inside the returned box. Do not concatenate everything into a paragraph and ask
@@ -81,6 +86,20 @@ the browser to wrap it again unless you are deliberately testing how sadness is
 made.
 
 `direction` carries the resolved text direction when the engine publishes it.
+
+`lineDirection` carries the base direction of the solved line. HTML renderers
+that paint each piece in its own absolutely positioned node should prefer
+`lineDirection` for that node's `dir`/`direction`; otherwise the browser can
+turn each piece into its own tiny BIDI paragraph.
+
+`visualText`, when present, is the browser-paintable spelling for an isolated
+piece inside its line context. The logical `text` remains the source slice.
+For example, a logical `100%` inside an RTL line may expose
+`visualText: "%100"` so a piece renderer can match browser BIDI painting
+without changing the source text.
+
+`logicalSegmentIndex` and `visualSegmentIndex` are inspection aids. They explain
+where a piece came from in the engine line and where it landed visually.
 
 ## Paint
 
@@ -199,7 +218,10 @@ function renderPiece(piece) {
   node.style.width = `${piece.width}px`;
   node.style.height = `${ascentPx + descentPx}px`;
   node.style.lineHeight = `${ascentPx + descentPx}px`;
-  node.textContent = piece.text;
+  if (piece.lineDirection || piece.direction) {
+    node.dir = (piece.lineDirection || piece.direction) === "rtl" ? "rtl" : "ltr";
+  }
+  node.textContent = piece.visualText || piece.text;
   return node;
 }
 ```

@@ -75,6 +75,15 @@ function normalizeHyphenation(value) {
   return parseCssHyphensValue(value) ?? "off";
 }
 
+function normalizeDirection(value) {
+  const normalized = String(value || "auto").trim().toLowerCase();
+  return normalized === "ltr" || normalized === "rtl" ? normalized : "auto";
+}
+
+function normalizeLang(value) {
+  return String(value || "").trim();
+}
+
 function normalizeLineHeightMode(value) {
   const normalized = String(value || "css").trim().toLowerCase();
   if (normalized === "browser") return "css";
@@ -171,6 +180,8 @@ export function normalizeRequest(content = "", options = {}, mode = "form") {
     ) ?? 1.4,
     lineHeightMode: normalizeLineHeightMode(normalizedOptions.lineHeightMode),
     lineHeightAdjustment: normalizeLineHeightAdjustment(normalizedOptions.lineHeightAdjustment),
+    lang: normalizeLang(normalizedOptions.lang),
+    direction: normalizeDirection(normalizedOptions.direction),
     hyphenation: normalizeHyphenation(normalizedOptions.hyphenation),
     margins: normalizeMargins(normalizedOptions.margins),
     styles: normalizeStyles(normalizedOptions.styles),

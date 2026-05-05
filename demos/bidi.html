@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster BIDI Lab</title>
+  <script src="./importmap.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      color-scheme: light;
+      --ink: #161a1d;
+      --muted: #59636d;
+      --paper: #fffefb;
+      --surface: #f7f8f3;
+      --line: #cad2cc;
+      --green: #2f6f5e;
+      --green-soft: #e3f0eb;
+      --coral: #a84932;
+      --coral-soft: #f6e4dc;
+      --blue: #2d5d82;
+      --blue-soft: #dfecf6;
+      --gold: #8a6b16;
+      --gold-soft: #f2e9c8;
+    }
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(247, 248, 243, 0.96), rgba(232, 238, 232, 0.96)),
+        var(--surface);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+    }
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      padding: 24px clamp(16px, 3vw, 36px) 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 254, 251, 0.9);
+    }
+    h1 {
+      margin: 0;
+      font: 850 34px/1.05 Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    .subtitle {
+      margin: 8px 0 0;
+      max-width: 820px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(82px, 1fr));
+      gap: 8px;
+      min-width: 300px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.76);
+      padding: 9px 10px;
+    }
+    .stat-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .stat-value {
+      margin-top: 4px;
+      font-size: 18px;
+      font-weight: 850;
+      line-height: 1;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+      padding: 12px clamp(16px, 3vw, 36px);
+      border-bottom: 1px solid var(--line);
+      background: rgba(247, 248, 243, 0.94);
+    }
+    .field {
+      display: grid;
+      gap: 5px;
+      min-width: 150px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    select,
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      height: 34px;
+      border: 1px solid #b9c4bd;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 9px;
+      font: inherit;
+      font-size: 13px;
+    }
+    input[type="range"] {
+      accent-color: var(--green);
+    }
+    .segmented,
+    .toggles {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #b9c4bd;
+      background: #fff;
+      min-height: 34px;
+    }
+    .segmented button {
+      min-width: 54px;
+      height: 32px;
+      border: 0;
+      border-right: 1px solid #d8dfda;
+      background: transparent;
+      color: var(--muted);
+      font: 800 12px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .segmented button:last-child {
+      border-right: 0;
+    }
+    .segmented button[aria-pressed="true"] {
+      background: var(--green-soft);
+      color: var(--green);
+    }
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 0 9px;
+      border-right: 1px solid #d8dfda;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .toggle:last-child {
+      border-right: 0;
+    }
+    .toggle input {
+      margin: 0;
+      accent-color: var(--green);
+    }
+    .comparison {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      padding: 14px clamp(16px, 3vw, 36px) 26px;
+    }
+    .panel {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      border: 1px solid var(--line);
+      background: var(--paper);
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #dce3de;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    .panel-head h2 {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge {
+      min-width: 0;
+      padding: 5px 8px;
+      border: 1px solid transparent;
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .badge.native {
+      background: var(--blue-soft);
+      color: var(--blue);
+      border-color: #c4d9e8;
+    }
+    .badge.layoutmaster {
+      background: var(--coral-soft);
+      color: var(--coral);
+      border-color: #edcabc;
+    }
+    .surface-wrap {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      padding: 22px;
+      background:
+        linear-gradient(90deg, rgba(22, 26, 29, 0.045) 1px, transparent 1px),
+        linear-gradient(rgba(22, 26, 29, 0.045) 1px, transparent 1px),
+        #eef2ed;
+      background-size: 24px 24px;
+    }
+    .stage,
+    .native-column {
+      width: var(--column-width);
+      min-height: 160px;
+      background: #fff;
+      box-shadow: 0 0 0 1px #d9e0dc;
+    }
+    .native-column {
+      padding: 0;
+      white-space: pre-wrap;
+      overflow-wrap: normal;
+      line-height: var(--line-height);
+      font-family: var(--text-font);
+      font-size: var(--font-size);
+      color: #1c2023;
+    }
+    .stage {
+      position: relative;
+      overflow: visible;
+    }
+    .piece {
+      position: absolute;
+      overflow: visible;
+      user-select: text;
+      z-index: 4;
+    }
+    .solved-line {
+      position: absolute;
+      overflow: visible;
+      white-space: pre;
+      user-select: text;
+      z-index: 4;
+      color: #1c2023;
+      font-family: var(--text-font);
+      font-size: var(--font-size);
+      line-height: var(--line-height);
+    }
+    .piece-text {
+      display: inline-block;
+      overflow: visible;
+      white-space: pre;
+    }
+    .chrome {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .piece-box {
+      fill: rgba(168, 73, 50, 0.05);
+      stroke: rgba(168, 73, 50, 0.48);
+      stroke-dasharray: 4 3;
+      vector-effect: non-scaling-stroke;
+    }
+    .baseline {
+      stroke: rgba(47, 111, 94, 0.72);
+      vector-effect: non-scaling-stroke;
+    }
+    .warning {
+      display: none;
+      grid-column: 1 / -1;
+      border: 1px solid #d8c16b;
+      background: var(--gold-soft);
+      color: var(--gold);
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .warning[data-visible="true"] {
+      display: block;
+    }
+    @media (max-width: 980px) {
+      header {
+        grid-template-columns: 1fr;
+      }
+      .stats {
+        min-width: 0;
+      }
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>BIDI Lab</h1>
+        <p class="subtitle">
+          Native browser text layout beside Layoutmaster pieces rendered back into DOM, using the same sample, width, font, and base direction.
+        </p>
+      </div>
+      <div class="stats" aria-label="Layout statistics">
+        <div class="stat">
+          <div class="stat-label">Pieces</div>
+          <div id="piece-count" class="stat-value">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Lines</div>
+          <div id="line-count" class="stat-value">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Height</div>
+          <div id="height-value" class="stat-value">0</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="BIDI demo controls">
+      <label class="field">
+        Sample
+        <select id="sample-input"></select>
+      </label>
+      <label class="field">
+        Width <span id="width-value">420</span>
+        <input id="width-input" type="range" min="260" max="720" step="10" value="420">
+      </label>
+      <label class="field">
+        Font size <span id="font-size-value">20</span>
+        <input id="font-size-input" type="range" min="14" max="34" step="1" value="20">
+      </label>
+      <div class="field">
+        Direction
+        <div id="direction-input" class="segmented" role="group" aria-label="Base direction">
+          <button type="button" data-direction="auto" aria-pressed="true">Auto</button>
+          <button type="button" data-direction="ltr" aria-pressed="false">LTR</button>
+          <button type="button" data-direction="rtl" aria-pressed="false">RTL</button>
+        </div>
+      </div>
+      <div class="field">
+        Overlay
+        <div class="toggles">
+          <label class="toggle"><input id="boxes-input" type="checkbox"> Boxes</label>
+          <label class="toggle"><input id="baselines-input" type="checkbox"> Baselines</label>
+        </div>
+      </div>
+    </section>
+
+    <section class="comparison" aria-label="Native browser and Layoutmaster comparison">
+      <div id="warning" class="warning"></div>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Native Browser DOM</h2>
+          <span class="badge native">Browser layout</span>
+        </div>
+        <div class="surface-wrap">
+          <div id="native-column" class="native-column"></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Layoutmaster Pieces</h2>
+          <span class="badge layoutmaster">Solved pieces</span>
+        </div>
+        <div class="surface-wrap">
+          <div id="layoutmaster-stage" class="stage"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="./bidi.js"></script>
+</body>
+</html>

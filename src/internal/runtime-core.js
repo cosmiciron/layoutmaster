@@ -118,6 +118,8 @@ function buildLayoutForRequest(request, height, overrides = {}) {
     lineHeight: request.lineHeight,
     lineHeightMode: request.lineHeightMode,
     lineHeightAdjustment: request.lineHeightAdjustment,
+    lang: request.lang,
+    direction: request.direction,
     hyphenation: request.hyphenation,
     ...overrides
   };
@@ -195,8 +197,36 @@ function createEngineInputBundle(request, fragment, layout, fonts, styles, eleme
   return {
     request,
     fragment,
-    document: createEngineDocument({ layout, fonts, styles, elements })
+    document: createEngineDocument({ layout, fonts, styles, elements: lowerBrowserBidiHints(elements) })
   };
+}
+
+function shouldLowerBrowserBidiHint(element) {
+  if (!isPlainObject(element)) return false;
+  const type = String(element.type || "").trim();
+  return type === "p" || type === "span" || type === "text";
+}
+
+function lowerBrowserBidiHints(elements) {
+  if (!Array.isArray(elements)) return elements;
+  return elements.map((element) => {
+    if (!isPlainObject(element)) return element;
+    const children = Array.isArray(element.children)
+      ? lowerBrowserBidiHints(element.children)
+      : element.children;
+    if (!shouldLowerBrowserBidiHint(element)) {
+      return children === element.children ? element : { ...element, children };
+    }
+    const properties = isPlainObject(element.properties) ? element.properties : {};
+    return {
+      ...element,
+      ...(children === undefined ? {} : { children }),
+      properties: {
+        ...properties,
+        _layoutmasterBidiScope: properties._layoutmasterBidiScope || "dom-block"
+      }
+    };
+  });
 }
 
 function createLetterPageDefaults(options = {}) {
@@ -364,7 +394,8 @@ export function computeSnapshotSync(mode, request) {
 
   const includeContentReport = mode !== "form";
   const regions = extractRegionResults(pages, engineReport.interactionMap, fragment, {
-    includeContentReport
+    includeContentReport,
+    layout: runner.config.layout
   });
   const actualPieces = regions[0]?.pieces ?? [];
   const actualLines = regions[0]?.lines ?? [];
@@ -389,7 +420,8 @@ export function computeFlowSnapshotSync(sourceRequest, targetRequests) {
     stopAtPage: Math.max(0, targetRequests.length - 1)
   });
   const regions = extractRegionResults(pages, engineReport.interactionMap, fragment, {
-    includeContentReport: true
+    includeContentReport: true,
+    layout: runner.config.layout
   });
   const fullText = String(fragment?.normalizedText || "");
   let remainingText = fullText;
@@ -451,7 +483,8 @@ export function computePourSnapshotSync(field, request) {
 
   const { pages, engineReport } = runner.run();
   const regions = extractRegionResults(pages, engineReport.interactionMap, fragment, {
-    includeContentReport: true
+    includeContentReport: true,
+    layout: runner.config.layout
   });
   const actualPieces = regions[0]?.pieces ?? [];
   const actualLines = regions[0]?.lines ?? [];
@@ -470,7 +503,9 @@ export function computePourSnapshotSync(field, request) {
 export function computeProduceSnapshotSync(documentInput) {
   const runner = createEmbeddedEngineRunner(documentInput);
   const { pages, engineReport } = runner.run();
-  const regions = extractRegionResults(pages, engineReport.interactionMap, null);
+  const regions = extractRegionResults(pages, engineReport.interactionMap, null, {
+    layout: runner.config.layout
+  });
 
   return {
     pages: regions.map((region, index) => {

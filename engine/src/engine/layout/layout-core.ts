@@ -1273,7 +1273,13 @@ export class LayoutProcessor extends TextProcessor {
 
         const textIndent = Number(style.textIndent || 0);
         const letterSpacing = Number(style.letterSpacing || 0);
-        const richSegments = this.getRichSegments(element, style);
+        const privateBidiScope = typeof element.properties?._layoutmasterBidiScope === 'string'
+            ? element.properties._layoutmasterBidiScope
+            : undefined;
+        const richSegments = this.getRichSegments(
+            element,
+            privateBidiScope ? { ...style, _layoutmasterBidiScope: privateBidiScope } : style
+        );
         session?.recordProfile(this.classifySimpleProseEligibility(richSegments, text), 1);
         const wrapped = this.wrapRichSegments(
             richSegments,

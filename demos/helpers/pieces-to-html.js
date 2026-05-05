@@ -27,13 +27,15 @@ export function renderPiece(container, piece) {
   node.style.zIndex = "4";
 
   applyTextPaint(node, piece);
-  if (piece.direction) {
-    node.dir = piece.direction === "rtl" ? "rtl" : "ltr";
+  const paintDirection = piece.lineDirection || piece.direction;
+  if (paintDirection) {
+    node.dir = paintDirection === "rtl" ? "rtl" : "ltr";
+    node.style.direction = paintDirection === "rtl" ? "rtl" : "ltr";
   }
 
   const text = document.createElement("span");
   text.className = "piece-text";
-  text.textContent = piece.text || "";
+  text.textContent = piece.visualText || piece.text || "";
   node.append(text);
   container.append(node);
   return node;

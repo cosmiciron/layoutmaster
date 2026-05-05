@@ -1,6 +1,27 @@
 import {
   applyContentReportsToRegions
 } from "./content-report-helper.js";
+import {
+  buildParagraphMetrics,
+  computeAlignedLineX,
+  computeJustifyExtraAfter,
+  computeLineWidth,
+  createLineFrameAccessors,
+  getStrongDirection,
+  reorderItemsForVisualBidi,
+  resolveVisualTextByItem,
+  resolveParagraphDirection
+} from "../../engine/dist/core/index.mjs";
+
+const DEFAULT_LAYOUT = {
+  direction: "auto",
+  fontFamily: "Arial",
+  fontSize: 16,
+  justifyEngine: "basic",
+  lineHeight: 1.2,
+  lineHeightAdjustment: 0,
+  lineHeightMode: "css"
+};
 
 function isPlainObject(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
@@ -9,6 +30,14 @@ function isPlainObject(value) {
 function positiveExtent(value) {
   const numeric = Number(value);
   return Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
+}
+
+function validateUnit(value) {
+  if (Number.isFinite(Number(value))) {
+    return Number(value);
+  }
+  const match = String(value ?? "").trim().match(/^(-?\d+(?:\.\d+)?)px$/);
+  return match ? Number(match[1]) : 0;
 }
 
 export function computePageOccupiedHeight(page) {
@@ -67,6 +96,33 @@ function getBoxShape(box) {
   if (Array.isArray(properties._clipAssembly) || Array.isArray(properties._imageClipAssembly)) return "assembly";
   if (box?.style?.borderRadius) return "rounded";
   return "rect";
+}
+
+function resolveContentBox(box) {
+  const style = box?.style || {};
+  const paddingLeft = validateUnit(style.paddingLeft ?? style.padding ?? 0);
+  const paddingRight = validateUnit(style.paddingRight ?? style.padding ?? 0);
+  const paddingTop = validateUnit(style.paddingTop ?? style.padding ?? 0);
+  const paddingBottom = validateUnit(style.paddingBottom ?? style.padding ?? 0);
+  const borderLeft = validateUnit(style.borderLeftWidth ?? style.borderWidth ?? 0);
+  const borderRight = validateUnit(style.borderRightWidth ?? style.borderWidth ?? 0);
+  const borderTop = validateUnit(style.borderTopWidth ?? style.borderWidth ?? 0);
+  const borderBottom = validateUnit(style.borderBottomWidth ?? style.borderWidth ?? 0);
+
+  return {
+    x: Number(box?.x || 0) + paddingLeft + borderLeft,
+    y: Number(box?.y || 0) + paddingTop + borderTop,
+    w: Math.max(0, Number(box?.w || 0) - paddingLeft - paddingRight - borderLeft - borderRight),
+    h: Math.max(0, Number(box?.h || 0) - paddingTop - paddingBottom - borderTop - borderBottom)
+  };
+}
+
+function shouldExposeVisualText(segment, visualText) {
+  const text = String(segment?.text || "");
+  if (!text || !visualText || text === visualText) {
+    return false;
+  }
+  return getStrongDirection(text) !== "rtl";
 }
 
 function buildSegmentBoundsByLine(target) {
@@ -176,6 +232,9 @@ function createPieceFromSegment({
   targetOffsetY,
   line,
   lineIndex,
+  lineDirection,
+  logicalSegmentIndex,
+  visualSegmentIndex,
   pieceIndex,
   sourceId,
   shape
@@ -222,10 +281,16 @@ function createPieceFromSegment({
     lineIndex,
     pieceIndex,
     kind,
-    direction: rawSegment?.direction || bounds.direction || line?.direction || "ltr"
+    direction: rawSegment?.direction || bounds.direction || line?.direction || "ltr",
+    lineDirection: lineDirection || line?.direction || "ltr",
+    logicalSegmentIndex,
+    visualSegmentIndex
   };
 
   if (text) piece.text = text;
+  if (shouldExposeVisualText(rawSegment, rawSegment?.visualText)) {
+    piece.visualText = String(rawSegment.visualText);
+  }
   if (inlineObject) piece.shape = shape;
   if (sourceId) piece._sourceId = sourceId;
   if (Number.isFinite(Number(rawSegment?.sourceStart))) piece._sourceStart = Number(rawSegment.sourceStart);
@@ -237,6 +302,169 @@ function createPieceFromSegment({
   copyUnderscoreFields(piece, rawSegment);
   copyStyleFields(piece, rawSegment?.style);
   return piece;
+}
+
+function createRawTextPageProjection(page, layout = DEFAULT_LAYOUT) {
+  const pieces = [];
+  const lines = [];
+
+  for (const rawBox of page?.boxes || []) {
+    if (!hasTextLines(rawBox)) {
+      continue;
+    }
+
+    const rawLines = rawBox.lines || [];
+    const sourceId = getSourceId(rawBox);
+    const shape = getBoxShape(rawBox);
+    const contentBox = resolveContentBox(rawBox);
+    const boxStyle = rawBox.style || {};
+    const fontSize = Number(boxStyle.fontSize || layout?.fontSize || DEFAULT_LAYOUT.fontSize);
+    const lineHeight = Number(boxStyle.lineHeight || layout?.lineHeight || DEFAULT_LAYOUT.lineHeight);
+    const lineFrame = createLineFrameAccessors(rawBox.properties || {}, contentBox.y, contentBox.w);
+    const paragraphMetrics = buildParagraphMetrics(rawLines, fontSize, lineHeight, layout);
+    const paragraphDirection = resolveParagraphDirection(
+      rawLines,
+      boxStyle,
+      layout?.direction,
+      DEFAULT_LAYOUT.direction
+    );
+    const letterSpacing = validateUnit(boxStyle.letterSpacing || 0);
+    const textIndent = validateUnit(boxStyle.textIndent || 0);
+    const align = boxStyle.textAlign;
+    const justifyEngine = boxStyle.justifyEngine || layout?.justifyEngine || DEFAULT_LAYOUT.justifyEngine;
+    let currentY = contentBox.y;
+    let pieceIndex = 0;
+
+    rawLines.forEach((rawLine, lineIndex) => {
+      if (!Array.isArray(rawLine)) {
+        return;
+      }
+
+      const metric = paragraphMetrics.lineMetrics[lineIndex] || {};
+      const actualLineFontSize = metric.lineFontSize ?? fontSize;
+      const referenceAscentScale = metric.referenceAscentScale ?? paragraphMetrics.paragraphReferenceAscentScale;
+      const effectiveLineHeight = paragraphMetrics.paragraphHasInlineObjects
+        ? (metric.effectiveLineHeight ?? paragraphMetrics.uniformLineHeight)
+        : paragraphMetrics.uniformLineHeight;
+      const nominalLineHeight = actualLineFontSize * lineHeight;
+      const nominalLeading = nominalLineHeight - actualLineFontSize;
+      const vOffset = nominalLeading / 2;
+      const lineOffset = lineFrame.getLineOffset(lineIndex);
+      const lineWidthLimit = lineFrame.getLineWidth(lineIndex);
+      const lineOriginX = contentBox.x + lineOffset;
+      const lineDirection = paragraphDirection;
+      const lineTop = lineFrame.getLineY(lineIndex) ?? currentY;
+      const baseline = lineTop + vOffset + (referenceAscentScale * actualLineFontSize);
+      const bottom = lineTop + effectiveLineHeight;
+      const lineWidth = computeLineWidth(rawLine);
+      const adjustedLineWidth = lineWidth - letterSpacing;
+      const lineX = computeAlignedLineX(
+        lineIndex,
+        lineDirection,
+        lineOriginX,
+        lineWidthLimit,
+        textIndent,
+        align,
+        adjustedLineWidth
+      );
+      const justifyExtraAfter = computeJustifyExtraAfter(
+        rawLine,
+        lineIndex,
+        rawLines.length,
+        align,
+        justifyEngine,
+        lineWidthLimit,
+        lineWidth
+      );
+      const rawItems = rawLine.map((seg, index) => ({
+          seg,
+          extra: justifyExtraAfter[index] || 0,
+          logicalIndex: index
+      }));
+      const visualTextByLogicalSegment = resolveVisualTextByItem(rawItems, lineDirection);
+      const lineItems = reorderItemsForVisualBidi(rawItems, lineDirection);
+
+      let currentX = lineX;
+      const boundsByLogicalSegment = new Map();
+      for (let visualIndex = 0; visualIndex < lineItems.length; visualIndex += 1) {
+        const { seg, extra, logicalIndex } = lineItems[visualIndex];
+        const segWidth = positiveExtent(seg?.width);
+        if (lineDirection === "rtl") {
+          currentX -= segWidth;
+        }
+        const left = currentX;
+        const right = currentX + segWidth;
+        boundsByLogicalSegment.set(logicalIndex, {
+          left,
+          right,
+          top: lineTop,
+          bottom,
+          direction: seg?.direction,
+          visualSegmentIndex: visualIndex
+        });
+        if (lineDirection === "rtl") {
+          currentX -= extra;
+        } else {
+          currentX += segWidth + extra;
+        }
+      }
+
+      const lineLeft = boundsByLogicalSegment.size > 0
+        ? Math.min(...Array.from(boundsByLogicalSegment.values()).map((bounds) => bounds.left))
+        : lineX;
+      const lineRight = boundsByLogicalSegment.size > 0
+        ? Math.max(...Array.from(boundsByLogicalSegment.values()).map((bounds) => bounds.right))
+        : lineX;
+
+      lines.push({
+        x: lineLeft,
+        y: lineTop,
+        width: positiveExtent(lineRight - lineLeft),
+        height: positiveExtent(bottom - lineTop),
+        baselineY: baseline,
+        lineIndex,
+        direction: lineDirection,
+        ...(sourceId ? { _sourceId: sourceId } : {})
+      });
+
+      for (const item of lineItems) {
+        const bounds = boundsByLogicalSegment.get(item.logicalIndex);
+        if (!bounds) {
+          continue;
+        }
+        const piece = createPieceFromSegment({
+          rawSegment: {
+            ...rawLine[item.logicalIndex],
+            visualText: visualTextByLogicalSegment[item.logicalIndex]
+          },
+          rawBox,
+          bounds,
+          targetOffsetX: 0,
+          targetOffsetY: 0,
+          line: { top: lineTop, bottom, baseline, direction: lineDirection },
+          lineIndex,
+          lineDirection,
+          logicalSegmentIndex: item.logicalIndex,
+          visualSegmentIndex: bounds.visualSegmentIndex,
+          pieceIndex: pieceIndex + 1,
+          sourceId,
+          shape
+        });
+        if (piece) {
+          pieceIndex += 1;
+          pieces.push(piece);
+        }
+      }
+
+      if (lineFrame.hasExplicitLineYOffsets) {
+        currentY = Math.max(currentY, bottom);
+      } else {
+        currentY += effectiveLineHeight;
+      }
+    });
+  }
+
+  return { pieces, lines };
 }
 
 function hasTextLines(box) {
@@ -272,13 +500,15 @@ function createPieceFromBox({ rawBox, pieceIndex, sourceId, shape }) {
   return piece;
 }
 
-function projectPage(page, interactionPage) {
+function projectPage(page, interactionPage, layout = DEFAULT_LAYOUT) {
   const boxLookup = buildBoxLookup(page);
-  const pieces = [];
-  const lines = [];
-  const projectedBoxes = new Set();
+  const rawTextProjection = createRawTextPageProjection(page, layout);
+  const pieces = [...rawTextProjection.pieces];
+  const lines = [...rawTextProjection.lines];
+  const projectedBoxes = new Set((page?.boxes || []).filter(hasTextLines));
 
-  for (const target of interactionPage?.targets || []) {
+  if (pieces.length === 0 && lines.length === 0) {
+    for (const target of interactionPage?.targets || []) {
     const matchingBoxes = boxLookup.get(String(target?.targetId || ""));
     const rawBox = matchingBoxes?.shift();
     if (!rawBox || !Array.isArray(target?.lines)) {
@@ -331,6 +561,9 @@ function projectPage(page, interactionPage) {
           targetOffsetY,
           line: targetLine,
           lineIndex,
+          lineDirection: direction,
+          logicalSegmentIndex: segmentIndex,
+          visualSegmentIndex: null,
           pieceIndex: pieceIndex + 1,
           sourceId,
           shape
@@ -340,6 +573,7 @@ function projectPage(page, interactionPage) {
           pieces.push(piece);
         }
       }
+    }
     }
   }
 
@@ -370,7 +604,7 @@ export function extractRegionResults(pages, interactionMap, fragment, options = 
     const interactionPage = interactionPages.find(
       (entry) => Number(entry?.index || 0) === Number(page?.index || 0)
     );
-    const pageLayout = projectPage(page, interactionPage);
+    const pageLayout = projectPage(page, interactionPage, options.layout || DEFAULT_LAYOUT);
 
     return {
       index: pageIndex,
