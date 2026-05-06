@@ -296,6 +296,36 @@ test("layoutmaster browser font mode preserves author CSS stacks for multilingua
     ", ",
     "expected separator comma to remain visible before the CJK run"
   );
+
+  const punctuationStress = "Bidi punctuation: العربية الفصحى, עברית קצרה, numbers (123,456), percent 100%, quote \"VMPrint\", then English again.";
+  for (const width of [260, 360, 460]) {
+    const stressPieces = form(punctuationStress, {
+      width,
+      fontFamily: '"Inter", system-ui, "Noto Sans Arabic", "Noto Sans Hebrew", sans-serif',
+      fontSize: 24,
+      lineHeight: 1.5
+    }).pieces;
+
+    assert.ok(
+      stressPieces.some((piece) => String(piece.text || "").startsWith("100%")),
+      `expected percent sign to stay attached to 100 at width ${width}`
+    );
+    assert.ok(
+      !stressPieces.some((piece, index) => (
+        String(piece.text || "").endsWith("100")
+        && String(stressPieces[index + 1]?.text || "").startsWith("%")
+      )),
+      `expected no line break between 100 and % at width ${width}`
+    );
+    assert.ok(
+      stressPieces.some((piece) => String(piece.text || "").startsWith('"VMPrint')),
+      `expected opening quote to stay attached to VMPrint at width ${width}`
+    );
+    assert.ok(
+      !stressPieces.some((piece) => String(piece.text || "") === '"'),
+      `expected opening quote not to dangle as its own piece at width ${width}`
+    );
+  }
 });
 
 test("layoutmaster lowers direction and lang options into the engine document", () => {
