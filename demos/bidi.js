@@ -180,13 +180,9 @@ function renderPiece(container, piece) {
   node.style.fontWeight = piece.fontWeight || "";
   node.style.fontStyle = piece.fontStyle || "";
   node.style.color = piece.color || "#1c2023";
-  const paintDirection = piece.lineDirection || piece.direction;
-  node.dir = paintDirection === "rtl" ? "rtl" : "ltr";
-  node.style.direction = paintDirection === "rtl" ? "rtl" : "ltr";
-
   const text = document.createElement("span");
   text.className = "piece-text";
-  text.textContent = piece.visualText || piece.text || "";
+  text.textContent = piece.text || "";
   node.append(text);
   container.append(node);
 }

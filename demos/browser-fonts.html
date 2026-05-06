@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Layoutmaster Browser Font Parity</title>
+  <script src="./importmap.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f6f3ee;
+      color: #1d1915;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.1;
+    }
+    .status {
+      min-width: 220px;
+      color: #5d5348;
+      font-size: 13px;
+      text-align: right;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.4fr) repeat(3, minmax(92px, 0.25fr)) minmax(120px, 0.2fr);
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid #d7cec3;
+      background: #fff;
+    }
+    label {
+      display: grid;
+      gap: 4px;
+      color: #5d5348;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    input, textarea {
+      width: 100%;
+      border: 1px solid #cfc5b9;
+      background: #fff;
+      color: inherit;
+      font: inherit;
+      padding: 7px 8px;
+    }
+    input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+    .toggle {
+      align-content: end;
+    }
+    .toggle span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 7px 8px;
+      border: 1px solid #cfc5b9;
+      background: #fff;
+      color: #1d1915;
+      font-weight: 700;
+    }
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+      grid-column: 1 / -1;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+      align-items: start;
+    }
+    .pane {
+      border: 1px solid #d7cec3;
+      background: #fff;
+      min-width: 0;
+    }
+    .pane h2 {
+      margin: 0;
+      padding: 9px 10px;
+      border-bottom: 1px solid #e5ded6;
+      color: #6a5d51;
+      font-size: 12px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    .surface-wrap {
+      padding: 14px;
+      overflow: auto;
+    }
+    #dom-surface,
+    #layoutmaster-surface {
+      width: 560px;
+      min-height: 140px;
+      color: #15120f;
+    }
+    #dom-surface {
+      white-space: pre-wrap;
+      overflow-wrap: normal;
+    }
+    #layoutmaster-surface {
+      position: relative;
+      overflow: visible;
+      background:
+        linear-gradient(rgba(132, 56, 39, 0.08) 1px, transparent 1px) 0 0 / 100% 1.4em;
+    }
+    .piece {
+      position: absolute;
+      overflow: visible;
+      user-select: text;
+    }
+    .piece-text {
+      display: inline-block;
+      white-space: pre;
+      overflow: visible;
+    }
+    .piece-chrome-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 3;
+    }
+    @media (max-width: 920px) {
+      header,
+      .comparison,
+      .controls {
+        grid-template-columns: 1fr;
+      }
+      .status {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Browser Font Parity</h1>
+      <div id="status" class="status">Idle.</div>
+    </header>
+
+    <section class="controls">
+      <label>CSS font-family
+        <input id="font-family-input" value='"Inter", system-ui, "Noto Sans Arabic", "Noto Sans SC", sans-serif'>
+      </label>
+      <label>Width
+        <input id="width-input" type="number" value="560">
+      </label>
+      <label>Font Size
+        <input id="font-size-input" type="number" value="24">
+      </label>
+      <label>Line Height
+        <input id="line-height-input" type="number" step="0.05" value="1.35">
+      </label>
+      <label class="toggle">Debug
+        <span><input id="show-pieces-input" type="checkbox"> Piece frames</span>
+      </label>
+      <label>Text
+        <textarea id="text-input">Browser fallback should stay browser-owned: Latin text, العربية الفصحى, עברית קצרה, 中文排版, 日本語の文, 한국어 문장, हिन्दी पाठ, ไทยภาษา, emoji 😀✨.</textarea>
+      </label>
+    </section>
+
+    <section class="comparison">
+      <article class="pane">
+        <h2>DOM rendering</h2>
+        <div class="surface-wrap"><div id="dom-surface"></div></div>
+      </article>
+      <article class="pane">
+        <h2>Layoutmaster pieces</h2>
+        <div class="surface-wrap"><div id="layoutmaster-surface"></div></div>
+      </article>
+    </section>
+  </main>
+  <script type="module" src="./browser-fonts.js"></script>
+</body>
+</html>

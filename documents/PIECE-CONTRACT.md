@@ -87,16 +87,12 @@ made.
 
 `direction` carries the resolved text direction when the engine publishes it.
 
-`lineDirection` carries the base direction of the solved line. HTML renderers
-that paint each piece in its own absolutely positioned node should prefer
-`lineDirection` for that node's `dir`/`direction`; otherwise the browser can
-turn each piece into its own tiny BIDI paragraph.
+`lineDirection` carries the base direction of the solved line.
 
-`visualText`, when present, is the browser-paintable spelling for an isolated
-piece inside its line context. The logical `text` remains the source slice.
-For example, a logical `100%` inside an RTL line may expose
-`visualText: "%100"` so a piece renderer can match browser BIDI painting
-without changing the source text.
+`visualText`, when present, is diagnostic output from the engine's BIDI solve.
+The logical `text` remains the source slice and is what the reference HTML
+renderers paint. Do not switch to `visualText` in an HTML renderer unless you
+are deliberately building an experimental renderer and documenting the tradeoff.
 
 `logicalSegmentIndex` and `visualSegmentIndex` are inspection aids. They explain
 where a piece came from in the engine line and where it landed visually.
@@ -218,10 +214,7 @@ function renderPiece(piece) {
   node.style.width = `${piece.width}px`;
   node.style.height = `${ascentPx + descentPx}px`;
   node.style.lineHeight = `${ascentPx + descentPx}px`;
-  if (piece.lineDirection || piece.direction) {
-    node.dir = (piece.lineDirection || piece.direction) === "rtl" ? "rtl" : "ltr";
-  }
-  node.textContent = piece.visualText || piece.text;
+  node.textContent = piece.text;
   return node;
 }
 ```

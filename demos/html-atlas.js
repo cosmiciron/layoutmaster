@@ -201,7 +201,6 @@ function renderPiece(container, piece) {
   node.style.height = px(metrics.height);
   node.style.lineHeight = px(metrics.height);
   applyTextPaint(node, piece);
-  node.dir = piece.direction === "rtl" ? "rtl" : "ltr";
   appendHighlightedText(node, String(piece.text), currentSearch);
   container.append(node);
 }

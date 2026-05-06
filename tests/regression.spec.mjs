@@ -142,13 +142,13 @@ test("layoutmaster keeps mixed Arabic bidi pieces inside the solved width", () =
     );
   }
 
-  for (const text of ["VMPrint", "0.1.0", "PDF", "100%", "123,456"]) {
+  for (const text of ["VMPrint", "0.1.0", "PDF", "100", "123,456"]) {
     const piece = actual.pieces.find((item) => item.text === text);
     assert.ok(piece, `expected "${text}" to remain a distinct bidi island`);
     assert.equal(piece.direction, "ltr", `expected "${text}" to keep LTR direction`);
   }
 
-  const percentPiece = form(
+  const percentPieces = form(
     "تتطلب نسبة 100% من المشاريع دقة في الأرقام",
     {
       width: targetWidth,
@@ -157,10 +157,73 @@ test("layoutmaster keeps mixed Arabic bidi pieces inside the solved width", () =
       direction: "rtl",
       lang: "ar"
     }
-  ).pieces.find((piece) => piece.text === "100%");
-  assert.ok(percentPiece, "expected percent number to remain a logical piece");
-  assert.equal(percentPiece.lineDirection, "rtl");
-  assert.equal(percentPiece.visualText, "%100");
+  ).pieces;
+  const percentNumber = percentPieces.find((piece) => piece.text === "100");
+  const percentMark = percentPieces.find((piece) => piece.text === "%");
+  assert.ok(percentNumber, "expected percent number to become a numeric atom");
+  assert.ok(percentMark, "expected percent mark to become its own punctuation atom");
+  assert.equal(percentNumber.direction, "ltr");
+  assert.equal(percentNumber.lineDirection, "rtl");
+  assert.equal(percentMark.lineDirection, "rtl");
+  assert.ok(
+    percentMark.x < percentNumber.x,
+    "expected percent mark to occupy the visual-leading side of an RTL line"
+  );
+
+  const arabicPrefixWithPercent = form(
+    "تظهر الكلمات PDF وCanvas و100% داخل الجملة العربية.",
+    {
+      width: targetWidth,
+      fontFamily: "Arial, 'Noto Naskh Arabic', 'Noto Sans Arabic', sans-serif",
+      fontSize: 22,
+      lineHeight: 1.45,
+      direction: "rtl",
+      lang: "ar"
+    }
+  );
+  assert.ok(
+    !arabicPrefixWithPercent.pieces.some((piece) => piece.text === "و100%"),
+    "expected Arabic conjunction not to swallow a numeric island"
+  );
+  const arabicPrefix = arabicPrefixWithPercent.pieces.find((piece) => piece.text === "و");
+  const numericIsland = arabicPrefixWithPercent.pieces.find((piece) => piece.text === "100");
+  const percentAtom = arabicPrefixWithPercent.pieces.find((piece) => piece.text === "%");
+  assert.ok(arabicPrefix, "expected Arabic conjunction to be exposed as its own piece");
+  assert.ok(numericIsland, "expected percent number to be exposed as its own piece");
+  assert.ok(percentAtom, "expected percent mark to be exposed as its own piece");
+  assert.equal(arabicPrefix.direction, "rtl");
+  assert.equal(numericIsland.direction, "ltr");
+  assert.equal(numericIsland.lineDirection, "rtl");
+  assert.equal(percentAtom.lineDirection, "rtl");
+
+  for (const direction of ["rtl", "ltr"]) {
+    const parenResult = form(
+      'هل تبقى علامات الترقيم مثل (123,456) و"VMPrint" في موضع منطقي؟',
+      {
+        width: targetWidth,
+        fontFamily: "Arial, 'Noto Naskh Arabic', 'Noto Sans Arabic', sans-serif",
+        fontSize: 20,
+        lineHeight: 1.45,
+        direction,
+        lang: "ar"
+      }
+    );
+    const parenOpen = parenResult.pieces.find((piece) => String(piece.text || "").includes("("));
+    const parenNumber = parenResult.pieces.find((piece) => piece.text === "123,456");
+    const parenClose = parenResult.pieces.find((piece) => String(piece.text || "").includes(")"));
+    assert.ok(parenOpen, `expected opening parenthesis to render in ${direction.toUpperCase()} mode`);
+    assert.ok(parenNumber, `expected parenthesized number to render in ${direction.toUpperCase()} mode`);
+    assert.ok(parenClose, `expected closing parenthesis to render in ${direction.toUpperCase()} mode`);
+    assert.equal(parenNumber.direction, "ltr");
+    assert.ok(
+      parenOpen.x < parenNumber.x,
+      `expected opening parenthesis to occupy the visual-leading side in ${direction.toUpperCase()} mode`
+    );
+    assert.ok(
+      parenClose.x > parenNumber.x,
+      `expected closing parenthesis to occupy the visual-trailing side in ${direction.toUpperCase()} mode`
+    );
+  }
 
   const ltrBase = form(
     "The word للنشر means 'for publishing' and مرحبا means 'welcome' in Arabic.",
@@ -173,14 +236,47 @@ test("layoutmaster keeps mixed Arabic bidi pieces inside the solved width", () =
     }
   );
   const ltrPieces = ltrBase.pieces;
-  const firstEnglishPiece = ltrPieces.find((piece) => piece.text === "The word ");
-  const arabicPiece = ltrPieces.find((piece) => piece.text === "للنشر");
+  const firstEnglishPiece = ltrPieces.find((piece) => String(piece.text || "").startsWith("The word "));
+  const arabicPiece = ltrPieces.find((piece) => String(piece.text || "").includes("للنشر"));
   assert.ok(firstEnglishPiece, "expected LTR base text to begin with English");
-  assert.ok(arabicPiece, "expected Arabic word to stay distinct inside LTR base text");
-  assert.equal(arabicPiece.direction, "rtl");
+  assert.ok(arabicPiece, "expected Arabic word to stay present inside LTR base text");
   assert.ok(
-    firstEnglishPiece.x < arabicPiece.x,
-    "expected Arabic island to appear after the opening English run in LTR base text"
+    firstEnglishPiece.x <= 0.5,
+    "expected opening English run to stay anchored at the left edge in LTR base text"
+  );
+});
+
+test("layoutmaster browser font mode preserves author CSS stacks for multilingual fallback", () => {
+  const fontFamily = '"Inter", system-ui, sans-serif';
+  const result = form(JSON.stringify({
+    elements: [{
+      type: "p",
+      children: [{
+        type: "span",
+        content: "Latin العربية 中文 日本語 emoji 😀",
+        properties: {
+          style: {
+            fontFamily,
+            fontSize: 18
+          }
+        }
+      }]
+    }]
+  }), {
+    width: 260,
+    fontFamily: "Times New Roman, Times, serif",
+    fontSize: 18,
+    lineHeight: 1.3
+  });
+
+  assert.ok(result.pieces.length > 0, "expected multilingual pieces");
+  assert.ok(
+    result.pieces.length >= 5,
+    "expected browser mode to preserve mixed-script piece boundaries"
+  );
+  assert.ok(
+    result.pieces.every((piece) => piece.fontFamily === fontFamily),
+    "expected browser mode to preserve the author CSS font stack instead of injecting fallback families"
   );
 });
 

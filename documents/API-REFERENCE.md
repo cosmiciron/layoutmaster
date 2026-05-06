@@ -11,7 +11,7 @@ Browser image sampling, video extraction, and HTML painting helpers live under
 
 Current clean build footprint:
 
-- npm tarball: about 257 kB
+- npm tarball: about 264 kB
 - unpacked package: about 1.4 MB across 18 files
 - shipped runtime JavaScript: about 1.1 MB raw, 193 KiB gzip
 - engine type declarations: about 172 kB raw, 30 kB gzip
@@ -38,6 +38,8 @@ import {
   flow,
   pour,
   produce,
+  prepareFonts,
+  prepareLayoutFonts,
   exclusion,
   debugBuildHiddenDocument
 } from "@layoutmaster/layoutmaster";
@@ -45,6 +47,37 @@ import {
 
 `debugBuildHiddenDocument()` is mostly for people working on Layoutmaster itself.
 It is handy when you need to inspect what the wrapper handed to the engine.
+
+## Browser Fonts
+
+Layoutmaster measures with browser font strings. It preserves the CSS
+`font-family` stack you pass in and lets the browser handle multilingual,
+platform, emoji, and web-font fallback.
+
+Font selection stays browser-compatible, but layout remains Layoutmaster-owned:
+the engine keeps its publishing-oriented mixed-script sizing, baseline, and
+wrapping policies instead of trying to clone every DOM line-break decision.
+
+
+For ordinary system stacks you can call the sync layout APIs directly. For web
+fonts, prepare the relevant CSS font faces first:
+
+```js
+await prepareFonts([
+  `400 16px "Inter", system-ui, sans-serif`,
+  `700 16px "Inter", system-ui, sans-serif`
+]);
+
+const result = form(text, {
+  width: 420,
+  fontFamily: `"Inter", system-ui, sans-serif`
+});
+```
+
+For simple calls, `prepareLayoutFonts(content, options)` derives the base font
+and style-map fonts from the same options you will pass to `form()` or `fit()`.
+Both helpers use the browser's `document.fonts` API when available and return a
+small `{ status, requested, loaded, failed }` report.
 
 ## Content Inputs
 
@@ -490,9 +523,11 @@ interface LayoutmasterPiece {
 
 The important bit: `x`, `y`, `width`, `height`, and `baselineY` are engine
 answers. Treat them as layout truth. Paint fields help you draw text with the
-same metrics the engine used. BIDI-aware renderers should use `lineDirection`
-for isolated piece painting and `visualText` when present. Underscore fields are
-for source mapping and app metadata.
+same metrics the engine used. Renderers should paint `text` literally inside the
+returned box; fields such as `direction`, `lineDirection`, and `visualText` are
+diagnostic engine output, not an invitation to run a second layout or BIDI
+policy in the renderer. Underscore fields are for source mapping and app
+metadata.
 
 See [PIECE-CONTRACT.md](./PIECE-CONTRACT.md) and
 [PAINTING-PIECES.md](./PAINTING-PIECES.md).

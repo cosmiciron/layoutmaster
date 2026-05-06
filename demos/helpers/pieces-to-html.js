@@ -27,15 +27,9 @@ export function renderPiece(container, piece) {
   node.style.zIndex = "4";
 
   applyTextPaint(node, piece);
-  const paintDirection = piece.lineDirection || piece.direction;
-  if (paintDirection) {
-    node.dir = paintDirection === "rtl" ? "rtl" : "ltr";
-    node.style.direction = paintDirection === "rtl" ? "rtl" : "ltr";
-  }
-
   const text = document.createElement("span");
   text.className = "piece-text";
-  text.textContent = piece.visualText || piece.text || "";
+  text.textContent = piece.text || "";
   node.append(text);
   container.append(node);
   return node;

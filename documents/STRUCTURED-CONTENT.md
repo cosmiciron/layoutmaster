@@ -89,8 +89,9 @@ the resolved paint fields, such as:
 - `lineDirection`
 - `visualText`
 
-A renderer can copy those fields while painting. It should not replace the
-returned geometry.
+A renderer should copy geometry and paint fields while painting. Directional
+fields are engine diagnostics; do not use them to add a second BIDI policy in
+the renderer.
 
 ## Custom Metadata
 
@@ -142,9 +143,7 @@ for (const piece of result.pieces) {
   node.style.top = `${piece.y}px`;
   node.style.width = `${piece.width}px`;
   node.style.height = `${piece.height}px`;
-  const paintDirection = piece.lineDirection || piece.direction;
-  if (paintDirection) node.dir = paintDirection === "rtl" ? "rtl" : "ltr";
-  node.textContent = piece.visualText || piece.text || "";
+  node.textContent = piece.text || "";
 
   if (piece._annotationId) {
     node.dataset.annotationId = piece._annotationId;

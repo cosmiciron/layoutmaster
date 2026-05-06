@@ -206,18 +206,19 @@ function unicodeRangeContainsCodePoint(unicodeRange, codePoint) {
 }
 
 function createFontEntry(family, weight = 400, style = "normal") {
-  const resolvedFamily = resolveFamilyAlias(family);
+  const resolvedFamily = String(family || "sans-serif");
   const base = BROWSER_FONT_FAMILIES[resolvedFamily] || {
-    browserFamily: family,
+    browserFamily: resolvedFamily,
     unicodeRange: undefined,
     fallback: false
   };
+  const encodedFamily = encodeURIComponent(resolvedFamily);
   return {
     name: `${resolvedFamily} ${style === "italic" ? "Italic" : weight >= 700 ? "Bold" : "Regular"}`,
     family: resolvedFamily,
     weight,
     style,
-    src: `browser:${resolvedFamily}:${weight}:${style}`,
+    src: `browser:${encodedFamily}:${weight}:${style}`,
     unicodeRange: base.unicodeRange,
     enabled: true,
     fallback: Boolean(base.fallback),
@@ -240,9 +241,9 @@ function toBrowserMeasurementFontRef(entry) {
 }
 
 function resolveBrowserMeasurementFontBySrc(src) {
-  const match = /^browser:(.*?):(\d+):(normal|italic)$/.exec(String(src || ""));
+  const match = /^browser:(.*):(\d+):(normal|italic)$/.exec(String(src || ""));
   if (!match) return null;
-  return toBrowserMeasurementFontRef(createFontEntry(match[1], Number(match[2]), match[3]));
+  return toBrowserMeasurementFontRef(createFontEntry(decodeURIComponent(match[1]), Number(match[2]), match[3]));
 }
 
 function buildCanvasFont(font, fontSize) {
@@ -269,6 +270,93 @@ function resolveMetricDescent(metrics, fallback) {
 
 const browserVerticalMetricsCache = new Map();
 const browserCssBaselineOffsetCache = new Map();
+
+function normalizeFontPreparationEntries(input, defaultText = "Hg") {
+  const values = Array.isArray(input) ? input : [input];
+  return values
+    .filter((entry) => entry != null)
+    .map((entry) => {
+      if (typeof entry === "string") {
+        return { cssFont: entry, text: defaultText };
+      }
+      if (entry.cssFont) {
+        return { cssFont: String(entry.cssFont), text: String(entry.text || defaultText) };
+      }
+      const fontFamily = entry.fontFamily || entry.family || "sans-serif";
+      const fontSize = Math.max(1, Number(entry.fontSize || entry.size || 16));
+      const fontWeight = entry.fontWeight || entry.weight || 400;
+      const fontStyle = entry.fontStyle || entry.style || "normal";
+      return {
+        cssFont: `${fontStyle} ${fontWeight} ${fontSize}px ${quoteFontFamily(String(fontFamily))}`,
+        text: String(entry.text || defaultText)
+      };
+    })
+    .filter((entry) => entry.cssFont);
+}
+
+function collectLayoutFontPreparationEntries(content, options = {}) {
+  const entries = [];
+  const text = String(content || "Hg");
+  const base = {
+    fontFamily: options.fontFamily || "Times New Roman, Times, serif",
+    fontSize: Number(options.fontSize || 16),
+    fontWeight: options.fontWeight || 400,
+    fontStyle: options.fontStyle || "normal",
+    text
+  };
+  entries.push(base);
+
+  for (const style of Object.values(options.styles || {})) {
+    if (!style || typeof style !== "object") continue;
+    entries.push({
+      fontFamily: style.fontFamily || base.fontFamily,
+      fontSize: Number(style.fontSize || base.fontSize),
+      fontWeight: style.fontWeight || base.fontWeight,
+      fontStyle: style.fontStyle || base.fontStyle,
+      text
+    });
+  }
+
+  return entries;
+}
+
+async function prepareFonts(input, options = {}) {
+  const fontSet = typeof document !== "undefined" ? document.fonts : null;
+  const entries = normalizeFontPreparationEntries(input, options.text || "Hg");
+  const report = {
+    status: "unsupported",
+    requested: entries,
+    loaded: [],
+    failed: []
+  };
+
+  if (!fontSet || typeof fontSet.load !== "function") {
+    return report;
+  }
+
+  for (const entry of entries) {
+    try {
+      await fontSet.load(entry.cssFont, entry.text);
+      report.loaded.push(entry);
+    } catch (error) {
+      report.failed.push({
+        ...entry,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
+
+  if (fontSet.ready && typeof fontSet.ready.then === "function") {
+    await fontSet.ready;
+  }
+
+  report.status = report.failed.length === 0 ? "ready" : (report.loaded.length > 0 ? "partial" : "failed");
+  return report;
+}
+
+async function prepareLayoutFonts(content, options = {}) {
+  return prepareFonts(collectLayoutFontPreparationEntries(content, options), { text: String(content || "Hg") });
+}
 
 function measureBrowserCssBaselineOffset({ fontFamily, fontSize, fontWeight, fontStyle, lineHeight }) {
   if (
@@ -350,16 +438,7 @@ class CanvasTextDelegate {
   }
 
   getEnabledFallbackFonts() {
-    return Object.keys(BROWSER_FONT_FAMILIES)
-      .filter((family) => BROWSER_FONT_FAMILIES[family].fallback)
-      .map((family) => {
-        const entry = createFontEntry(family, 400, "normal");
-        return {
-          src: entry.src,
-          name: entry.name,
-          unicodeRange: entry.unicodeRange
-        };
-      });
+    return [];
   }
 
   getFontsByFamily(family) {
@@ -373,7 +452,7 @@ class CanvasTextDelegate {
   }
 
   getFallbackFamilies() {
-    return Object.keys(BROWSER_FONT_FAMILIES).filter((family) => BROWSER_FONT_FAMILIES[family].fallback);
+    return [];
   }
 
   async loadFace(src, state) {
@@ -522,5 +601,7 @@ export {
   CanvasTextDelegate,
   createBrowserTextDelegate,
   measureBrowserCssBaselineOffset,
+  prepareFonts,
+  prepareLayoutFonts,
   resolveBrowserMeasurementFontBySrc
 };

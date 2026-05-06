@@ -161,15 +161,10 @@ function paintTextPiece(piece) {
   node.style.boxSizing = "border-box";
 
   copyTextPaint(node, piece);
-  const paintDirection = piece.lineDirection || piece.direction;
-  if (paintDirection) {
-    node.dir = paintDirection === "rtl" ? "rtl" : "ltr";
-    node.style.direction = paintDirection === "rtl" ? "rtl" : "ltr";
-  }
 
   const text = document.createElement("span");
   text.style.whiteSpace = "pre";
-  text.textContent = piece.visualText || piece.text;
+  text.textContent = piece.text;
   node.append(text);
   return node;
 }
@@ -230,11 +225,10 @@ Why bother with `baselineY`, `ascent`, and `descent`? Because mixed-size text,
 CJK, Latin, RTL, and LTR can all share a line. Layoutmaster solved that baseline.
 CSS defaults are not invited to solve it again.
 
-For mixed-direction text, use `piece.lineDirection || piece.direction` as the
-paint direction for the positioned node, and use `piece.visualText ||
-piece.text` as the painted text. `piece.text` remains the logical source slice;
-`visualText` only appears when isolated piece painting needs line-context help
-to match browser BIDI behavior.
+For mixed-direction text, keep the renderer literal. Paint `piece.text` in the
+returned box and do not add your own direction policy in the renderer. If the
+punctuation looks strange, that is useful signal from the engine, not something
+the HTML painter should quietly repair.
 
 ## Debug Chrome
 
@@ -282,10 +276,8 @@ function paintPiecesToCanvas(ctx, pieces) {
     ctx.font = cssFont(piece);
     ctx.fillStyle = piece.color || "#000";
     ctx.textBaseline = "alphabetic";
-    const paintDirection = piece.lineDirection || piece.direction;
-    ctx.direction = paintDirection === "rtl" ? "rtl" : "ltr";
 
-    ctx.fillText(piece.visualText || piece.text, piece.x, piece.baselineY);
+    ctx.fillText(piece.text, piece.x, piece.baselineY);
     ctx.restore();
   }
 }

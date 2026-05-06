@@ -298,7 +298,7 @@ At this point you probably picture the master as a burly man holding a Gatling g
 a tank. Nope. A two-foot-tall humanoid with green skin, large eyes, pointy ears, and wearing
 a robe - that's more like it.
 
-Seriously, the package packs to about 257 kB on npm - 193 KiB gzip at runtime, the embedded
+Seriously, the package packs to about 264 kB on npm - 193 KiB gzip at runtime, the embedded
 engine included. No other dependencies.
 
 So like the master (the other one) says: *Smaller in number are we, but larger in mind*.
@@ -348,6 +348,7 @@ Current demos:
 - `fit`: bounded layout with consumed and remaining content
 - `flow`: continuation through multiple targets
 - `bidi`: native browser BIDI rendering beside Layoutmaster's solved pieces
+- `browser-fonts`: DOM text beside Layoutmaster pieces with the same CSS font stack
 - `pour`: text contained inside a primitive shape
 - `pour-image`: text contained inside image-derived alpha geometry
 - `pieces`: minimal piece and baseline inspection

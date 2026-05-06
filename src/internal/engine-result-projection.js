@@ -435,6 +435,8 @@ function createRawTextPageProjection(page, layout = DEFAULT_LAYOUT) {
         const piece = createPieceFromSegment({
           rawSegment: {
             ...rawLine[item.logicalIndex],
+            text: item.seg?.text ?? rawLine[item.logicalIndex]?.text,
+            direction: item.seg?.direction ?? rawLine[item.logicalIndex]?.direction,
             visualText: visualTextByLogicalSegment[item.logicalIndex]
           },
           rawBox,

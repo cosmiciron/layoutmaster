@@ -29,9 +29,14 @@ type BidiDirectionRun = { text: string; direction: 'ltr' | 'rtl' };
 
 const SIMPLE_LATIN_WRAP_RE = /^[\u0009\u0020-\u007E\u00A0-\u00FF\u2010-\u201F\u2026]*$/u;
 const BROWSER_RTL_LTR_TRAILING_NEUTRAL_RE = /^(.+?)([.!?:;]+)$/u;
+const ASCII_PUNCTUATION_ATOM_RE = /^[\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E]+$/u;
 
 function tokenizeSimpleLatinSegment(text: string): string[] {
     return text.match(/\s+|[^\s]+/g) ?? [];
+}
+
+function isLtrAtomSegment(text: string): boolean {
+    return isNumericRunSegment(text) || ASCII_PUNCTUATION_ATOM_RE.test(text);
 }
 
 function splitBrowserRtlTrailingNeutral(text: string, enabled: boolean): string[] {
@@ -262,10 +267,16 @@ export function buildRichWrapTokens(params: {
 
                             const richSubSeg = params.transformSegment(rawSubSeg, rawSubSeg.fontFamily);
                             const textValue = richSubSeg.text || '';
+                            let preserveBrowserTokenBoundary = false;
                             if (textValue.trim().length > 0) {
                                 const scriptClass = params.getScriptClass(textValue);
                                 richSubSeg.scriptClass = scriptClass;
-                                richSubSeg.direction = isNumericRunSegment(textValue) ? 'ltr' : bidiRun.direction;
+                                richSubSeg.direction = isLtrAtomSegment(textValue) ? 'ltr' : bidiRun.direction;
+                                preserveBrowserTokenBoundary = !!params.browserDomBidiScope && (
+                                    scriptClass !== 'latin' ||
+                                    bidiRun.direction !== params.baseDirection ||
+                                    params.hasRtlScript(textValue)
+                                );
 
                                 const optScale = params.getOpticalScale(scriptClass);
                                 if (optScale !== 1.0) {
@@ -286,6 +297,7 @@ export function buildRichWrapTokens(params: {
                             const preserveBoundaries =
                                 params.advancedJustify ||
                                 params.preserveDirectionalBoundaries ||
+                                preserveBrowserTokenBoundary ||
                                 (params.direction === 'auto' && params.hasRtlScript(richSubSeg.text || '')) ||
                                 ((richSubSeg.style as any)?.textAlign === 'justify' && params.isAdvancedJustifyEnabled(richSubSeg.style as any));
 

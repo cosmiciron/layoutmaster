@@ -1,6 +1,6 @@
 {
   "height": 232,
-  "pieceCount": 85,
+  "pieceCount": 88,
   "pieces": [
     {
       "x": 366.8,
@@ -132,7 +132,7 @@
       "pieceIndex": 12,
       "kind": "text",
       "text": ".",
-      "direction": "rtl"
+      "direction": "ltr"
     },
     {
       "x": 370,
@@ -198,7 +198,7 @@
       "pieceIndex": 18,
       "kind": "text",
       "text": " ",
-      "direction": "ltr"
+      "direction": "rtl"
     },
     {
       "x": 227.4,
@@ -330,7 +330,7 @@
       "pieceIndex": 30,
       "kind": "text",
       "text": " ",
-      "direction": "ltr"
+      "direction": "rtl"
     },
     {
       "x": 296.2,
@@ -484,7 +484,7 @@
       "pieceIndex": 44,
       "kind": "text",
       "text": " ",
-      "direction": "ltr"
+      "direction": "rtl"
     },
     {
       "x": 294.32,
@@ -572,7 +572,7 @@
       "pieceIndex": 52,
       "kind": "text",
       "text": " ",
-      "direction": "ltr"
+      "direction": "rtl"
     },
     {
       "x": 8.8,
@@ -638,7 +638,7 @@
       "pieceIndex": 58,
       "kind": "text",
       "text": ".",
-      "direction": "rtl"
+      "direction": "ltr"
     },
     {
       "x": 366.8,
@@ -685,14 +685,25 @@
       "direction": "rtl"
     },
     {
-      "x": 271.84,
+      "x": 283.04,
       "y": 145,
-      "width": 39.2,
+      "width": 28,
       "height": 29,
       "lineIndex": 5,
       "pieceIndex": 63,
       "kind": "text",
-      "text": "100%",
+      "text": "100",
+      "direction": "ltr"
+    },
+    {
+      "x": 271.84,
+      "y": 145,
+      "width": 11.2,
+      "height": 29,
+      "lineIndex": 5,
+      "pieceIndex": 64,
+      "kind": "text",
+      "text": "%",
       "direction": "ltr"
     },
     {
@@ -701,7 +712,7 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 64,
+      "pieceIndex": 65,
       "kind": "text",
       "text": " ",
       "direction": "rtl"
@@ -712,7 +723,7 @@
       "width": 21.28,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 65,
+      "pieceIndex": 66,
       "kind": "text",
       "text": "من",
       "direction": "rtl"
@@ -723,7 +734,7 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 66,
+      "pieceIndex": 67,
       "kind": "text",
       "text": " ",
       "direction": "rtl"
@@ -734,7 +745,7 @@
       "width": 85.12,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 67,
+      "pieceIndex": 68,
       "kind": "text",
       "text": "المشاريع",
       "direction": "rtl"
@@ -745,7 +756,7 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 68,
+      "pieceIndex": 69,
       "kind": "text",
       "text": " ",
       "direction": "rtl"
@@ -756,7 +767,7 @@
       "width": 31.92,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 69,
+      "pieceIndex": 70,
       "kind": "text",
       "text": "دقة",
       "direction": "rtl"
@@ -767,7 +778,7 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 70,
+      "pieceIndex": 71,
       "kind": "text",
       "text": " ",
       "direction": "rtl"
@@ -778,7 +789,7 @@
       "width": 21.28,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 71,
+      "pieceIndex": 72,
       "kind": "text",
       "text": "في",
       "direction": "rtl"
@@ -789,7 +800,7 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 72,
+      "pieceIndex": 73,
       "kind": "text",
       "text": " ",
       "direction": "rtl"
@@ -800,7 +811,7 @@
       "width": 74.48,
       "height": 29,
       "lineIndex": 5,
-      "pieceIndex": 73,
+      "pieceIndex": 74,
       "kind": "text",
       "text": "الأرقام",
       "direction": "rtl"
@@ -811,7 +822,7 @@
       "width": 31.92,
       "height": 29,
       "lineIndex": 6,
-      "pieceIndex": 74,
+      "pieceIndex": 75,
       "kind": "text",
       "text": "مثل",
       "direction": "rtl"
@@ -822,7 +833,7 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 6,
-      "pieceIndex": 75,
+      "pieceIndex": 76,
       "kind": "text",
       "text": " ",
       "direction": "rtl"
@@ -833,7 +844,7 @@
       "width": 66.6,
       "height": 29,
       "lineIndex": 6,
-      "pieceIndex": 76,
+      "pieceIndex": 77,
       "kind": "text",
       "text": "123,456",
       "direction": "ltr"
@@ -844,7 +855,7 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 6,
-      "pieceIndex": 77,
+      "pieceIndex": 78,
       "kind": "text",
       "text": " ",
       "direction": "rtl"
@@ -855,7 +866,7 @@
       "width": 74.48,
       "height": 29,
       "lineIndex": 6,
-      "pieceIndex": 78,
+      "pieceIndex": 79,
       "kind": "text",
       "text": "وعلامات",
       "direction": "rtl"
@@ -866,46 +877,35 @@
       "width": 6.6,
       "height": 29,
       "lineIndex": 6,
-      "pieceIndex": 79,
+      "pieceIndex": 80,
       "kind": "text",
       "text": " ",
+      "direction": "rtl"
+    },
+    {
+      "x": 152.72,
+      "y": 174,
+      "width": 74.48,
+      "height": 29,
+      "lineIndex": 6,
+      "pieceIndex": 81,
+      "kind": "text",
+      "text": "الترقيم",
       "direction": "rtl"
     },
     {
       "x": 142.08,
       "y": 174,
-      "width": 85.12,
-      "height": 29,
-      "lineIndex": 6,
-      "pieceIndex": 80,
-      "kind": "text",
-      "text": "الترقيم؟",
-      "direction": "rtl"
-    },
-    {
-      "x": 135.48,
-      "y": 174,
-      "width": 6.6,
-      "height": 29,
-      "lineIndex": 6,
-      "pieceIndex": 81,
-      "kind": "text",
-      "text": " ",
-      "direction": "rtl"
-    },
-    {
-      "x": 92.92,
-      "y": 174,
-      "width": 42.56,
+      "width": 10.64,
       "height": 29,
       "lineIndex": 6,
       "pieceIndex": 82,
       "kind": "text",
-      "text": "نعم،",
+      "text": "؟",
       "direction": "rtl"
     },
     {
-      "x": 86.32,
+      "x": 135.48,
       "y": 174,
       "width": 6.6,
       "height": 29,
@@ -916,12 +916,45 @@
       "direction": "rtl"
     },
     {
+      "x": 103.56,
+      "y": 174,
+      "width": 31.92,
+      "height": 29,
+      "lineIndex": 6,
+      "pieceIndex": 84,
+      "kind": "text",
+      "text": "نعم",
+      "direction": "rtl"
+    },
+    {
+      "x": 92.92,
+      "y": 174,
+      "width": 10.64,
+      "height": 29,
+      "lineIndex": 6,
+      "pieceIndex": 85,
+      "kind": "text",
+      "text": "،",
+      "direction": "rtl"
+    },
+    {
+      "x": 86.32,
+      "y": 174,
+      "width": 6.6,
+      "height": 29,
+      "lineIndex": 6,
+      "pieceIndex": 86,
+      "kind": "text",
+      "text": " ",
+      "direction": "rtl"
+    },
+    {
       "x": 334.88,
       "y": 203,
       "width": 85.12,
       "height": 29,
       "lineIndex": 7,
-      "pieceIndex": 84,
+      "pieceIndex": 87,
       "kind": "text",
       "text": "بالتأكيد",
       "direction": "rtl"
@@ -932,10 +965,10 @@
       "width": 5,
       "height": 29,
       "lineIndex": 7,
-      "pieceIndex": 85,
+      "pieceIndex": 88,
       "kind": "text",
       "text": "!",
-      "direction": "rtl"
+      "direction": "ltr"
     }
   ]
 }

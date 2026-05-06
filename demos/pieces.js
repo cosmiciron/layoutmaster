@@ -327,9 +327,6 @@ function renderTextPiece(container, piece) {
   node.style.boxSizing = "border-box";
 
   applyTextPaint(node, piece);
-  if (piece.direction) {
-    node.dir = piece.direction === "rtl" ? "rtl" : "ltr";
-  }
 
   const text = document.createElement("span");
   text.className = "piece-text";
