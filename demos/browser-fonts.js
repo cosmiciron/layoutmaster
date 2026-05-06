@@ -1,6 +1,5 @@
 import {
-  form,
-  prepareLayoutFonts
+  form
 } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
 
@@ -59,9 +58,9 @@ async function run() {
   applySurfaceStyle(domSurface, options);
   applySurfaceStyle(layoutmasterSurface, options);
   domSurface.textContent = text;
-  status.textContent = "Preparing fonts...";
+  status.textContent = "Checking page fonts...";
 
-  const fontReport = await prepareLayoutFonts(text, options);
+  const fontStatus = await waitForPageFonts();
   const result = form(text, options);
   renderLayoutmaster(result, options, showPiecesInput.checked);
 
@@ -70,8 +69,19 @@ async function run() {
     `${result.pieces.length} pieces`,
     `DOM ${domHeight.toFixed(1)}px`,
     `Layoutmaster ${result.height.toFixed(1)}px`,
-    `fonts ${fontReport.status}`
+    `fonts ${fontStatus}`
   ].join(" | ");
+}
+
+async function waitForPageFonts() {
+  const fontSet = document.fonts;
+  if (!fontSet || !fontSet.ready) {
+    return "untracked";
+  }
+  if (fontSet.status === "loading") {
+    await fontSet.ready;
+  }
+  return fontSet.status || "ready";
 }
 
 let pending = 0;
@@ -87,6 +97,11 @@ function scheduleRun() {
 
 for (const input of [fontFamilyInput, widthInput, fontSizeInput, lineHeightInput, showPiecesInput, textInput]) {
   input.addEventListener("input", scheduleRun);
+}
+
+if (document.fonts && typeof document.fonts.addEventListener === "function") {
+  document.fonts.addEventListener("loadingdone", scheduleRun);
+  document.fonts.addEventListener("loadingerror", scheduleRun);
 }
 
 scheduleRun();

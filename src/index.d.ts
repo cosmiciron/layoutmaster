@@ -348,26 +348,6 @@ export interface ProduceResult {
   performance: LayoutmasterPerformance;
 }
 
-export interface LayoutmasterFontPreparationEntry {
-  cssFont?: string;
-  fontFamily?: string;
-  family?: string;
-  fontSize?: number | string;
-  size?: number | string;
-  fontWeight?: number | string;
-  weight?: number | string;
-  fontStyle?: string;
-  style?: string;
-  text?: string;
-}
-
-export interface LayoutmasterFontPreparationResult {
-  status: "ready" | "partial" | "failed" | "unsupported";
-  requested: Array<{ cssFont: string; text: string }>;
-  loaded: Array<{ cssFont: string; text: string }>;
-  failed: Array<{ cssFont: string; text: string; error: string }>;
-}
-
 export type FormResultHandler = (result: FormResult) => void;
 export type FitResultHandler = (result: FitResult) => void;
 export type FlowResultHandler = (result: FlowResult) => void;
@@ -407,13 +387,5 @@ export declare function plan(content?: LayoutmasterContentInput, options?: Layou
 export declare function plan(content: LayoutmasterContentInput[], options?: LayoutmasterTargetInput): PlannedLayoutCollection;
 export declare function produce(source: unknown, options?: ProduceOptions, handler?: ProduceResultHandler): ProduceResult;
 export declare function produce(source: unknown, handler?: ProduceResultHandler): ProduceResult;
-export declare function prepareFonts(
-  fonts: string | LayoutmasterFontPreparationEntry | Array<string | LayoutmasterFontPreparationEntry>,
-  options?: { text?: string }
-): Promise<LayoutmasterFontPreparationResult>;
-export declare function prepareLayoutFonts(
-  content?: LayoutmasterContentInput,
-  options?: LayoutmasterRequest
-): Promise<LayoutmasterFontPreparationResult>;
 export declare const exclusion: LayoutmasterExclusionNamespace;
 export declare function debugBuildHiddenDocument(content?: LayoutmasterContentInput, options?: LayoutmasterRequest, mode?: "form" | "fit"): unknown;

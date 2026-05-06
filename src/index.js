@@ -12,10 +12,5 @@ export {
 } from "./internal/runtime-core.js";
 
 export {
-  prepareFonts,
-  prepareLayoutFonts
-} from "./browser-runtime.js";
-
-export {
   exclusion
 } from "./internal/exclusion-author.js";

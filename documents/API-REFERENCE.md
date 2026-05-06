@@ -38,8 +38,6 @@ import {
   flow,
   pour,
   produce,
-  prepareFonts,
-  prepareLayoutFonts,
   exclusion,
   debugBuildHiddenDocument
 } from "@layoutmaster/layoutmaster";
@@ -58,26 +56,25 @@ Font selection stays browser-compatible, but layout remains Layoutmaster-owned:
 the engine keeps its publishing-oriented mixed-script sizing, baseline, and
 wrapping policies instead of trying to clone every DOM line-break decision.
 
+Layoutmaster does not load fonts. It uses whatever fonts are available in the
+current browser environment at layout time. If a page has not loaded a custom
+font yet, Layoutmaster will measure with the browser's current fallback result;
+call it again after the page's font state changes to get the updated layout.
 
-For ordinary system stacks you can call the sync layout APIs directly. For web
-fonts, prepare the relevant CSS font faces first:
+For custom web fonts, declare them the normal browser way with CSS or the
+`FontFace` API before relying on them for final layout. Apps that want to wait
+for page fonts can do that outside Layoutmaster:
 
 ```js
-await prepareFonts([
-  `400 16px "Inter", system-ui, sans-serif`,
-  `700 16px "Inter", system-ui, sans-serif`
-]);
+if (document.fonts?.status === "loading") {
+  await document.fonts.ready;
+}
 
 const result = form(text, {
   width: 420,
   fontFamily: `"Inter", system-ui, sans-serif`
 });
 ```
-
-For simple calls, `prepareLayoutFonts(content, options)` derives the base font
-and style-map fonts from the same options you will pass to `form()` or `fit()`.
-Both helpers use the browser's `document.fonts` API when available and return a
-small `{ status, requested, loaded, failed }` report.
 
 ## Content Inputs
 
