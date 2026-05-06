@@ -278,6 +278,24 @@ test("layoutmaster browser font mode preserves author CSS stacks for multilingua
     result.pieces.every((piece) => piece.fontFamily === fontFamily),
     "expected browser mode to preserve the author CSS font stack instead of injecting fallback families"
   );
+
+  const bidiBoundary = form("Latin text, العربية الفصحى, עברית קצרה, 中文排版", {
+    width: 566,
+    fontFamily,
+    fontSize: 26,
+    lineHeight: 2
+  });
+  assert.ok(
+    !bidiBoundary.pieces.some((piece) => String(piece.text || "").includes("קצרה,")),
+    "expected trailing comma after Hebrew to stay out of the RTL word piece"
+  );
+  const cjkIndex = bidiBoundary.pieces.findIndex((piece) => piece.text === "中");
+  assert.ok(cjkIndex > 0, "expected CJK run to stay visible after mixed RTL text");
+  assert.equal(
+    bidiBoundary.pieces[cjkIndex - 1]?.text,
+    ", ",
+    "expected separator comma to remain visible before the CJK run"
+  );
 });
 
 test("layoutmaster lowers direction and lang options into the engine document", () => {
@@ -290,7 +308,6 @@ test("layoutmaster lowers direction and lang options into the engine document", 
   }, "form");
   assert.equal(hidden.layout.direction, "rtl");
   assert.equal(hidden.layout.lang, "ar");
-  assert.equal(hidden.elements[0].properties._layoutmasterBidiScope, "dom-block");
 
   const result = form("English مرحبا", {
     width: 220,

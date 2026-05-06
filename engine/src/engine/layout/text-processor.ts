@@ -714,14 +714,10 @@ export class TextProcessor extends FontProcessor {
         if (segments.length === 0) return [[this.createEmptyMeasuredSegment(font)]];
         const flattenedSegments = flattenSegmentsByHardBreak(segments);
         const primaryStyle = (segments.find((seg) => !!seg.style)?.style || {}) as ElementStyle;
-        const layoutmasterBidiScope = String((primaryStyle as any)._layoutmasterBidiScope || '');
         const advancedJustify = this.isAdvancedJustifyEnabled(primaryStyle) && primaryStyle.textAlign === 'justify';
         const configuredDirection = String(primaryStyle.direction || this.config.layout.direction || LAYOUT_DEFAULTS.textLayout.direction);
         const paragraphText = flattenedSegments.map((seg) => seg.text || '').join('');
-        // Layoutmaster lowers plain DOM-like text into this private hint so this
-        // engine copy can make browser-scope BIDI decisions without changing the
-        // shared VMPrint AST contract.
-        const browserDomBidiScope = layoutmasterBidiScope === 'dom-block';
+        const isolateBidiRunBoundaries = true;
         const baseDirection = resolveBaseDirection(paragraphText, configuredDirection, 'ltr');
         const paragraphStrongDirection = getStrongDirection(paragraphText);
         const preserveDirectionalBoundaries =
@@ -780,7 +776,7 @@ export class TextProcessor extends FontProcessor {
             getSegmenterLocale: (style) => this.getSegmenterLocale(style),
             makeWordSegmenter: (locale, isCJK) => this.makeWordSegmenter(locale, isCJK),
             transformSegment: (segment) => segment,
-            browserDomBidiScope,
+            isolateBidiRunBoundaries,
             hasRtlScript: (value) => this.hasRtlScript(value),
             isAdvancedJustifyEnabled: (style) => this.isAdvancedJustifyEnabled(style),
             resolveRichFontInfo: (seg, defaultSize) => resolveCachedRichFontInfo(seg, defaultSize),

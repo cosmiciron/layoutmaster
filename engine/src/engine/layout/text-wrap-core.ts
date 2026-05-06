@@ -28,7 +28,7 @@ type ScriptRun = { text: string; isCJK: boolean };
 type BidiDirectionRun = { text: string; direction: 'ltr' | 'rtl' };
 
 const SIMPLE_LATIN_WRAP_RE = /^[\u0009\u0020-\u007E\u00A0-\u00FF\u2010-\u201F\u2026]*$/u;
-const BROWSER_RTL_LTR_TRAILING_NEUTRAL_RE = /^(.+?)([.!?:;]+)$/u;
+const RTL_BASE_LTR_TRAILING_NEUTRAL_RE = /^(.+?)([.!?:;]+)$/u;
 const ASCII_PUNCTUATION_ATOM_RE = /^[\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E]+$/u;
 
 function tokenizeSimpleLatinSegment(text: string): string[] {
@@ -39,9 +39,9 @@ function isLtrAtomSegment(text: string): boolean {
     return isNumericRunSegment(text) || ASCII_PUNCTUATION_ATOM_RE.test(text);
 }
 
-function splitBrowserRtlTrailingNeutral(text: string, enabled: boolean): string[] {
+function splitRtlBaseLtrTrailingNeutral(text: string, enabled: boolean): string[] {
     if (!enabled || !text || isNumericRunSegment(text)) return [text];
-    const match = text.match(BROWSER_RTL_LTR_TRAILING_NEUTRAL_RE);
+    const match = text.match(RTL_BASE_LTR_TRAILING_NEUTRAL_RE);
     if (!match || !match[1] || !match[2]) return [text];
     return [match[1], match[2]];
 }
@@ -120,7 +120,7 @@ export function buildRichWrapTokens(params: {
     hasRtlScript: (text: string) => boolean;
     isAdvancedJustifyEnabled: (style?: ElementStyle | Record<string, any>) => boolean;
     resolveRichFontInfo: (seg: TextSegment, defaultFontSize: number) => { font: any; fontSize: number };
-    browserDomBidiScope?: boolean;
+    isolateBidiRunBoundaries?: boolean;
     onBidiSplit?: (durationMs: number) => void;
     onScriptSplit?: (durationMs: number) => void;
     onWordSegment?: (durationMs: number) => void;
@@ -245,9 +245,9 @@ export function buildRichWrapTokens(params: {
                         const rawSubSegHasLetterSpacing = hasSegmentLetterSpacing(runBaseSeg);
                         const measuredSegments = rawSubSegHasLetterSpacing
                             ? splitToCodePointSegments(segment)
-                            : splitBrowserRtlTrailingNeutral(
+                            : splitRtlBaseLtrTrailingNeutral(
                                 segment,
-                                !!params.browserDomBidiScope
+                                !!params.isolateBidiRunBoundaries
                                     && params.baseDirection === 'rtl'
                                     && bidiRun.direction === 'ltr'
                             );
@@ -267,12 +267,12 @@ export function buildRichWrapTokens(params: {
 
                             const richSubSeg = params.transformSegment(rawSubSeg, rawSubSeg.fontFamily);
                             const textValue = richSubSeg.text || '';
-                            let preserveBrowserTokenBoundary = false;
+                            let preserveBidiTokenBoundary = false;
                             if (textValue.trim().length > 0) {
                                 const scriptClass = params.getScriptClass(textValue);
                                 richSubSeg.scriptClass = scriptClass;
                                 richSubSeg.direction = isLtrAtomSegment(textValue) ? 'ltr' : bidiRun.direction;
-                                preserveBrowserTokenBoundary = !!params.browserDomBidiScope && (
+                                preserveBidiTokenBoundary = !!params.isolateBidiRunBoundaries && (
                                     scriptClass !== 'latin' ||
                                     bidiRun.direction !== params.baseDirection ||
                                     params.hasRtlScript(textValue)
@@ -297,7 +297,7 @@ export function buildRichWrapTokens(params: {
                             const preserveBoundaries =
                                 params.advancedJustify ||
                                 params.preserveDirectionalBoundaries ||
-                                preserveBrowserTokenBoundary ||
+                                preserveBidiTokenBoundary ||
                                 (params.direction === 'auto' && params.hasRtlScript(richSubSeg.text || '')) ||
                                 ((richSubSeg.style as any)?.textAlign === 'justify' && params.isAdvancedJustifyEnabled(richSubSeg.style as any));
 

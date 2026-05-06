@@ -197,36 +197,8 @@ function createEngineInputBundle(request, fragment, layout, fonts, styles, eleme
   return {
     request,
     fragment,
-    document: createEngineDocument({ layout, fonts, styles, elements: lowerBrowserBidiHints(elements) })
+    document: createEngineDocument({ layout, fonts, styles, elements })
   };
-}
-
-function shouldLowerBrowserBidiHint(element) {
-  if (!isPlainObject(element)) return false;
-  const type = String(element.type || "").trim();
-  return type === "p" || type === "span" || type === "text";
-}
-
-function lowerBrowserBidiHints(elements) {
-  if (!Array.isArray(elements)) return elements;
-  return elements.map((element) => {
-    if (!isPlainObject(element)) return element;
-    const children = Array.isArray(element.children)
-      ? lowerBrowserBidiHints(element.children)
-      : element.children;
-    if (!shouldLowerBrowserBidiHint(element)) {
-      return children === element.children ? element : { ...element, children };
-    }
-    const properties = isPlainObject(element.properties) ? element.properties : {};
-    return {
-      ...element,
-      ...(children === undefined ? {} : { children }),
-      properties: {
-        ...properties,
-        _layoutmasterBidiScope: properties._layoutmasterBidiScope || "dom-block"
-      }
-    };
-  });
 }
 
 function createLetterPageDefaults(options = {}) {
