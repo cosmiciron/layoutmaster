@@ -14,9 +14,13 @@ const updateBaseline =
 const baseline = JSON.parse(fs.readFileSync(performanceBaselinePath, "utf8"));
 const fixtures = loadRegressionFixtures();
 const results = [];
+const defaultBenchmarkLimits = {
+  iterations: 12,
+  warmupIterations: 3
+};
 
 for (const fixture of fixtures) {
-  const limits = baseline.cases[fixture.name];
+  const limits = baseline.cases[fixture.name] ?? (updateBaseline ? defaultBenchmarkLimits : null);
   assert.ok(limits, `[layoutmaster-benchmark] Missing performance baseline for ${fixture.name}`);
   const result = benchmarkFixture(fixture, limits.iterations, limits.warmupIterations);
   results.push({ fixture: fixture.name, ...result });
@@ -53,4 +57,3 @@ for (const result of results) {
 }
 
 console.log(JSON.stringify({ updated: false, results }, null, 2));
-

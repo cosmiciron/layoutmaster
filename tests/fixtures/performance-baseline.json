@@ -30,6 +30,12 @@
       "warmupIterations": 3,
       "maxAverageElapsedMs": 25,
       "maxPeakElapsedMs": 60
+    },
+    "06-form-bidi-arabic-mixed.json": {
+      "iterations": 12,
+      "warmupIterations": 3,
+      "maxAverageElapsedMs": 25,
+      "maxPeakElapsedMs": 60
     }
   }
 }
