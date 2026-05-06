@@ -526,8 +526,10 @@ answers. Treat them as layout truth. Paint fields help you draw text with the
 same metrics the engine used. Renderers should paint `text` literally inside the
 returned box; fields such as `direction`, `lineDirection`, and `visualText` are
 diagnostic engine output, not an invitation to run a second layout or BIDI
-policy in the renderer. Underscore fields are for source mapping and app
-metadata.
+policy in the renderer. `text` is paint text, so BIDI-normalized punctuation may
+already be mirrored; use underscore source fields for source mapping rather than
+assuming `text` is always the original slice. Underscore fields are for source
+mapping and app metadata.
 
 See [PIECE-CONTRACT.md](./PIECE-CONTRACT.md) and
 [PAINTING-PIECES.md](./PAINTING-PIECES.md).

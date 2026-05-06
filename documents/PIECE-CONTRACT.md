@@ -80,19 +80,22 @@ layout theory on top of it.
 `kind` is usually `"text"`. Inline rich objects can appear as `"inline-box"` or
 `"inline-image"` pieces when structured content asks for them.
 
-`text` is the exact text slice represented by this piece. Render that text
-inside the returned box. Do not concatenate everything into a paragraph and ask
-the browser to wrap it again unless you are deliberately testing how sadness is
-made.
+`text` is the engine's paint text for this piece. It usually matches the source
+slice, but BIDI normalization may mirror paired punctuation before publication
+so the literal glyph is correct when painted. Render `text` inside the returned
+box. Do not concatenate everything into a paragraph and ask the browser to wrap
+it again unless you are deliberately testing how sadness is made.
 
 `direction` carries the resolved text direction when the engine publishes it.
 
 `lineDirection` carries the base direction of the solved line.
 
 `visualText`, when present, is diagnostic output from the engine's BIDI solve.
-The logical `text` remains the source slice and is what the reference HTML
-renderers paint. Do not switch to `visualText` in an HTML renderer unless you
-are deliberately building an experimental renderer and documenting the tradeoff.
+Reference HTML renderers still paint `text`; source mapping should use
+`_sourceStart`, `_sourceEnd`, and your own source IDs instead of assuming
+`text` is always byte-for-byte source content. Do not switch to `visualText` in
+an HTML renderer unless you are deliberately building an experimental renderer
+and documenting the tradeoff.
 
 `logicalSegmentIndex` and `visualSegmentIndex` are inspection aids. They explain
 where a piece came from in the engine line and where it landed visually.
