@@ -348,7 +348,7 @@ Current demos:
 - `fit`: bounded layout with consumed and remaining content
 - `flow`: continuation through multiple targets
 - `bidi`: native browser BIDI rendering beside Layoutmaster's solved pieces
-- `browser-fonts`: DOM text beside Layoutmaster pieces with the same CSS font stack
+- `browser-fonts`: browser font-scope probe with DOM text beside Layoutmaster pieces using the same CSS stack and native fallback
 - `pour`: text contained inside a primitive shape
 - `pour-image`: text contained inside image-derived alpha geometry
 - `pieces`: minimal piece and baseline inspection

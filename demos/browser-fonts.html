@@ -3,65 +3,157 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Layoutmaster Browser Font Parity</title>
+  <title>Layoutmaster Browser Font Scope</title>
   <script src="./importmap.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      color-scheme: light;
+      --page: #f7f5f0;
+      --panel: #ffffff;
+      --ink: #191713;
+      --muted: #625a50;
+      --soft: #eef3ef;
+      --line: #d5cdc3;
+      --line-soft: #ebe4dc;
+      --green: #426f60;
+      --blue: #3f638f;
+      --amber: #9a6433;
+      --red: #a65443;
+    }
     body {
       margin: 0;
-      background: #f6f3ee;
-      color: #1d1915;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     main {
-      max-width: 1280px;
+      max-width: 1440px;
       margin: 0 auto;
-      padding: 18px;
+      padding: 20px;
     }
-    header {
+    .masthead {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 16px;
+      gap: 24px;
       align-items: end;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
     h1 {
       margin: 0;
-      font-size: 26px;
-      line-height: 1.1;
+      font-size: 38px;
+      line-height: 1.05;
+      font-weight: 900;
     }
-    .status {
-      min-width: 220px;
-      color: #5d5348;
+    .lede {
+      max-width: 780px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(104px, 1fr));
+      gap: 8px;
+      min-width: 520px;
+    }
+    .metric {
+      min-width: 0;
+      min-height: 58px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.74);
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+    .metric strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 19px;
+      line-height: 1;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .metric.good strong { color: var(--green); }
+    .metric.draft strong { color: var(--amber); }
+    .metric.warn strong { color: var(--red); }
+    .brief {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .brief-item {
+      min-width: 0;
+      min-height: 86px;
+      padding: 14px 15px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+    .brief-item strong {
+      display: block;
       font-size: 13px;
-      text-align: right;
+      line-height: 1.2;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .brief-item p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 600;
     }
     .controls {
       display: grid;
-      grid-template-columns: minmax(260px, 1.4fr) repeat(3, minmax(92px, 0.25fr)) minmax(120px, 0.2fr);
+      grid-template-columns: minmax(250px, 1.05fr) minmax(340px, 1.7fr) repeat(3, minmax(96px, 0.32fr)) minmax(150px, 0.38fr);
       gap: 10px;
       padding: 12px;
-      border: 1px solid #d7cec3;
-      background: #fff;
+      border: 1px solid var(--line);
+      background: var(--panel);
     }
     label {
+      min-width: 0;
       display: grid;
-      gap: 4px;
-      color: #5d5348;
+      gap: 5px;
+      color: var(--muted);
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 850;
     }
-    input, textarea {
+    input, textarea, select {
       width: 100%;
+      min-width: 0;
+      min-height: 38px;
       border: 1px solid #cfc5b9;
+      border-radius: 0;
       background: #fff;
       color: inherit;
       font: inherit;
-      padding: 7px 8px;
+      font-size: 14px;
+      font-weight: 650;
+      padding: 8px 9px;
+    }
+    textarea {
+      min-height: 98px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .text-control {
+      grid-column: 1 / -1;
     }
     input[type="checkbox"] {
       width: auto;
+      min-height: 0;
       margin: 0;
+      accent-color: var(--green);
     }
     .toggle {
       align-content: end;
@@ -70,48 +162,60 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 36px;
-      padding: 7px 8px;
+      min-height: 38px;
+      padding: 8px 9px;
       border: 1px solid #cfc5b9;
       background: #fff;
-      color: #1d1915;
-      font-weight: 700;
-    }
-    textarea {
-      min-height: 92px;
-      resize: vertical;
-      grid-column: 1 / -1;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 850;
+      white-space: nowrap;
     }
     .comparison {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 12px;
+      gap: 14px;
+      margin-top: 14px;
       align-items: start;
     }
     .pane {
-      border: 1px solid #d7cec3;
-      background: #fff;
+      border: 1px solid var(--line);
+      background: var(--panel);
       min-width: 0;
+    }
+    .pane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line-soft);
     }
     .pane h2 {
       margin: 0;
-      padding: 9px 10px;
-      border-bottom: 1px solid #e5ded6;
-      color: #6a5d51;
-      font-size: 12px;
+      color: #5b5148;
+      font-size: 13px;
+      line-height: 1;
+      font-weight: 900;
       letter-spacing: 0;
       text-transform: uppercase;
     }
+    .pane-note {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
     .surface-wrap {
-      padding: 14px;
+      padding: 16px;
       overflow: auto;
     }
     #dom-surface,
     #layoutmaster-surface {
       width: 560px;
-      min-height: 140px;
-      color: #15120f;
+      min-height: 170px;
+      color: #11100e;
     }
     #dom-surface {
       white-space: pre-wrap;
@@ -121,7 +225,7 @@
       position: relative;
       overflow: visible;
       background:
-        linear-gradient(rgba(132, 56, 39, 0.08) 1px, transparent 1px) 0 0 / 100% 1.4em;
+        linear-gradient(rgba(65, 111, 96, 0.09) 1px, transparent 1px) 0 0 / 100% 1.35em;
     }
     .piece {
       position: absolute;
@@ -142,55 +246,154 @@
       pointer-events: none;
       z-index: 3;
     }
-    @media (max-width: 920px) {
-      header,
+    .font-readout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .readout {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 12px;
+      min-width: 0;
+    }
+    .readout strong {
+      display: block;
+      font-size: 12px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    .readout code {
+      display: block;
+      margin-top: 8px;
+      color: var(--blue);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    @media (max-width: 1080px) {
+      .masthead,
+      .brief,
       .comparison,
+      .font-readout,
       .controls {
         grid-template-columns: 1fr;
       }
-      .status {
-        text-align: left;
+      .status-grid {
+        min-width: 0;
+      }
+    }
+    @media (max-width: 620px) {
+      main {
+        padding: 14px;
+      }
+      h1 {
+        font-size: 30px;
+      }
+      .status-grid {
+        grid-template-columns: 1fr;
+      }
+      .pane-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .pane-note {
+        white-space: normal;
       }
     }
   </style>
 </head>
 <body>
   <main>
-    <header>
-      <h1>Browser Font Parity</h1>
-      <div id="status" class="status">Idle.</div>
+    <header class="masthead">
+      <div>
+        <h1>Browser Font Scope</h1>
+        <p class="lede">
+          A focused probe for the Layoutmaster browser runtime: the same CSS font stack is painted once by native DOM text and once from solved Layoutmaster pieces.
+        </p>
+      </div>
+      <div class="status-grid" aria-label="Run summary">
+        <div class="metric" id="pieces-metric"><span>Pieces</span><strong>-</strong></div>
+        <div class="metric" id="dom-metric"><span>DOM height</span><strong>-</strong></div>
+        <div class="metric" id="layout-metric"><span>Master height</span><strong>-</strong></div>
+        <div class="metric" id="font-metric"><span>Font state</span><strong>Idle</strong></div>
+      </div>
     </header>
 
-    <section class="controls">
+    <section class="brief" aria-label="What this demo checks">
+      <div class="brief-item">
+        <strong>Browser-owned fonts</strong>
+        <p>Layoutmaster measures with the page's browser font machinery and does not expose a font-loading API.</p>
+      </div>
+      <div class="brief-item">
+        <strong>Fallback stays native</strong>
+        <p>Mixed scripts rely on the environment's fallback chain instead of a custom Unicode-range map.</p>
+      </div>
+      <div class="brief-item">
+        <strong>Pieces stay literal</strong>
+        <p>The right pane paints returned pieces as-is, including bidi punctuation and browser-shaped fallback runs.</p>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Font probe controls">
+      <label>Sample
+        <select id="sample-input">
+          <option value="multilingual">Multilingual fallback</option>
+          <option value="serif">Serif and standard fallbacks</option>
+          <option value="emoji">Emoji and symbols</option>
+          <option value="bidi">Bidi punctuation stress</option>
+          <option value="custom">Custom</option>
+        </select>
+      </label>
       <label>CSS font-family
         <input id="font-family-input" value='"Inter", system-ui, "Noto Sans Arabic", "Noto Sans SC", sans-serif'>
       </label>
       <label>Width
-        <input id="width-input" type="number" value="560">
+        <input id="width-input" type="number" value="560" min="180" step="1">
       </label>
-      <label>Font Size
-        <input id="font-size-input" type="number" value="24">
+      <label>Font size
+        <input id="font-size-input" type="number" value="24" min="8" step="1">
       </label>
-      <label>Line Height
-        <input id="line-height-input" type="number" step="0.05" value="1.35">
+      <label>Line height
+        <input id="line-height-input" type="number" step="0.05" value="1.35" min="0.8">
       </label>
       <label class="toggle">Debug
         <span><input id="show-pieces-input" type="checkbox"> Piece frames</span>
       </label>
-      <label>Text
+      <label class="text-control">Text
         <textarea id="text-input">Browser fallback should stay browser-owned: Latin text, العربية الفصحى, עברית קצרה, 中文排版, 日本語の文, 한국어 문장, हिन्दी पाठ, ไทยภาษา, emoji 😀✨.</textarea>
       </label>
     </section>
 
-    <section class="comparison">
+    <section class="comparison" aria-label="DOM and Layoutmaster comparison">
       <article class="pane">
-        <h2>DOM rendering</h2>
+        <div class="pane-header">
+          <h2>Native Browser DOM</h2>
+          <span class="pane-note">The browser lays out one normal text box.</span>
+        </div>
         <div class="surface-wrap"><div id="dom-surface"></div></div>
       </article>
       <article class="pane">
-        <h2>Layoutmaster pieces</h2>
+        <div class="pane-header">
+          <h2>Layoutmaster Pieces</h2>
+          <span class="pane-note">Layoutmaster lays out once; the DOM paints returned pieces.</span>
+        </div>
         <div class="surface-wrap"><div id="layoutmaster-surface"></div></div>
       </article>
+    </section>
+
+    <section class="font-readout" aria-label="Font diagnostics">
+      <div class="readout">
+        <strong>Requested CSS stack</strong>
+        <code id="requested-font-readout"></code>
+      </div>
+      <div class="readout">
+        <strong>Browser computed stack</strong>
+        <code id="computed-font-readout"></code>
+      </div>
     </section>
   </main>
   <script type="module" src="./browser-fonts.js"></script>
