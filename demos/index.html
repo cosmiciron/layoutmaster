@@ -5,220 +5,273 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Layoutmaster Demos</title>
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; }
+
     :root {
       color-scheme: light;
-      --paper: #fbfaf7;
-      --wash: #f2eee7;
-      --ink: #211914;
-      --muted: #675d53;
-      --line: #d8d0c6;
-      --accent: #9c4927;
-      --accent-soft: #f4e2d6;
-      --shadow: 0 18px 52px rgba(39, 30, 22, 0.08);
+      --paper: #f0e8d0;
+      --ink:   #1a1108;
+      --muted: #5e4e38;
+      --line:  #b8a580;
+      --accent: #c02800;
+      --accent-soft: #eed8cc;
     }
+
     body {
       margin: 0;
       font-family: Georgia, "Times New Roman", serif;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 248, 243, 0.92)),
-        var(--wash);
+      background-color: var(--paper);
+      background-image: radial-gradient(circle, rgba(0,0,0,0.038) 1px, transparent 1px);
+      background-size: 14px 14px;
       color: var(--ink);
     }
+
     main {
-      max-width: 1180px;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 46px 22px 64px;
+      padding: 24px 20px 40px;
+    }
+
+    /* ── MASTHEAD ────────────────────────────── */
+    .masthead {
+      border-top: 4px solid var(--ink);
+      padding-top: 14px;
+      margin-bottom: 22px;
+    }
+    .masthead-eyebrow {
+      font-family: Impact, "Arial Narrow", "Arial Black", Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
     }
     h1 {
-      margin: 0;
-      font-size: 94px;
-      line-height: 0.92;
-      font-weight: 800;
-    }
-    h2 {
-      margin: 46px 0 14px;
-      font-size: 18px;
-      line-height: 1.2;
+      margin: 0 0 2px;
+      font-family: Impact, "Arial Narrow", "Arial Black", Arial, sans-serif;
+      font-size: 76px;
+      font-weight: 400;
+      line-height: 0.9;
       text-transform: uppercase;
-      color: #8a7a68;
-      font-family: Arial, Helvetica, sans-serif;
-      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--ink);
+    }
+    .masthead-rule {
+      border: none;
+      border-top: 1px solid var(--ink);
+      margin: 10px 0 12px;
+      opacity: 0.28;
     }
     .lede {
-      max-width: 850px;
-      margin: 22px 0 0;
-      color: var(--muted);
+      margin: 0 0 6px;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 34px;
-      line-height: 1.35;
+      font-size: 17px;
       font-weight: 700;
+      line-height: 1.38;
+      color: var(--muted);
+      max-width: 720px;
     }
     .sublede {
-      max-width: 800px;
-      margin: 18px 0 0;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
       color: var(--muted);
-      font-size: 18px;
-      line-height: 1.55;
+      max-width: 680px;
     }
+
+    /* ── QUICK LINKS ─────────────────────────── */
     .quick-links {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin: 28px 0 0;
+      gap: 6px;
+      margin-top: 14px;
     }
     .quick-links a {
       display: inline-flex;
       align-items: center;
-      min-height: 36px;
-      padding: 8px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.64);
+      padding: 3px 9px;
+      border: 1.5px solid var(--accent);
+      border-radius: 2px;
+      background: transparent;
       color: var(--accent);
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 13px;
-      font-weight: 800;
+      font-size: 11px;
+      font-weight: 900;
       text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      transition: background 80ms, color 80ms;
     }
+    .quick-links a:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ── SECTION HEADERS ─────────────────────── */
+    main { counter-reset: section; }
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 10px;
+      font-family: Impact, "Arial Narrow", "Arial Black", Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+    h2::before {
+      counter-increment: section;
+      content: counter(section, upper-roman) ".";
+      font-family: Georgia, serif;
+      font-style: italic;
+      font-size: 12px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    h2::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--ink);
+      opacity: 0.22;
+    }
+
+    /* ── GRID ────────────────────────────────── */
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
+    .grid.two-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* ── CARDS ───────────────────────────────── */
     .demo-card {
       display: block;
-      min-height: 190px;
-      padding: 24px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.72);
-      box-shadow: var(--shadow);
+      padding: 14px 16px 16px;
+      border: 1.5px solid var(--ink);
+      border-radius: 2px;
+      background: rgba(250, 245, 232, 0.88);
+      box-shadow: 3px 3px 0 rgba(26, 17, 8, 0.2);
       color: inherit;
       text-decoration: none;
-      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+      transition: transform 80ms, box-shadow 80ms;
     }
     .demo-card:hover {
-      transform: translateY(-2px);
-      border-color: #c3ad9b;
-      background: #fff;
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 rgba(26, 17, 8, 0.28);
     }
     .demo-card:focus-visible {
-      outline: 3px solid rgba(156, 73, 39, 0.35);
-      outline-offset: 3px;
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
     .demo-card strong {
       display: block;
+      font-family: Impact, "Arial Narrow", "Arial Black", Arial, sans-serif;
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 1.02;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
       color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 36px;
-      line-height: 1.08;
-      font-weight: 900;
     }
     .demo-card p {
-      margin: 16px 0 0;
-      color: var(--muted);
+      margin: 7px 0 0;
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 18px;
+      font-size: 13px;
       line-height: 1.48;
-      font-weight: 650;
+      font-weight: 500;
+      color: var(--muted);
     }
+
     .tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 20px;
+      gap: 5px;
+      margin-top: 11px;
     }
     .tag {
       display: inline-flex;
       align-items: center;
-      min-height: 26px;
-      padding: 5px 9px;
-      border-radius: 8px;
-      background: var(--accent-soft);
-      color: #7b351d;
+      padding: 2px 6px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
       font-family: Arial, Helvetica, sans-serif;
-      font-size: 12px;
-      font-weight: 800;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
+
+    /* ── FEATURED CARD ───────────────────────── */
     .demo-card.featured {
       grid-column: span 2;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 240px;
-      gap: 28px;
+      grid-template-columns: minmax(0, 1fr) 190px;
+      gap: 18px;
       align-items: center;
-      min-height: 260px;
-      overflow: hidden;
     }
     .demo-card.featured .preview {
-      min-height: 170px;
-      border: 1px solid rgba(156, 73, 39, 0.18);
-      border-radius: 8px;
+      min-height: 110px;
+      align-self: stretch;
+      border: 1.5px solid var(--line);
       background:
-        linear-gradient(90deg, rgba(255, 255, 255, 0.94), rgba(255, 246, 238, 0.58)),
+        linear-gradient(90deg, rgba(250,245,232,0.92), rgba(255,246,238,0.4)),
         url("./assets/men-dance.gif") center / cover;
     }
-    .demo-card.wide {
-      grid-column: span 2;
-      min-height: 170px;
-    }
+
+    /* ── RESPONSIVE ──────────────────────────── */
     @media (max-width: 820px) {
-      main {
-        padding: 34px 16px 46px;
-      }
-      .grid {
-        grid-template-columns: 1fr;
-      }
-      .demo-card,
-      .demo-card.featured {
-        min-height: auto;
-      }
+      main { padding: 18px 14px 30px; }
+      h1 { font-size: 52px; }
+      .lede { font-size: 15px; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .grid.two-col { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 540px) {
+      h1 { font-size: 40px; }
+      .grid,
+      .grid.two-col { grid-template-columns: 1fr; }
       .demo-card.featured {
         grid-column: span 1;
         grid-template-columns: 1fr;
       }
-      .demo-card.wide {
-        grid-column: span 1;
-      }
-      .demo-card.featured .preview {
-        min-height: 160px;
-      }
-      h1 {
-        font-size: 52px;
-      }
-      .lede {
-        font-size: 23px;
-      }
-      .demo-card strong {
-        font-size: 29px;
-      }
+      .demo-card.featured .preview { min-height: 120px; }
     }
   </style>
 </head>
 <body>
   <main>
-    <h1>Demos</h1>
-    <p class="lede">
-      Browser demos for the frontend work Layoutmaster unlocks: text size,
-      continuation, shaped text, paginated surfaces, and live effects without
-      DOM measurement loops.
-    </p>
-    <p class="sublede">
-      Every page below renders from data returned by Layoutmaster. The browser is
-      the painter, not the secret layout oracle.
-    </p>
-
-    <nav class="quick-links" aria-label="Demo shortcuts">
-      <a href="./form.html">form()</a>
-      <a href="./fit.html">fit()</a>
-      <a href="./flow.html">flow()</a>
-      <a href="./bidi.html">BIDI</a>
-      <a href="./browser-fonts.html">Browser fonts</a>
-      <a href="./pour.html">pour()</a>
-      <a href="./html-atlas.html">produce()</a>
-    </nav>
+    <header class="masthead">
+      <div class="masthead-eyebrow">Layoutmaster</div>
+      <h1>Demos</h1>
+      <hr class="masthead-rule">
+      <p class="lede">
+        Browser demos for the frontend work Layoutmaster unlocks: text size,
+        continuation, shaped text, paginated surfaces, and live effects without
+        DOM measurement loops.
+      </p>
+      <p class="sublede">
+        Every page below renders from data returned by Layoutmaster. The browser is
+        the painter, not the secret layout oracle.
+      </p>
+      <nav class="quick-links" aria-label="Demo shortcuts">
+        <a href="./form.html">form()</a>
+        <a href="./fit.html">fit()</a>
+        <a href="./flow.html">flow()</a>
+        <a href="./bidi.html">BIDI</a>
+        <a href="./browser-fonts.html">Browser fonts</a>
+        <a href="./pour.html">pour()</a>
+        <a href="./html-atlas.html">produce()</a>
+      </nav>
+    </header>
 
     <h2>Start With Text As Data</h2>
     <section class="grid" aria-label="Core text layout demos">
@@ -284,7 +337,7 @@
     </section>
 
     <h2>Scale And Motion</h2>
-    <section class="grid" aria-label="Advanced demos">
+    <section class="grid two-col" aria-label="Advanced demos">
       <a class="demo-card featured" href="./dancing-text.html">
         <span>
           <strong>Dancing Text</strong>
@@ -293,17 +346,12 @@
         </span>
         <span class="preview" aria-hidden="true"></span>
       </a>
-      <a class="demo-card wide" href="./html-atlas.html">
+      <a class="demo-card" href="./html-atlas.html">
         <strong>produce() HTML Atlas</strong>
         <p>Paginate a long manuscript once, then render hundreds of searchable, selectable pages as ordinary HTML.</p>
         <span class="tags"><span class="tag">produce()</span><span class="tag">pagination</span><span class="tag">HTML</span></span>
       </a>
-      <a class="demo-card wide" href="./html-atlas-dom.html">
-        <strong>DOM Atlas Baseline</strong>
-        <p>Run the same manuscript through DOM measurement with widow/orphan checks to expose the pagination performance gap.</p>
-        <span class="tags"><span class="tag">DOM</span><span class="tag">benchmark</span><span class="tag">pagination</span></span>
-      </a>
-      <a class="demo-card wide" href="./masonry-book.html">
+      <a class="demo-card" href="./masonry-book.html">
         <strong>Book Masonry</strong>
         <p>Pack every chapter as a live card, resize the wall, and inspect the solved Layoutmaster piece geometry.</p>
         <span class="tags"><span class="tag">masonry</span><span class="tag">fit()</span><span class="tag">geometry</span></span>
