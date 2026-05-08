@@ -23,6 +23,13 @@ const DEFAULT_LAYOUT = {
   lineHeightMode: "css"
 };
 
+function resolveLineHeightPolicy(layout = DEFAULT_LAYOUT) {
+  return {
+    mode: layout?.lineHeightMode === "css" ? "css" : "print",
+    adjustment: Number.isFinite(Number(layout?.lineHeightAdjustment)) ? Number(layout.lineHeightAdjustment) : 0
+  };
+}
+
 function isPlainObject(value) {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
@@ -321,7 +328,7 @@ function createRawTextPageProjection(page, layout = DEFAULT_LAYOUT) {
     const fontSize = Number(boxStyle.fontSize || layout?.fontSize || DEFAULT_LAYOUT.fontSize);
     const lineHeight = Number(boxStyle.lineHeight || layout?.lineHeight || DEFAULT_LAYOUT.lineHeight);
     const lineFrame = createLineFrameAccessors(rawBox.properties || {}, contentBox.y, contentBox.w);
-    const paragraphMetrics = buildParagraphMetrics(rawLines, fontSize, lineHeight, layout);
+    const paragraphMetrics = buildParagraphMetrics(rawLines, fontSize, lineHeight, resolveLineHeightPolicy(layout));
     const paragraphDirection = resolveParagraphDirection(
       rawLines,
       boxStyle,

@@ -18,6 +18,7 @@ const updateSnapshots =
 
 const fixtures = loadRegressionFixtures();
 const layoutmasterModule = await import(pathToFileURL(path.join(process.cwd(), "src", "index.js")).href);
+const projectionModule = await import(pathToFileURL(path.join(process.cwd(), "src", "internal", "engine-result-projection.js")).href);
 const {
   form,
   fit,
@@ -28,6 +29,9 @@ const {
   exclusion,
   debugBuildHiddenDocument
 } = layoutmasterModule;
+const {
+  extractRegionResults
+} = projectionModule;
 
 test("layoutmaster regression fixtures remain stable", async (t) => {
   for (const fixture of fixtures) {
@@ -351,6 +355,64 @@ test("layoutmaster lowers direction and lang options into the engine document", 
   assert.ok(
     result.pieces.some((piece) => piece.lineDirection === "rtl"),
     "expected pieces to carry the lowered RTL line context"
+  );
+});
+
+test("layoutmaster projects pieces with the engine line-height policy", () => {
+  const fontSize = 25;
+  const lineHeight = 1.45;
+  const lineHeightPx = fontSize * lineHeight;
+  const textSegment = (text, sourceStart, width) => ({
+    text,
+    width,
+    sourceStart,
+    sourceEnd: sourceStart + text.length,
+    ascent: 835,
+    descent: 165
+  });
+  const blankSegment = () => ({
+    text: "",
+    width: 0,
+    ascent: 920,
+    descent: 220
+  });
+  const [region] = extractRegionResults([{
+    index: 0,
+    width: 560,
+    height: 400,
+    boxes: [{
+      x: 0,
+      y: 0,
+      w: 560,
+      h: 300,
+      style: { fontSize, lineHeight },
+      meta: { sourceId: "author:blank-line-policy", engineKey: "ek:blank-line-policy" },
+      lines: [
+        [textSegment("This source is still owned by the host.", 0, 410)],
+        [blankSegment()],
+        [textSegment("Every inserted character rebuilds the hologram.", 41, 526)],
+        [blankSegment()],
+        [blankSegment()],
+        [textSegment("The caret returns by source offset, not DOM ", 91, 490)],
+        [textSegment("selection.", 135, 104)]
+      ]
+    }]
+  }], [], null, {
+    layout: {
+      fontSize,
+      lineHeight,
+      lineHeightMode: "css",
+      lineHeightAdjustment: 0
+    }
+  });
+
+  assert.deepEqual(
+    region.pieces.map((piece) => Number(piece.y.toFixed(3))),
+    [0, 2, 5, 6].map((lineIndex) => Number((lineIndex * lineHeightPx).toFixed(3)))
+  );
+  assert.deepEqual(
+    region.pieces.map((piece) => Number(piece.height.toFixed(3))),
+    new Array(4).fill(Number(lineHeightPx.toFixed(3)))
   );
 });
 
