@@ -28,7 +28,6 @@ import { PageExclusionArtifactCollaborator } from './collaborators/page-exclusio
 import { PageReservationArtifactCollaborator } from './collaborators/page-reservation-artifact-collaborator';
 import { PageSpatialConstraintArtifactCollaborator } from './collaborators/page-spatial-constraint-artifact-collaborator';
 import { PageRegionArtifactCollaborator } from './collaborators/page-region-artifact-collaborator';
-import type { LayoutProfileMetrics } from './runtime/session/session-profile-types';
 import type { Collaborator } from './runtime/session/session-runtime-types';
 import { LayoutSession } from './layout-session';
 import {
@@ -39,9 +38,6 @@ import {
     SimulationReportReader
 } from './simulation-report';
 import { SourcePositionArtifactCollaborator } from './collaborators/source-position-artifact-collaborator';
-import { ScriptRuntimeCollaborator } from './runtime/scripting/script-runtime-pass';
-import { ScriptRuntimeHost } from './script-runtime-host';
-import type { ScriptLifecycleState } from './script-runtime-host';
 import { TransformCapabilityArtifactCollaborator } from './collaborators/transform-capability-artifact-collaborator';
 import { TransformArtifactCollaborator } from './collaborators/transform-artifact-collaborator';
 import { RegionDebugOverlayCollaborator } from './collaborators/region-debug-overlay-collaborator';
@@ -65,7 +61,6 @@ import { resolveDocumentMicroLanePolicy, resolveMinUsableLaneWidth } from './mic
 import { DropCapPackager } from './packagers/dropcap-packager';
 import { createPackagers, ExternalPackagerFactory } from './packagers/create-packagers';
 import { SpatialMap } from './packagers/spatial-map';
-import { ScriptDocumentPackager } from './packagers/script-document-packager';
 import { createSimulationMarchRunner, executeSimulationMarch, type SimulationRunner } from './packagers/execute-simulation-march';
 import type { PackagerContext } from './packagers/packager-types';
 import { reflowTextElementAgainstSpatialField } from './spatial-field-reflow';
@@ -78,35 +73,11 @@ export type LayoutSimulationOptions = {
 export class LayoutProcessor extends TextProcessor {
     private static readonly REGION_LAYOUT_HEIGHT = 1000000;
     private lastLayoutSession: LayoutSession | null = null;
-    private activeScriptRuntimeHost: ScriptRuntimeHost | null = null;
     private packagerFactory: ExternalPackagerFactory | undefined = undefined;
     private resolvedLinesCache = new WeakMap<Element, Map<string, ResolvedLinesResult>>();
-    private static readonly SCRIPT_PROFILE_KEYS: Array<keyof LayoutProfileMetrics> = [
-        'handlerCalls',
-        'handlerMs',
-        'loadCalls',
-        'loadMs',
-        'createCalls',
-        'createMs',
-        'readyCalls',
-        'readyMs',
-        'replayRequests',
-        'replayPasses',
-        'docQueryCalls',
-        'setContentCalls',
-        'replaceCalls',
-        'insertCalls',
-        'removeCalls',
-        'messageSendCalls',
-        'messageHandlerCalls'
-    ];
 
     setPackagerFactory(factory: ExternalPackagerFactory | undefined): void {
         this.packagerFactory = factory;
-    }
-
-    getActiveScriptRuntimeHost(): ScriptRuntimeHost | null {
-        return this.activeScriptRuntimeHost;
     }
 
     getPackagerFactory(): ExternalPackagerFactory | undefined {
@@ -144,62 +115,6 @@ export class LayoutProcessor extends TextProcessor {
             tickRateHz,
             maxTicks: Math.max(1, Math.round(baseDurationSeconds * tickRateHz))
         };
-    }
-
-    private cloneElementsForSimulation(elements: Element[]): Element[] {
-        return structuredClone(elements) as Element[];
-    }
-
-    private elementTreeHasPhaseHandler(
-        elements: Element[],
-        predicate: (element: Element) => boolean
-    ): boolean {
-        const stack = [...elements];
-        while (stack.length > 0) {
-            const element = stack.pop();
-            if (!element) continue;
-            if (predicate(element)) return true;
-            if (Array.isArray(element.children) && element.children.length > 0) {
-                stack.push(...element.children);
-            }
-            if (Array.isArray(element.zones)) {
-                for (const zone of element.zones) {
-                    if (Array.isArray(zone.elements) && zone.elements.length > 0) {
-                        stack.push(...zone.elements);
-                    }
-                }
-            }
-            if (Array.isArray(element.slots)) {
-                for (const slot of element.slots) {
-                    if (Array.isArray(slot.elements) && slot.elements.length > 0) {
-                        stack.push(...slot.elements);
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private requiresSimulationClone(
-        elements: Element[],
-        scriptRuntimeHost: ScriptRuntimeHost | null
-    ): boolean {
-        if (!scriptRuntimeHost) return false;
-
-        const hasOnLoad = scriptRuntimeHost.getDocumentHandlerName('onLoad') !== null;
-        if (hasOnLoad) return true;
-
-        if (scriptRuntimeHost.hasDocumentAfterSettleHandler()) return true;
-
-        return this.elementTreeHasPhaseHandler(elements, (element) => {
-            const sourceId = typeof element.properties?.sourceId === 'string'
-                ? element.properties.sourceId
-                : null;
-            const explicitHandlerName = typeof element.properties?.onResolve === 'string'
-                ? element.properties.onResolve
-                : null;
-            return !!scriptRuntimeHost.getElementHandlerName(sourceId, 'onCreate', explicitHandlerName);
-        });
     }
 
     private normalizeOverflowPolicy(value: unknown): OverflowPolicy {
@@ -706,11 +621,11 @@ export class LayoutProcessor extends TextProcessor {
     }
 
     /**
-     * Canonical flat pipeline:
-     * input elements -> flow boxes -> paginated flow boxes -> positioned page boxes.
+     * Runs one engine simulation march. The march runner itself still advances
+     * until settled and may resettle from checkpoints when observers alter geometry.
      */
     simulate(elements: Element[], options: LayoutSimulationOptions = {}): Page[] {
-        const result = this.runSimulationReplayLoop(elements, null, null, options);
+        const result = this.runSimulationMarch(elements, null, options);
         return result.pages;
     }
 
@@ -718,25 +633,11 @@ export class LayoutProcessor extends TextProcessor {
         elements: Element[],
         options: { tickRateHz?: number; timeOffsetSeconds?: number } = {}
     ): SimulationRunner {
-        const scriptRuntimeHost = this.config.scripting
-            ? new ScriptRuntimeHost(this.config.scripting)
-            : null;
-        const simulationElements = this.requiresSimulationClone(elements, scriptRuntimeHost)
-            ? this.cloneElementsForSimulation(elements)
-            : elements;
-        const scriptLifecycleState = scriptRuntimeHost?.createLifecycleState() ?? null;
         this.resolvedLinesCache = new WeakMap<Element, Map<string, ResolvedLinesResult>>();
-        const { collaborators, scriptRuntimeHost: activeScriptRuntimeHost } = this.createLayoutCollaborators(
-            simulationElements,
-            scriptLifecycleState,
-            scriptRuntimeHost ?? undefined,
-            null
-        );
+        const { collaborators } = this.createLayoutCollaborators(null);
         const progression = this.resolveSimulationProgressionOverride(options);
         return this.createSimulationRunnerPass(
-            simulationElements,
-            activeScriptRuntimeHost,
-            scriptLifecycleState,
+            elements,
             null,
             collaborators,
             progression,
@@ -772,7 +673,7 @@ export class LayoutProcessor extends TextProcessor {
         const accumulatedTimeline: any[] = [];
 
         for (let asyncPass = 0; asyncPass < maxAsyncReplayPasses; asyncPass++) {
-            const result = this.runSimulationReplayLoop(elements, null, asyncThoughtHost);
+            const result = this.runSimulationMarch(elements, asyncThoughtHost);
             const report = result.session.getSimulationReport();
             const timeline = result.session.getSimulationReportReader().get('temporalPresentationTimeline' as any) as any[] | undefined;
             if (Array.isArray(timeline)) {
@@ -796,83 +697,27 @@ export class LayoutProcessor extends TextProcessor {
         throw new Error('[LayoutProcessor] Async thought replay exceeded the current bounded limit.');
     }
 
-    private runSimulationReplayLoop(
+    private runSimulationMarch(
         elements: Element[],
-        existingScriptRuntimeHost: ScriptRuntimeHost | null,
         asyncThoughtHost: AsyncThoughtHost | null,
         options: LayoutSimulationOptions = {}
     ): { pages: Page[]; session: LayoutSession } {
-        const maxScriptReplayPasses = 3;
-        const aggregateScriptProfile = Object.fromEntries(
-            LayoutProcessor.SCRIPT_PROFILE_KEYS.map((key) => [key, 0])
-        ) as Record<keyof LayoutProfileMetrics, number>;
-        const scriptRuntimeHost = existingScriptRuntimeHost ?? (this.config.scripting
-            ? new ScriptRuntimeHost(this.config.scripting)
-            : null);
-        // Any scripting-capable simulation works against a cloned element tree so
-        // authored input remains immutable across pre-layout and post-settlement
-        // runtime mutations.
-        const simulationElements = this.requiresSimulationClone(elements, scriptRuntimeHost)
-            ? this.cloneElementsForSimulation(elements)
-            : elements;
-        const scriptLifecycleState = scriptRuntimeHost?.createLifecycleState() ?? null;
-
-        for (let pass = 0; pass < maxScriptReplayPasses; pass++) {
-            this.resolvedLinesCache = new WeakMap<Element, Map<string, ResolvedLinesResult>>();
-            const { collaborators, scriptRuntimeCollaborator, scriptRuntimeHost: activeScriptRuntimeHost } = this.createLayoutCollaborators(
-                simulationElements,
-                scriptLifecycleState,
-                scriptRuntimeHost ?? undefined,
-                asyncThoughtHost
-            );
-            const { session, scriptDocumentPackager, runner } = this.createSimulationRunnerPass(
-                simulationElements,
-                activeScriptRuntimeHost,
-                scriptLifecycleState,
-                asyncThoughtHost,
-                collaborators,
-                undefined,
-                0,
-                options
-            );
-            const pages = runner.runToCompletion();
-            const finalized = session.finalizePages(pages);
-            for (const key of LayoutProcessor.SCRIPT_PROFILE_KEYS) {
-                aggregateScriptProfile[key] += Number(session.profile[key] || 0);
-            }
-
-            if (
-                scriptRuntimeCollaborator?.consumeReplayRequested()
-                || scriptDocumentPackager?.consumeReplayRequested()
-                || session.consumeScriptReplayRequested()
-            ) {
-                aggregateScriptProfile.replayPasses += 1;
-                if (pass >= maxScriptReplayPasses - 1) {
-                    throw new Error('[LayoutProcessor] Script requested replay more times than the current bounded limit allows.');
-                }
-                continue;
-            }
-
-            for (const key of LayoutProcessor.SCRIPT_PROFILE_KEYS) {
-                session.profile[key] = aggregateScriptProfile[key] as never;
-            }
-            const report = session.getSimulationReport();
-            if (report?.profile) {
-                for (const key of LayoutProcessor.SCRIPT_PROFILE_KEYS) {
-                    report.profile[key] = aggregateScriptProfile[key] as never;
-                }
-            }
-
-            return { pages: finalized, session };
-        }
-
-        throw new Error('[LayoutProcessor] Script replay loop exited unexpectedly.');
+        this.resolvedLinesCache = new WeakMap<Element, Map<string, ResolvedLinesResult>>();
+        const { collaborators } = this.createLayoutCollaborators(asyncThoughtHost);
+        const { session, runner } = this.createSimulationRunnerPass(
+            elements,
+            asyncThoughtHost,
+            collaborators,
+            undefined,
+            0,
+            options
+        );
+        const pages = runner.runToCompletion();
+        return { pages: session.finalizePages(pages), session };
     }
 
     private createSimulationRunnerPass(
         elements: Element[],
-        scriptRuntimeHost: ScriptRuntimeHost | null,
-        scriptLifecycleState: ScriptLifecycleState | null,
         asyncThoughtHost: AsyncThoughtHost | null,
         collaborators: readonly Collaborator[],
         progressionOverride?: Required<SimulationProgressionConfig>,
@@ -881,13 +726,11 @@ export class LayoutProcessor extends TextProcessor {
     ): {
         runner: SimulationRunner;
         session: LayoutSession;
-        scriptDocumentPackager: ScriptDocumentPackager | null;
     } {
         const firstPageGeometry = LayoutUtils.resolvePageGeometry(this.config, 0);
         const stopAtPage = Number.isFinite(Number(options.stopAtPage))
             ? Math.max(0, Math.floor(Number(options.stopAtPage)))
             : null;
-        this.activeScriptRuntimeHost = scriptRuntimeHost;
         const session = new LayoutSession({
             runtime: this.getRuntime(),
             collaborators,
@@ -900,11 +743,6 @@ export class LayoutProcessor extends TextProcessor {
         this.lastLayoutSession = session;
         session.notifySimulationStart();
         const packagers = createPackagers(elements, this, this.packagerFactory);
-        let scriptDocumentPackager: ScriptDocumentPackager | null = null;
-        if (scriptRuntimeHost?.hasDocumentAfterSettleHandler()) {
-            scriptDocumentPackager = new ScriptDocumentPackager(scriptRuntimeHost, elements, scriptLifecycleState!);
-            packagers.push(scriptDocumentPackager);
-        }
         for (const packager of packagers) {
             session.notifyActorSpawn(packager);
         }
@@ -927,8 +765,7 @@ export class LayoutProcessor extends TextProcessor {
         };
         return {
             runner: createSimulationMarchRunner(this, packagers, contextBase, session, progressionOverride),
-            session,
-            scriptDocumentPackager
+            session
         };
     }
 
@@ -1399,22 +1236,10 @@ export class LayoutProcessor extends TextProcessor {
     }
 
     private createLayoutCollaborators(
-        elements: Element[],
-        scriptLifecycleState: ScriptLifecycleState | null,
-        existingScriptRuntimeHost?: ScriptRuntimeHost,
         asyncThoughtHost?: AsyncThoughtHost | null
     ): {
         collaborators: Collaborator[];
-        scriptRuntimeCollaborator: ScriptRuntimeCollaborator | null;
-        scriptRuntimeHost: ScriptRuntimeHost | null;
     } {
-        const scriptRuntimeHost = existingScriptRuntimeHost
-            ?? (this.config.scripting
-                ? new ScriptRuntimeHost(this.config.scripting)
-                : null);
-        const scriptRuntimeCollaborator = scriptRuntimeHost
-            ? new ScriptRuntimeCollaborator(scriptRuntimeHost, elements, scriptLifecycleState ?? scriptRuntimeHost.createLifecycleState())
-            : null;
         const spatialCorePasses: Collaborator[] = [
             new ContinuationMarkerCollaborator(),
             new PageStartExclusionCollaborator(this.config),
@@ -1436,9 +1261,6 @@ export class LayoutProcessor extends TextProcessor {
                     this.layoutRegion(content, rect, pageIndex, sourceType, actorId)
             }),
         ];
-        const documentScriptingCollaborators: Collaborator[] = [
-            ...(scriptRuntimeCollaborator ? [scriptRuntimeCollaborator] : []),
-        ];
         const observerCollaborators: Collaborator[] = [
             new FragmentTransitionArtifactCollaborator(),
             new TransformCapabilityArtifactCollaborator(),
@@ -1458,14 +1280,11 @@ export class LayoutProcessor extends TextProcessor {
             new RegionDebugOverlayCollaborator(),
         ];
         return {
-            scriptRuntimeHost,
-            scriptRuntimeCollaborator,
             collaborators: [
                 ...spatialCorePasses,
                 ...spatialCoreSignals,
                 ...spatialCoreExperiments,
                 ...vmPrintPolicyCollaborators,
-                ...documentScriptingCollaborators,
                 ...observerCollaborators,
             ]
         };

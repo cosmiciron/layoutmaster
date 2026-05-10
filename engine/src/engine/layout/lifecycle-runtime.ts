@@ -6,11 +6,6 @@ import type {
 } from './runtime/session/session-pagination-types';
 import type { PaginationState } from './runtime/session/session-lifecycle-types';
 import type { PageFinalizationState } from './runtime/session/session-state-types';
-import {
-    collectScriptRegionsFromPageSummaries,
-    findScriptRegionByNameInRegions,
-    type ScriptRegionRef
-} from './script-region-query';
 import { summarizePageRegions, type PageRegionSummary } from './page-region-summary';
 
 export type LifecycleRuntimeHost = {
@@ -32,7 +27,6 @@ export class LifecycleRuntime {
     private logicalPageNumberCursor = 0;
     private finalizedPages: Page[] = [];
     private pageRegionSummaries: PageRegionSummary[] = [];
-    private cachedScriptRegions: readonly ScriptRegionRef[] | null = null;
     private readonly chunkPolicy: ChunkPolicy;
 
     constructor(
@@ -47,7 +41,6 @@ export class LifecycleRuntime {
     resetForSimulation(): void {
         this.finalizedPages = [];
         this.pageRegionSummaries = [];
-        this.cachedScriptRegions = null;
         this.pageFinalizationStates.clear();
         this.logicalPageNumberCursor = 0;
     }
@@ -55,7 +48,6 @@ export class LifecycleRuntime {
     recordFinalizedPage(page: Page): void {
         this.finalizedPages.push(page);
         this.pageRegionSummaries.push(summarizePageRegions(page));
-        this.cachedScriptRegions = null;
     }
 
     advancePage(
@@ -169,7 +161,6 @@ export class LifecycleRuntime {
     setFinalizedPages(pages: Page[]): void {
         this.finalizedPages = pages;
         this.pageRegionSummaries = pages.map((page) => summarizePageRegions(page));
-        this.cachedScriptRegions = null;
     }
 
     getFinalizedPages(): readonly Page[] {
@@ -178,19 +169,5 @@ export class LifecycleRuntime {
 
     getPageRegionSummaries(): readonly PageRegionSummary[] {
         return this.pageRegionSummaries;
-    }
-
-    getScriptRegions(): readonly ScriptRegionRef[] {
-        if (this.cachedScriptRegions) {
-            return this.cachedScriptRegions;
-        }
-        this.cachedScriptRegions = collectScriptRegionsFromPageSummaries(this.pageRegionSummaries);
-        return this.cachedScriptRegions;
-    }
-
-    findScriptRegionByName(name: string): ScriptRegionRef | null {
-        const normalized = String(name || '').trim();
-        if (!normalized) return null;
-        return findScriptRegionByNameInRegions(this.getScriptRegions(), normalized);
     }
 }

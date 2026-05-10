@@ -8,7 +8,6 @@ import {
     type WorldViewportRequest
 } from './viewport';
 export type {
-    ExternalMessage,
     SimulationDiagnosticProfileSnapshot,
     SimulationDiagnosticSnapshot,
     SimulationDiagnosticSourceSnapshot,

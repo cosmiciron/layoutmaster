@@ -7,7 +7,6 @@ export type ImageFitMode = 'contain' | 'fill';
 export type PageReservationSelector = 'first' | 'odd' | 'even' | 'all';
 export type VmprintDocumentVersion = '1.1';
 export type VmprintIRVersion = '1.0';
-export type ScriptMethodSource = string | string[];
 export type SimulationProgressionPolicy = 'until-settled' | 'fixed-tick-count';
 export type SimulationStopReason = 'settled' | 'fixed-tick-count' | 'page-limit';
 
@@ -28,13 +27,6 @@ export interface SimulationProgressionConfig {
     policy?: SimulationProgressionPolicy;
     maxTicks?: number;
     tickRateHz?: number;
-}
-
-export interface LayoutScriptingConfig {
-    methods?: Record<string, ScriptMethodSource>;
-    vars?: Record<string, unknown>;
-    onBeforeLayout?: string;
-    onAfterSettle?: string;
 }
 
 export type ShapedGlyph = {
@@ -319,7 +311,7 @@ export interface ElementProperties extends Record<string, any> {
     spatialField?: SpatialFieldDirective;
     /**
      * Preferred public name for simple built-in declarative movement.
-     * Kept intentionally narrow so small motion does not require scripting.
+     * Kept intentionally narrow so small motion stays declarative.
      */
     motion?: ElementSimulationDirective;
     pageOverrides?: {
@@ -612,7 +604,6 @@ export interface LayoutConfig {
             includeTitle?: boolean;
         };
     };
-    scripting?: LayoutScriptingConfig;
     preloadFontFamilies?: string[];
     runtimeHints?: {
         /**
@@ -635,10 +626,6 @@ export interface DocumentInput {
     header?: PageRegionDefinition;
     footer?: PageRegionDefinition;
     printPipeline?: LayoutConfig['printPipeline'];
-    methods?: Record<string, ScriptMethodSource>;
-    scriptVars?: Record<string, unknown>;
-    onBeforeLayout?: string;
-    onAfterSettle?: string;
     debug?: boolean;
 }
 

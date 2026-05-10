@@ -5,7 +5,6 @@ import type { ContinuationArtifacts, FlowBox } from '../../layout-core-types';
 import type { PackagerContext, PackagerReshapeResult } from '../../packagers/packager-types';
 import type { PackagerUnit } from '../../packagers/packager-types';
 import type { PageRegionSummary } from '../../page-region-summary';
-import type { ScriptRegionRef } from '../../script-region-query';
 import type { SimulationArtifactKey, SimulationArtifactMap } from '../../simulation-report';
 import type { CollaboratorConstraintField } from './session-constraint-types';
 import type { PageSurface, PaginationLoopState, SplitAttempt } from './session-lifecycle-types';
@@ -104,10 +103,6 @@ export interface CollaboratorHost {
     // Transition reads
     getFragmentTransitionSourceIds(): readonly string[];
     getFragmentTransitionsBySource(sourceActorId: string): readonly FragmentTransition[];
-
-    // Script reads
-    getScriptRegions(): readonly ScriptRegionRef[];
-    findScriptRegionByName(name: string): ScriptRegionRef | null;
 
     // Page finalization (PageRegionCollaborator)
     allocateLogicalPageNumber(usesLogicalNumbering: boolean): number | null;

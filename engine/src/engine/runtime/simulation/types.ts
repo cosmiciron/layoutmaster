@@ -3,15 +3,6 @@ import type { LayoutProfileMetrics } from '../../layout/runtime/session/session-
 import type { PageCaptureRecord } from '../../layout/runtime/session/session-state-types';
 import type { Page, SimulationStopReason } from '../../types';
 
-export type ExternalMessage = {
-    subject: string;
-    payload?: unknown;
-    sender?: string;
-    meta?: {
-        messageId?: string;
-    };
-};
-
 export type SimulationUpdateSource = 'none' | 'stepped-actors' | 'observer-registry';
 
 export type SimulationUpdateSummary = {
@@ -64,6 +55,4 @@ export interface SimulationRunner {
     getCurrentPages(): Page[];
     runToCompletion(): Page[];
     advanceTick(): boolean;
-    sendExternalMessage(targetSourceId: string, message: ExternalMessage): boolean;
-    hasExternalMessageAck(messageId: string): boolean;
 }

@@ -43,7 +43,6 @@ import type {
 } from './simulation-report';
 import { SimulationReportBridge } from './simulation-report-bridge';
 import type { PageRegionSummary } from './page-region-summary';
-import type { ScriptRegionRef } from './script-region-query';
 
 import {
     type FragmentTransition,
@@ -377,22 +376,11 @@ export class LayoutSession {
     private paginationLoopState: PaginationLoopState | null = null;
     private speculativeBranchSequence = 0;
     private readonly flowResolveSignaturesSeen = new Set<string>();
-    private scriptReplayRequested = false;
 
     currentPageIndex = 0;
     currentY = 0;
     currentConstraintField: ConstraintField | null = null;
     currentSurface: PageSurface | null = null;
-
-    requestScriptReplay(): void {
-        this.scriptReplayRequested = true;
-    }
-
-    consumeScriptReplayRequested(): boolean {
-        const value = this.scriptReplayRequested;
-        this.scriptReplayRequested = false;
-        return value;
-    }
 
     constructor(options: LayoutSessionOptions) {
         this.runtime = options.runtime;
@@ -1295,14 +1283,6 @@ export class LayoutSession {
 
     getPageRegionSummaries(): readonly PageRegionSummary[] {
         return this.sessionCollaborationRuntime.getPageRegionSummaries();
-    }
-
-    getScriptRegions(): readonly ScriptRegionRef[] {
-        return this.sessionCollaborationRuntime.getScriptRegions();
-    }
-
-    findScriptRegionByName(name: string): ScriptRegionRef | null {
-        return this.sessionCollaborationRuntime.findScriptRegionByName(name);
     }
 
     recordPageCapture(record: PageCaptureRecord): void {

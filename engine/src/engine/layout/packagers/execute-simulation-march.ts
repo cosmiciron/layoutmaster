@@ -1,5 +1,4 @@
 export type {
-    ExternalMessage,
     SimulationDiagnosticProfileSnapshot,
     SimulationDiagnosticSnapshot,
     SimulationDiagnosticSourceSnapshot,

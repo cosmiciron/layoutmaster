@@ -45,6 +45,11 @@ function requirePath(existingPath, message) {
   assert.ok(fs.existsSync(existingPath), `${message}\nMissing path: ${existingPath}`);
 }
 
+function isScriptingFixture(rawSource) {
+  return /(^|\n)---[\s\S]*?\nmethods\s*:/m.test(rawSource)
+    || /"methods"\s*:|"scriptVars"\s*:|"onBeforeLayout"\s*:|"onAfterSettle"\s*:/m.test(rawSource);
+}
+
 export function assertVmprintIntegrityPrerequisites() {
   requirePath(
     embeddedEngineDistPath,
@@ -110,7 +115,8 @@ export function loadVmprintRegressionFixtures() {
         fixtureRaw: fs.readFileSync(fixturePath, "utf8"),
         expected: JSON.parse(fs.readFileSync(snapshotPath, "utf8"))
       };
-    });
+    })
+    .filter((fixture) => !isScriptingFixture(fixture.fixtureRaw));
 }
 
 export async function runVmprintRegressionFixture(fixture) {

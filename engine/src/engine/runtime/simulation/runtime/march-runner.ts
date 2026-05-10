@@ -9,7 +9,7 @@ import type { PageCaptureRecord } from '../../../layout/runtime/session/session-
 import type { PaginationLoopAction } from '../../../layout/runtime/session/session-pagination-types';
 import { ChunkAdvanceStopped } from '../../../layout/chunk-policy';
 import { PackagerContext, type PackagerUnit, type LayoutBox, type SpatialFrontier } from '../../../layout/packagers/packager-types';
-import { createScriptMessageAckTopic, createScriptMessageTopic, LayoutUtils } from '../../../layout/layout-utils';
+import { LayoutUtils } from '../../../layout/layout-utils';
 import { handleBoundaryCheckpoint } from '../core/boundary-checkpoints';
 import { reapplyCheckpointState } from '../core/checkpoints';
 import { applyContentOnlyObservation } from '../core/content-updates';
@@ -26,7 +26,6 @@ import { accumulateUpdateSummary, createEmptyUpdateSummary } from '../core/updat
 import { collectDiagnosticSources } from '../tooling/diagnostics';
 import { clonePage } from '../tooling/pages';
 import type {
-    ExternalMessage,
     SimulationDiagnosticSnapshot,
     SimulationRunner,
     SimulationUpdateSource,
@@ -224,36 +223,6 @@ export class SimulationMarchRunner implements SimulationRunner {
             }
         }
         return this.pages;
-    }
-
-    sendExternalMessage(targetSourceId: string, message: ExternalMessage): boolean {
-        const normalizedId = LayoutUtils.normalizeAuthorSourceId(targetSourceId) ?? targetSourceId;
-        const actors = this.session.getRegisteredActors();
-        const found = actors.some((actor) => actor.sourceId === normalizedId);
-        if (!found) return false;
-        this.session.publishActorSignal({
-            topic: createScriptMessageTopic(targetSourceId),
-            publisherActorId: 'host:external',
-            publisherSourceId: 'host:external',
-            publisherActorKind: 'host',
-            fragmentIndex: 0,
-            payload: {
-                subject: message.subject,
-                payload: message.payload,
-                from: message.sender ?? 'host',
-                to: targetSourceId,
-                __vmcanvasMessageId: typeof message.meta?.messageId === 'string'
-                    ? message.meta.messageId
-                    : undefined
-            }
-        });
-        return true;
-    }
-
-    hasExternalMessageAck(messageId: string): boolean {
-        const normalizedId = String(messageId || '').trim();
-        if (!normalizedId) return false;
-        return this.session.getActorSignals(createScriptMessageAckTopic(normalizedId)).length > 0;
     }
 
     advanceTick(): boolean {

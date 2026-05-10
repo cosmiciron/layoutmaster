@@ -15,17 +15,11 @@ import { isTableElement } from '../layout-table';
 import type { FlowBox } from '../layout-core-types';
 import type { NormalizedFlowBlock } from '../normalized-flow-block';
 import { createElementPackagerIdentity } from './packager-identity';
-import { ScriptedFlowBoxPackager } from './scripted-flow-box-packager';
-import { ScriptRuntimeHost } from '../script-runtime-host';
 
 type ElementShaper = {
     shapeElement(element: Element, options: { path: number[] }): FlowBox;
     normalizeFlowBlock(element: Element, options: { path: number[] }): NormalizedFlowBlock;
     shapeNormalizedFlowBlock(block: NormalizedFlowBlock): FlowBox;
-};
-
-type ScriptHostProvider = LayoutProcessor & {
-    getActiveScriptRuntimeHost(): ScriptRuntimeHost | null;
 };
 
 /**
@@ -76,14 +70,6 @@ export function buildPackagerForElement(
     const dropCap = item.dropCap;
     if (dropCap && dropCap.enabled) {
         return new DropCapPackager(processor, item, index, dropCap, identity);
-    }
-    const scriptHost = (processor as unknown as ScriptHostProvider).getActiveScriptRuntimeHost();
-    const sourceId = typeof item.properties?.sourceId === 'string' ? item.properties.sourceId : null;
-    const hasMessageHandler =
-        (typeof item.properties?.onMessage === 'string' && item.properties.onMessage.length > 0)
-        || !!(scriptHost && scriptHost.hasElementHandler(sourceId, 'onMessage'));
-    if (scriptHost && hasMessageHandler) {
-        return new ScriptedFlowBoxPackager(processor, flowBox, scriptHost, item, identity, [index], elements || [item]);
     }
     const flowPackager = ((item.properties?.space ?? item.properties?.spatialField) as { kind?: string } | undefined)?.kind === 'contain'
         ? new ContainedFlowPackager(processor, flowBox, identity)

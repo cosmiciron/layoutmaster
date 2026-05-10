@@ -11,7 +11,7 @@ assertVmprintIntegrityPrerequisites();
 
 const fixtures = loadVmprintRegressionFixtures();
 
-test("embedded engine matches vmprint regression snapshots", async (t) => {
+test("embedded engine matches non-scripting vmprint regression snapshots", async (t) => {
   for (const fixture of fixtures) {
     await t.test(fixture.name, async () => {
       const actual = await runVmprintRegressionFixture(fixture);

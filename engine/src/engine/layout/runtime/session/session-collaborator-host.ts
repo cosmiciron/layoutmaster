@@ -8,7 +8,6 @@ import type { FragmentTransition, PageCaptureRecord, PageCaptureState, PageFinal
 import type { PageExclusionIntent, PageReservationIntent, RegionReservation, SpatialExclusion } from './session-spatial-types';
 import type { PackagerUnit } from '../../packagers/packager-types';
 import type { PageRegionSummary } from '../../page-region-summary';
-import type { ScriptRegionRef } from '../../script-region-query';
 import type { SimulationArtifactKey, SimulationArtifactMap } from '../../simulation-report';
 import type { SessionCollaborationRuntime } from './session-collaboration-runtime';
 
@@ -149,14 +148,6 @@ export class SessionCollaboratorHost implements CollaboratorHost {
 
     getFragmentTransitionsBySource(sourceActorId: string): readonly FragmentTransition[] {
         return this.deps.getFragmentTransitionsBySource(sourceActorId);
-    }
-
-    getScriptRegions(): readonly ScriptRegionRef[] {
-        return this.deps.collaborationRuntime.getScriptRegions();
-    }
-
-    findScriptRegionByName(name: string): ScriptRegionRef | null {
-        return this.deps.collaborationRuntime.findScriptRegionByName(name);
     }
 
     allocateLogicalPageNumber(usesLogicalNumbering: boolean): number | null {
