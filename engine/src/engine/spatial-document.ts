@@ -295,12 +295,6 @@ function adaptFlowBlock(
         if (passthrough.spatialField && typeof passthrough.spatialField === 'object') {
             properties.spatialField = JSON.parse(JSON.stringify(passthrough.spatialField));
         }
-        if (typeof passthrough.onResolve === 'string') {
-            properties.onResolve = passthrough.onResolve;
-        }
-        if (typeof passthrough.onMessage === 'string') {
-            properties.onMessage = passthrough.onMessage;
-        }
         if (passthrough._worldPlainOptions && typeof passthrough._worldPlainOptions === 'object') {
             properties._worldPlainOptions = JSON.parse(JSON.stringify(passthrough._worldPlainOptions));
         }

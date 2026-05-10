@@ -145,9 +145,6 @@ export class SimulationMarchRunner implements SimulationRunner {
             namedSources: collectDiagnosticSources(this.session.getRegisteredActors()),
             profile: {
                 simulationTickCount: profile.simulationTickCount,
-                setContentCalls: profile.setContentCalls,
-                messageSendCalls: profile.messageSendCalls,
-                messageHandlerCalls: profile.messageHandlerCalls,
                 actorUpdateContentOnlyCalls: profile.actorUpdateContentOnlyCalls,
                 actorUpdateGeometryCalls: profile.actorUpdateGeometryCalls,
                 actorUpdateNoopCalls: profile.actorUpdateNoopCalls

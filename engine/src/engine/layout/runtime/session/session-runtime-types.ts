@@ -12,33 +12,15 @@ import type { FragmentTransition, PageCaptureRecord, PageCaptureState, PageFinal
 import type { PageExclusionIntent, PageReservationIntent, RegionReservation, SpatialExclusion } from './session-spatial-types';
 
 export type RuntimeProfileMetric =
-    | 'createCalls'
-    | 'createMs'
-    | 'docQueryCalls'
-    | 'documentChangedCalls'
-    | 'documentChangedMs'
-    | 'handlerCalls'
-    | 'handlerMs'
-    | 'insertCalls'
     | 'keepWithNextEarlyExitCalls'
     | 'keepWithNextPlanCalls'
     | 'keepWithNextPlanMs'
     | 'keepWithNextPreparedActors'
-    | 'loadCalls'
-    | 'loadMs'
-    | 'messageHandlerCalls'
-    | 'messageSendCalls'
-    | 'readyCalls'
-    | 'readyMs'
-    | 'removeCalls'
     | 'refreshCalls'
     | 'refreshMs'
-    | 'replayRequests'
-    | 'replaceCalls'
     | 'reservationArtifactMs'
     | 'reservationCommitProbeCalls'
-    | 'reservationCommitProbeMs'
-    | 'setContentCalls';
+    | 'reservationCommitProbeMs';
 
 export type PageCaptureStateParams = {
     pageIndex: number;

@@ -78,8 +78,6 @@ const ELEMENT_PROPERTIES_KEYS = new Set([
     'semanticRole',
     'reflowKey',
     'keepWithNext',
-    'onResolve',
-    'onMessage',
     'marginTop',
     'marginBottom',
     'paginationContinuation',
@@ -925,8 +923,6 @@ function validateElementProperties(
     if (props.sourceId !== undefined) assertStringAt(props.sourceId, `${path}.sourceId`, documentPath);
     if (props.linkTarget !== undefined) assertStringAt(props.linkTarget, `${path}.linkTarget`, documentPath);
     if (props.semanticRole !== undefined) assertStringAt(props.semanticRole, `${path}.semanticRole`, documentPath);
-    if (props.onResolve !== undefined) assertStringAt(props.onResolve, `${path}.onResolve`, documentPath);
-    if (props.onMessage !== undefined) assertStringAt(props.onMessage, `${path}.onMessage`, documentPath);
     if (props.reflowKey !== undefined) assertStringAt(props.reflowKey, `${path}.reflowKey`, documentPath);
     if (props.sourceSyntax !== undefined) assertStringAt(props.sourceSyntax, `${path}.sourceSyntax`, documentPath);
     if (props.language !== undefined) assertStringAt(props.language, `${path}.language`, documentPath);

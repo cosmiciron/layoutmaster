@@ -288,8 +288,6 @@ export interface ElementProperties extends Record<string, any> {
     semanticRole?: string;
     reflowKey?: string;
     keepWithNext?: boolean;
-    onResolve?: string;
-    onMessage?: string;
     marginTop?: number;
     marginBottom?: number;
     paginationContinuation?: Record<string, any>;

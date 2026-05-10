@@ -23,9 +23,6 @@ export type SimulationDiagnosticSourceSnapshot = {
 export type SimulationDiagnosticProfileSnapshot = Pick<
     LayoutProfileMetrics,
     | 'simulationTickCount'
-    | 'setContentCalls'
-    | 'messageSendCalls'
-    | 'messageHandlerCalls'
     | 'actorUpdateContentOnlyCalls'
     | 'actorUpdateGeometryCalls'
     | 'actorUpdateNoopCalls'

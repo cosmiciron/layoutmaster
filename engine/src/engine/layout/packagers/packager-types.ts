@@ -1,6 +1,6 @@
 import { Box } from '../../types';
 import type { SimulationProgressionConfig } from '../../types';
-import { LayoutProcessor } from '../layout-core';
+import type { LayoutProcessor } from '../layout-core';
 import { FlowBox } from '../layout-core-types';
 import type { ActorSignal, ActorSignalDraft } from '../actor-event-bus';
 import type { AsyncThoughtHandle, AsyncThoughtRequest } from '../async-thought-host';
@@ -29,7 +29,7 @@ export type ObservationResult = {
 };
 
 export interface PackagerContext {
-    processor: any; // We'll cast to LayoutProcessor
+    processor: LayoutProcessor;
     pageIndex: number;
     cursorY: number;
     simulationTick?: number;
