@@ -1,42 +1,42 @@
 # Layoutmaster
 
-Layout is one of the essential substrates of the computing world. It is also
-one of the hardest to get right.
+Every time you ask the DOM where something goes, it makes you wait while
+it figures it out.
 
-For decades, developers have depended on browsers to handle it. But browser layout
-technology has not seen a significant upgrade in decades. Everything else got faster,
-but the part that handles layout remains a single chef working the kitchen alone.
+Ask too often, too fast — animate content, stream AI output, resize a
+giant masonry wall — and it thrashes. That is not a browser bug. That
+is the architecture. The browser's layout engine takes layout orders one
+at a time, on the main thread, and blocks everything else while it works.
 
-And that chef, in the age of AI generative UIs, where content arrives without warning
-and surfaces have to compose themselves on the fly, is overwhelmed.
+![Dr. DOM — The Tyrant of Terrible Layouts, versus Layoutmaster](https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/dr-dom.png)
 
-Enter Layoutmaster.
+Layoutmaster computes text layout without touching the DOM — returning
+exact coordinates, baselines, and paint metadata for every text fragment
+before a single pixel is painted. Whether you render with HTML, canvas,
+or WebGL doesn't matter. The engine hands you the job tickets. You paint.
+The DOM just follows orders.
 
-![Dancing text demo: live text layout dodging animated video silhouettes](https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/men-dance.gif)
+For example: 320,000 words — four novels back to back — laid out as a
+343,912px masonry wall on a base Pixel 10 phone in 882ms. Resize the
+window. It recomputes. Resize again. It recomputes again. Every time,
+in roughly the same bounded range.
 
-> **Try it live:** [cosmiciron.github.io/layoutmaster](https://cosmiciron.github.io/layoutmaster/)
->
-> **Watch the full demo UI:**
->
-> <a href="https://youtu.be/UwooKHDp6hs"><img src="https://img.youtube.com/vi/UwooKHDp6hs/maxresdefault.jpg" alt="Anime Girl Dancing With Texts: Layoutmaster demo UI with live text wrapping around animated video silhouettes" width="260"></a>
-> <a href="https://youtu.be/eQcJLhVWBeU"><img src="https://img.youtube.com/vi/eQcJLhVWBeU/maxresdefault.jpg" alt="Man Dancing With Texts: Layoutmaster text layout demo wrapping text around a dancing figure" width="260"></a>
->
-> [Anime Girl Dancing With Texts](https://youtu.be/UwooKHDp6hs) · [Man Dancing With Texts](https://youtu.be/eQcJLhVWBeU)
-
-While the browser's chef is still taking orders one at a time, Layoutmaster is like
-SpongeBob going absolutely mad in the kitchen. For example, it takes a novel with more than
-80,000 words and creates 370 pages from it. Not just any pages, but desktop-publishing-grade layout
-with advanced typography, widow/orphan control, and dynamically generated headers and footers. And it
-does this in 755ms and places the fully searchable, selectable text on a single HTML "wall" in
-31ms on a...
-
-base Pixel phone!
-
-Try this with your browser and DOM on your shiny MacBook Pro, you will still fry it. So don't.
+Try this with your browser and DOM on your shiny MacBook Pro, you will
+still fry it. So don't.
 
 Let the master handle layout, and your browser *will* thank you.
 
-Now you ask - how?
+> **Try it live:** [layoutmaster.dev](https://layoutmaster.dev)
+>
+> **Watch the dancing text demo:**
+>
+> <a href="https://layoutmaster.dev/demo.mp4">
+>   <img src="https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/video-cover.png"
+>     alt="Layoutmaster dancing text demo: live text layout wrapping around animated video silhouettes in real time"
+>     width="480">
+> </a>
+
+Now you ask — how?
 
 Two words: *game engines*.
 
@@ -268,9 +268,10 @@ recorded it.
 
 > **Watch the resize stress test:**
 >
-> <a href="https://youtu.be/qy0HDfbuthw"><img src="https://i.ytimg.com/vi/qy0HDfbuthw/hqdefault.jpg" alt="Layoutmaster versus DOM masonry resize stress test" width="260"></a>
->
-> [Layoutmaster vs DOM Masonry Resize Stress Test](https://youtu.be/qy0HDfbuthw)
+> <a href="https://youtu.be/qy0HDfbuthw">
+>   <img src="https://i.ytimg.com/vi/qy0HDfbuthw/hqdefault.jpg"
+>     alt="Layoutmaster versus DOM masonry resize stress test" width="480">
+> </a>
 
 The test is a masonry wall made from the same book content. Each chapter becomes
 a live card.
