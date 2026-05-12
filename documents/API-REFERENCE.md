@@ -86,6 +86,52 @@ const result = form(text, {
 });
 ```
 
+The demos' `prepareBrowserFonts()` helper is not exported by Layoutmaster. It is
+just the app-side pattern used by DOMless demos that offer a font picker without
+also rendering a styled source element. It creates a tiny hidden probe so the
+browser sees a real styled text request, then asks the CSS Font Loading API to
+resolve the same font before the demo calls Layoutmaster:
+
+```js
+async function prepareBrowserFonts({
+  fontFamily,
+  fontSize,
+  fontWeight = 400,
+  fontStyle = "normal",
+  text = "Hamburgefonstiv 1234567890"
+}) {
+  const probe = document.createElement("span");
+  probe.style.position = "absolute";
+  probe.style.left = "-10000px";
+  probe.style.visibility = "hidden";
+  probe.style.fontFamily = fontFamily;
+  probe.style.fontSize = `${fontSize}px`;
+  probe.style.fontWeight = String(fontWeight);
+  probe.style.fontStyle = fontStyle;
+  probe.textContent = text;
+  document.body.append(probe);
+
+  if (document.fonts?.load) {
+    await document.fonts.load(
+      `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`,
+      text
+    );
+  }
+}
+
+await prepareBrowserFonts({
+  fontFamily: `"Comic Sans MS", cursive`,
+  fontSize: 18,
+  text
+});
+
+const result = form(text, {
+  width: 420,
+  fontFamily: `"Comic Sans MS", cursive`,
+  fontSize: 18
+});
+```
+
 ## Content Inputs
 
 `form()`, `fit()`, `plan()`, `flow()`, and `pour()` take string content.
