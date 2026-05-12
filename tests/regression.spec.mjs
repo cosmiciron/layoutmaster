@@ -19,6 +19,7 @@ const updateSnapshots =
 const fixtures = loadRegressionFixtures();
 const layoutmasterModule = await import(pathToFileURL(path.join(process.cwd(), "src", "index.js")).href);
 const projectionModule = await import(pathToFileURL(path.join(process.cwd(), "src", "internal", "engine-result-projection.js")).href);
+const browserRuntimeModule = await import(pathToFileURL(path.join(process.cwd(), "src", "browser-runtime.js")).href);
 const {
   form,
   fit,
@@ -32,6 +33,10 @@ const {
 const {
   extractRegionResults
 } = projectionModule;
+const {
+  createBrowserTextDelegate,
+  getBrowserFallbackFontEntries
+} = browserRuntimeModule;
 
 test("layoutmaster regression fixtures remain stable", async (t) => {
   for (const fixture of fixtures) {
@@ -330,6 +335,33 @@ test("layoutmaster browser font mode preserves author CSS stacks for multilingua
       `expected opening quote not to dangle as its own piece at width ${width}`
     );
   }
+});
+
+test("layoutmaster projects base font family onto plain API pieces", () => {
+  const fontFamily = "Georgia, serif";
+  const result = form("Changing demo fonts should change the painted pieces.", {
+    width: 420,
+    fontFamily,
+    fontSize: 18,
+    lineHeight: 1.35
+  });
+
+  assert.ok(result.pieces.length > 0, "expected form to return pieces");
+  assert.ok(
+    result.pieces.every((piece) => piece.fontFamily === fontFamily),
+    "expected plain text pieces to carry the requested base font family"
+  );
+});
+
+test("layoutmaster browser runtime prewarms mapped fallback fonts without enabling fallback injection", () => {
+  const textDelegate = createBrowserTextDelegate();
+  const fallbackFonts = getBrowserFallbackFontEntries();
+  const fallbackNames = fallbackFonts.map((font) => font.name);
+
+  assert.ok(fallbackNames.some((name) => name.startsWith("Noto Sans SC ")), "expected CJK browser fallback preload");
+  assert.ok(fallbackNames.some((name) => name.startsWith("Noto Sans Arabic ")), "expected Arabic browser fallback preload");
+  assert.equal(textDelegate.getFallbackFamilies().length, 0, "expected browser mode to avoid fallback-family injection");
+  assert.equal(textDelegate.getEnabledFallbackFonts().length, 0, "expected fallback prewarming to stay separate from enabled fallbacks");
 });
 
 test("layoutmaster lowers direction and lang options into the engine document", () => {

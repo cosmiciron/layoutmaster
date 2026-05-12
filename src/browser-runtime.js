@@ -270,6 +270,84 @@ function resolveMetricDescent(metrics, fallback) {
 
 const browserVerticalMetricsCache = new Map();
 const browserCssBaselineOffsetCache = new Map();
+const browserFontWarmupKeys = new Set();
+let browserFontWarmupRoot = null;
+
+function getBrowserFontWarmupRoot() {
+  if (
+    typeof document === "undefined"
+    || typeof document.createElement !== "function"
+    || !document.body
+  ) {
+    return null;
+  }
+
+  if (browserFontWarmupRoot && browserFontWarmupRoot.isConnected) {
+    return browserFontWarmupRoot;
+  }
+
+  const root = document.createElement("div");
+  root.setAttribute("aria-hidden", "true");
+  root.style.position = "absolute";
+  root.style.left = "-10000px";
+  root.style.top = "0";
+  root.style.width = "1px";
+  root.style.height = "1px";
+  root.style.overflow = "hidden";
+  root.style.visibility = "hidden";
+  root.style.pointerEvents = "none";
+  document.body.append(root);
+  browserFontWarmupRoot = root;
+  return root;
+}
+
+function warmBrowserMeasurementFont(font) {
+  if (!font) return;
+  const root = getBrowserFontWarmupRoot();
+  if (!root) return;
+
+  const fontFamily = font.browserFamily || font.family || "serif";
+  const fontWeight = font.weight || "400";
+  const fontStyle = font.style || "normal";
+  const key = [fontFamily, fontWeight, fontStyle].join("|");
+  if (browserFontWarmupKeys.has(key)) {
+    return;
+  }
+  browserFontWarmupKeys.add(key);
+
+  const probe = document.createElement("span");
+  probe.style.fontFamily = fontFamily;
+  probe.style.fontWeight = String(fontWeight);
+  probe.style.fontStyle = fontStyle;
+  probe.style.fontSize = "32px";
+  probe.style.lineHeight = "1";
+  probe.style.whiteSpace = "pre";
+  probe.textContent = "Hamburgefonstiv العربية 中文 日本語 😀";
+  root.append(probe);
+
+  if (document.fonts && typeof document.fonts.load === "function") {
+    try {
+      document.fonts.load(`${fontStyle} ${fontWeight} 32px ${quoteFontFamily(fontFamily)}`, probe.textContent).catch(() => {});
+    } catch {
+      // The DOM probe still gives local/browser fonts a concrete style request.
+    }
+  }
+
+  probe.getBoundingClientRect();
+}
+
+function getBrowserFallbackFontEntries() {
+  return Object.keys(BROWSER_FONT_FAMILIES)
+    .filter((family) => BROWSER_FONT_FAMILIES[family].fallback)
+    .map((family) => {
+      const entry = createFontEntry(family, 400, "normal");
+      return {
+        src: entry.src,
+        name: entry.name,
+        unicodeRange: entry.unicodeRange
+      };
+    });
+}
 
 function measureBrowserCssBaselineOffset({ fontFamily, fontSize, fontWeight, fontStyle, lineHeight }) {
   if (
@@ -401,6 +479,7 @@ class CanvasTextDelegate {
     const cacheKey = this.getFaceCacheKey(font);
     const cached = browserVerticalMetricsCache.get(cacheKey);
     if (cached) return cached;
+    warmBrowserMeasurementFont(font);
     this.context.save();
     this.context.font = buildCanvasFont(font, 100);
     this.context.textBaseline = "alphabetic";
@@ -467,6 +546,7 @@ class CanvasTextDelegate {
     }
 
     const context = this.context;
+    warmBrowserMeasurementFont(font);
     context.save();
     context.font = buildCanvasFont(font, fontSize);
     context.textBaseline = "alphabetic";
@@ -490,6 +570,7 @@ class CanvasTextDelegate {
 
   estimateTextBoundsMetrics(font, text) {
     if (!font || !text) return null;
+    warmBrowserMeasurementFont(font);
     this.context.save();
     this.context.font = buildCanvasFont(font, 100);
     this.context.textBaseline = "alphabetic";
@@ -513,6 +594,8 @@ function createBrowserTextDelegate() {
 export {
   CanvasTextDelegate,
   createBrowserTextDelegate,
+  getBrowserFallbackFontEntries,
   measureBrowserCssBaselineOffset,
-  resolveBrowserMeasurementFontBySrc
+  resolveBrowserMeasurementFontBySrc,
+  warmBrowserMeasurementFont
 };

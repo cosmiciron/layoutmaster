@@ -7,7 +7,9 @@ import {
 } from "../../engine/dist/core/index.mjs";
 import {
   createBrowserTextDelegate,
-  resolveBrowserMeasurementFontBySrc
+  getBrowserFallbackFontEntries,
+  resolveBrowserMeasurementFontBySrc,
+  warmBrowserMeasurementFont
 } from "../browser-runtime.js";
 import { readEmbeddedEngineReport } from "./engine-report-helper.js";
 
@@ -109,15 +111,21 @@ function ensureSynchronousBrowserRuntime(config) {
     for (const font of textDelegate.getFontsByFamily(family)) {
       if (!(font.src in sharedBrowserFaceCache)) {
         const face = resolveBrowserMeasurementFontBySrc(font.src);
-        if (face) sharedBrowserFaceCache[font.src] = face;
+        if (face) {
+          warmBrowserMeasurementFont(face);
+          sharedBrowserFaceCache[font.src] = face;
+        }
       }
     }
   }
 
-  for (const fallback of textDelegate.getEnabledFallbackFonts()) {
+  for (const fallback of getBrowserFallbackFontEntries()) {
     if (!(fallback.src in sharedBrowserFaceCache)) {
       const face = resolveBrowserMeasurementFontBySrc(fallback.src);
-      if (face) sharedBrowserFaceCache[fallback.src] = face;
+      if (face) {
+        warmBrowserMeasurementFont(face);
+        sharedBrowserFaceCache[fallback.src] = face;
+      }
     }
   }
 

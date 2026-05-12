@@ -234,6 +234,7 @@ function copyUnderscoreFields(target, source) {
 function createPieceFromSegment({
   rawSegment,
   rawBox,
+  baseStyle,
   bounds,
   targetOffsetX,
   targetOffsetY,
@@ -307,8 +308,20 @@ function createPieceFromSegment({
 
   copyUnderscoreFields(piece, rawBox?.properties);
   copyUnderscoreFields(piece, rawSegment);
+  copyStyleFields(piece, baseStyle);
   copyStyleFields(piece, rawSegment?.style);
   return piece;
+}
+
+function buildBasePieceStyle(boxStyle = {}, layout = DEFAULT_LAYOUT) {
+  return {
+    fontFamily: boxStyle.fontFamily || layout?.fontFamily || DEFAULT_LAYOUT.fontFamily,
+    fontSize: boxStyle.fontSize || layout?.fontSize || DEFAULT_LAYOUT.fontSize,
+    letterSpacing: boxStyle.letterSpacing || 0,
+    fontWeight: boxStyle.fontWeight,
+    fontStyle: boxStyle.fontStyle,
+    color: boxStyle.color
+  };
 }
 
 function createRawTextPageProjection(page, layout = DEFAULT_LAYOUT) {
@@ -325,6 +338,7 @@ function createRawTextPageProjection(page, layout = DEFAULT_LAYOUT) {
     const shape = getBoxShape(rawBox);
     const contentBox = resolveContentBox(rawBox);
     const boxStyle = rawBox.style || {};
+    const basePieceStyle = buildBasePieceStyle(boxStyle, layout);
     const fontSize = Number(boxStyle.fontSize || layout?.fontSize || DEFAULT_LAYOUT.fontSize);
     const lineHeight = Number(boxStyle.lineHeight || layout?.lineHeight || DEFAULT_LAYOUT.lineHeight);
     const lineFrame = createLineFrameAccessors(rawBox.properties || {}, contentBox.y, contentBox.w);
@@ -447,6 +461,7 @@ function createRawTextPageProjection(page, layout = DEFAULT_LAYOUT) {
             visualText: visualTextByLogicalSegment[item.logicalIndex]
           },
           rawBox,
+          baseStyle: basePieceStyle,
           bounds,
           targetOffsetX: 0,
           targetOffsetY: 0,
