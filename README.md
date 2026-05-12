@@ -1,32 +1,30 @@
 # Layoutmaster
 
-Every time you ask the DOM where something goes, it makes you wait while
-it figures it out.
+Every time you ask the DOM a layout question, it has to render the layout before
+it can answer. It's a bit like committing a crime while you're still contemplating it.
 
-Ask too often, too fast — animate content, stream AI output, resize a
-giant masonry wall — and it thrashes. That is not a browser bug. That
-is the architecture. The browser's layout engine takes layout orders one
-at a time, on the main thread, and blocks everything else while it works.
+And if you ask that too often and too fast, you cause the infamous browser layout thrashing.
+Then everything goes bad from there. Very bad.
 
 ![Dr. DOM — The Tyrant of Terrible Layouts, versus Layoutmaster](https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/dr-dom.png)
 
-Layoutmaster computes text layout without touching the DOM — returning
-exact coordinates, baselines, and paint metadata for every text fragment
-before a single pixel is painted. Whether you render with HTML, canvas,
-or WebGL doesn't matter. The engine hands you the job tickets. You paint.
-The DOM just follows orders.
+Layoutmaster comes to your browser's rescue. It uses a built-in layout engine to compute
+layout without ever touching the DOM. It then returns you the exact coordinates,
+baselines, and paint metadata for every text fragment.
 
-For example: 320,000 words — four novels back to back — laid out as a
-343,912px masonry wall on a base Pixel 10 phone in 882ms. Resize the
-window. It recomputes. Resize again. It recomputes again. Every time,
-in roughly the same bounded range.
+You can do this as many times as you want, as fast as you want.
 
-Try this with your browser and DOM on your shiny MacBook Pro, you will
-still fry it. So don't.
+How fast? Picture this:
 
-Let the master handle layout, and your browser *will* thank you.
+A massive 343,912px masonry wall. 320,000 words. Four novels back to back.
 
-> **Try it live:** [layoutmaster.dev](https://layoutmaster.dev)
+Layoutmaster lays it out in just 882ms while running on a —
+
+Base Pixel 10 phone!
+
+So -- let the master handle layout, leave DOM at home, and your browser *will* thank you.
+
+> **Try it live:** [layoutmaster.dev](https://cosmiciron.github.io/layoutmaster/)
 >
 > **Watch the dancing text demo:**
 >
@@ -36,23 +34,23 @@ Let the master handle layout, and your browser *will* thank you.
 >     width="480">
 > </a>
 
-Now you ask — how?
+Now you are probably thinking — how is this possible? Is this even legal?
 
 Two words: *game engines*.
 
 For decades, while layout technology stayed pretty much stale, game engine technology
-advanced enormously. Layoutmaster comes from that lineage. It is the world's first layout engine
-with game engine DNA - and that is where the insane speed comes from.
+advanced enormously. Layoutmaster comes from that lineage — it is the world's first layout engine
+with game engine DNA. That is where the insane speed comes from.
 
 Put simply, the master does not see text as sequential streams of characters or layout as a
 pile of complex conditionals. It sees actors, collisions, terrain, constraints, viewports,
 and deterministic updates.
 
-Under its tiny browser API is a deterministic 2D spatial simulation engine for layout -
-Content enters a "world", collides with constraints, flows through regions, avoids terrain,
+Under its tiny browser API is a deterministic 2D spatial simulation engine for layout —
+content enters a "world", collides with constraints, flows through regions, avoids terrain,
 splits across viewports, and settles into exact coordinates.
 
-And that - is where the master gets its superpowers.
+And that — is where the master gets its superpowers.
 
 ## The Six Mantras
 
@@ -231,8 +229,9 @@ No CSS tricks. No pre-authored columns. No browser screaming at you in distress.
 Browser layout is fast, very fast. The people who claim their stuff is 600 times faster are lying, big time.
 
 But Layoutmaster is just as fast, creating usual layouts just as beautifully and quickly as the browser would, so
-you can use it as a replacement for browser DOM-based layout on regular stuff without guilt. Mind you,
-the browser's layout engine is written in C++ with direct access to font machinery and rendering internals. So the mere
+you can use it as a replacement for browser DOM-based layout on regular stuff without guilt. 
+
+Mind you, the browser's layout engine is written in C++ with direct access to font machinery and rendering internals. So the mere
 fact that the master hangs with it nicely tells you it is punching above its weight.
 
 But David would not have become a legend if all he had done was throw one rock.
@@ -289,20 +288,19 @@ The browser version does it in 4,000ms, which isn't so bad. Then it falls apart
 when you grab its window and resize. The layout goes into a frenzy and cannot settle
 until some 20+ seconds later. Try harder, it can take even minutes to recover.
 
-That's the whole point -- when layout becomes highly dynamic and intense, it can overwhelm the
+That's the whole point — when layout becomes highly dynamic and intense, it can overwhelm the
 browser. That's why we propose a different kind of solution:
 
 Leave the job to the specialist -- let Layoutmaster handle the layout for the browser, and
 let the browser handle everything else.
 
 At this point you probably picture the master as a burly man holding a Gatling gun torn from
-a tank. Nope. A two-foot-tall humanoid with green skin, large eyes, pointy ears, and wearing
-a robe - that's more like it.
+a tank. 
 
-Seriously, the package packs to about 264 kB on npm - 193 KiB gzip at runtime, the embedded
+Nope. The package packs to about 246 kB on npm - 179 KiB gzip at runtime, the embedded
 engine included. No other dependencies.
 
-So like the master (the other one) says: *Smaller in number are we, but larger in mind*.
+So like the master (another one) says: *Smaller in number are we, but larger in mind*.
 
 ## Install
 
