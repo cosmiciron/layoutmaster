@@ -57,13 +57,23 @@ the engine keeps its publishing-oriented mixed-script sizing, baseline, and
 wrapping policies instead of trying to clone every DOM line-break decision.
 
 Layoutmaster does not load fonts. It uses whatever fonts are available in the
-current browser environment at layout time. If a page has not loaded a custom
-font yet, Layoutmaster will measure with the browser's current fallback result;
-call it again after the page's font state changes to get the updated layout.
+current browser environment at layout time. If the font stack comes from an
+actual styled DOM element, that element has usually already caused the browser
+to resolve the face before Layoutmaster reads and lowers the styles.
+
+Pure DOMless calls are different. If an app passes only
+`fontFamily: "Some Font"` and no DOM/CSS has requested that face yet,
+Layoutmaster may be the first code path to ask the browser for it. In that case
+the synchronous API measures the browser's current fallback result. Call
+Layoutmaster again after the page's font state changes to get an updated
+layout.
 
 For custom web fonts, declare them the normal browser way with CSS or the
-`FontFace` API before relying on them for final layout. Apps that want to wait
-for page fonts can do that outside Layoutmaster:
+`FontFace` API before relying on them for final layout. Apps that build a
+DOMless font picker can also create a hidden probe and call `document.fonts.load`
+before measuring; the demos keep that app-level pattern in
+`demos/helpers/prepare-browser-fonts.js`. Apps that want to wait for page fonts
+can do that outside Layoutmaster:
 
 ```js
 if (document.fonts?.status === "loading") {

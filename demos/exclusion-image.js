@@ -3,6 +3,7 @@
 // assembly token; `form` treats that token as a first-class spatial obstacle.
 import { exclusion, form } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const fileInput   = document.getElementById("file-input");
 const urlInput    = document.getElementById("url-input");
@@ -47,6 +48,7 @@ let dragState      = null;
 let frameRequested = false;
 let buildFrame     = false;
 let buildToken     = 0;
+let renderToken    = 0;
 let prevObjectUrl  = null;
 
 function num(input, fallback = 0) {
@@ -174,8 +176,9 @@ function getAssemblyAtPos() {
 // -- Layoutmaster: form with the assembly as a spatial exclusion --
 // The assembly token drops into `exclusions` identically to a circle or polygon.
 // The engine negotiates all field types in one unified pass.
-function renderForm() {
+async function renderForm() {
   frameRequested = false;
+  const token    = ++renderToken;
   const assembly = getAssemblyAtPos();
   const opts     = getOptions();
   const type     = getTypography();
@@ -186,6 +189,15 @@ function renderForm() {
   surface.replaceChildren();
 
   try {
+    // Demo helper: this DOMless control panel must ask the browser to resolve
+    // the selected font before taking a synchronous Layoutmaster measurement.
+    await prepareBrowserFonts({
+      fontFamily: type.fontFamily,
+      fontSize: type.fontSize,
+      text: getText()
+    });
+    if (token !== renderToken) return;
+
     const result = form(getText(), {
       width:      SURFACE_WIDTH,
       fontFamily: type.fontFamily,

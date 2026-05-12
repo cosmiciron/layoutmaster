@@ -4,6 +4,7 @@
 // frame so the UI code stays focused on playback and rendering.
 import { exclusion, form, pour } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const videoInput = document.getElementById("video-input");
 const buildButton = document.getElementById("build-button");
@@ -306,7 +307,7 @@ function scheduleForm() {
   });
 }
 
-function renderForm() {
+async function renderForm() {
   if (!frames.length) {
     stage.style.height = `${MIN_STAGE_HEIGHT}px`;
     return;
@@ -317,6 +318,15 @@ function renderForm() {
   layoutMetrics(frame);
 
   try {
+    // Demo helper: this DOMless control panel must ask the browser to resolve
+    // the selected font before taking a synchronous Layoutmaster measurement.
+    await prepareBrowserFonts({
+      fontFamily: getFontFamily(),
+      fontSize: getFontSize(),
+      text: getText()
+    });
+    if (revision !== renderRevision) return;
+
     // -- Layoutmaster: Reposition assembly via fromJSON --
     // Injects the current drag position into the cached JSON. Synchronous and
     // cheap - the silhouette sampling already happened at build time.

@@ -2,6 +2,7 @@
 // `form` lays out an unbounded passage and returns positioned text fragments.
 import { form } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const surface = document.getElementById("surface");
 const surfaceWidthInput = document.getElementById("surface-width-input");
@@ -37,9 +38,12 @@ function renderResultPieces(result, showPieces) {
   }
 }
 
-function runForm() {
+let runToken = 0;
+
+async function runForm() {
+  const token = ++runToken;
   status.className = "status";
-  status.textContent = "Forming...";
+  status.textContent = "Preparing fonts...";
   try {
     const surfaceWidth = Math.max(160, Number(surfaceWidthInput.value) || 860);
     const fontFamily = fontFamilyInput.value || '"Times New Roman", Times, serif';
@@ -49,6 +53,11 @@ function runForm() {
     const showPieces = showPiecesInput.checked;
 
     surface.style.width = `${surfaceWidth}px`;
+    // Demo helper: this DOMless control panel must ask the browser to resolve
+    // the selected font before taking a synchronous Layoutmaster measurement.
+    await prepareBrowserFonts({ fontFamily, fontSize, text });
+    if (token !== runToken) return;
+    status.textContent = "Forming...";
 
     // -- Layoutmaster: form --
     // Core form reads explicit options; DOM authoring helpers live in helpers.

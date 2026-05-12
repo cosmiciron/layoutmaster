@@ -3,6 +3,7 @@
 // both the consumed slice and the remaining text.
 import { exclusion, pour } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const shapeInput = document.getElementById("shape-input");
 const fontFamilyInput = document.getElementById("font-family-input");
@@ -231,14 +232,22 @@ function showPourError(message) {
   shapeHost.appendChild(error);
 }
 
-function runPour() {
+let runToken = 0;
+
+async function runPour() {
+  const token = ++runToken;
   shapeHost.replaceChildren();
-  updatePerfStatus("Pouring...");
+  updatePerfStatus("Preparing fonts...");
 
   try {
     const { selectedShape, fontFamily, fontSize, lineHeight, hyphenation, sourceText, showPieces, showShape } = getCurrentInputs();
     const shape = SHAPES[selectedShape] || SHAPES.circle;
     const pourOptions = buildPourOptions(fontFamily, fontSize, lineHeight, hyphenation);
+    // Demo helper: this DOMless control panel must ask the browser to resolve
+    // the selected font before taking a synchronous Layoutmaster measurement.
+    await prepareBrowserFonts({ fontFamily, fontSize, text: sourceText });
+    if (token !== runToken) return;
+    updatePerfStatus("Pouring...");
     // -- Layoutmaster: Pour --
     // One call pours into a single exclusion shape. The result reports the
     // positioned pieces, how much text fit, and any remaining overflow.

@@ -3,6 +3,7 @@
 // uses that token as a real container interior instead of an outside obstacle.
 import { pour } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const fileInput = document.getElementById("file-input");
 const scaleInput = document.getElementById("scale-input");
@@ -225,6 +226,19 @@ async function runPour() {
 
   try {
     const assembly = await getAssembly(metrics);
+
+    if (token !== renderToken) {
+      return;
+    }
+
+    setStatus("Preparing fonts...");
+    // Demo helper: this DOMless control panel must ask the browser to resolve
+    // the selected font before taking a synchronous Layoutmaster measurement.
+    await prepareBrowserFonts({
+      fontFamily: getFontFamily(),
+      fontSize: getFontSize(),
+      text: getText()
+    });
 
     if (token !== renderToken) {
       return;

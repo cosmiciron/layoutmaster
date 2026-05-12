@@ -2,6 +2,7 @@ import {
   form
 } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const SAMPLES = {
   multilingual: {
@@ -118,7 +119,14 @@ async function run() {
   domSurface.textContent = text;
   setMetric(fontMetric, "Checking", "draft");
 
-  const fontStatus = await waitForPageFonts();
+  // Demo helper: this DOMless probe must ask the browser to resolve the
+  // selected font before comparing DOM text with Layoutmaster pieces.
+  const fontStatus = await prepareBrowserFonts({
+    fontFamily: options.fontFamily,
+    fontSize: options.fontSize,
+    text
+  });
+  await waitForPageFonts();
   const result = form(text, options);
   renderLayoutmaster(result, options, showPiecesInput.checked);
 

@@ -3,6 +3,7 @@
 // advancing through each until the text is exhausted or regions run out.
 import { flow } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const fontFamilyInput = document.getElementById("font-family-input");
 const fontSizeInput = document.getElementById("font-size-input");
@@ -121,14 +122,22 @@ function showFlowError(message) {
   remainingOutput.textContent = message;
 }
 
-function runFlow() {
+let runToken = 0;
+
+async function runFlow() {
+  const token = ++runToken;
   flowButton.disabled = true;
-  resultSummary.textContent = "Flowing...";
+  resultSummary.textContent = "Preparing fonts...";
   regionGrid.replaceChildren();
 
   try {
     const { fontFamily, fontSize, lineHeight, hyphenation, text, showPieces, targets } = getCurrentInputs();
     const flowTargets = buildFlowTargets(targets, fontFamily, fontSize, lineHeight, hyphenation);
+    // Demo helper: this DOMless control panel must ask the browser to resolve
+    // the selected font before taking a synchronous Layoutmaster measurement.
+    await prepareBrowserFonts({ fontFamily, fontSize, text });
+    if (token !== runToken) return;
+    resultSummary.textContent = "Flowing...";
     // -- Layoutmaster: Flow --
     // One call distributes the passage across all targets. result.placements[i]
     // holds the pieces and content report for each region.
@@ -144,7 +153,9 @@ function runFlow() {
     console.error(error);
     showFlowError(error instanceof Error ? error.message : String(error));
   } finally {
-    flowButton.disabled = false;
+    if (token === runToken) {
+      flowButton.disabled = false;
+    }
   }
 }
 

@@ -3,6 +3,7 @@
 // It returns both what landed inside and what overflowed.
 import { fit } from "@layoutmaster/layoutmaster";
 import { helpers } from "./helpers/helpers.js";
+import { prepareBrowserFonts } from "./helpers/prepare-browser-fonts.js";
 
 const chain = document.getElementById("chain");
 const widthInput = document.getElementById("width-input");
@@ -106,14 +107,22 @@ function showFitError(message) {
   remainingOutput.textContent = message;
 }
 
-function runFit() {
+let runToken = 0;
+
+async function runFit() {
+  const token = ++runToken;
   status.className = "status";
-  status.textContent = "Fitting...";
+  status.textContent = "Preparing fonts...";
   chain.replaceChildren();
 
   try {
     const { width, height, fontFamily, fontSize, lineHeight, hyphenation, showPieces, sourceText } = getCurrentInputs();
     const fitOptions = buildFitOptions(width, height, fontFamily, fontSize, lineHeight, hyphenation);
+    // Demo helper: this DOMless control panel must ask the browser to resolve
+    // the selected font before taking a synchronous Layoutmaster measurement.
+    await prepareBrowserFonts({ fontFamily, fontSize, text: sourceText });
+    if (token !== runToken) return;
+    status.textContent = "Fitting...";
 
     // -- Layoutmaster: Fit --
     // result.content reports what fit and the overflow that can continue into
