@@ -1,56 +1,77 @@
 # Layoutmaster
 
-Every time you ask the DOM a layout question, it has to render the layout before
-it can answer. It's a bit like committing a crime while you're still contemplating it.
+Every time you ask the DOM a layout question, it has to render that layout **before**
+it can answer. It's like *committing a crime while you're still contemplating it*.
 
-And if you ask that too often and too fast, you cause the infamous browser layout thrashing.
-Then everything goes bad from there. Very bad.
+Ask too often and too fast (you will), **DR. DOM** will punish you, thrash your layout, 
+crash your browser, and make your life miserable. 
+
+Very miserable.
 
 ![Dr. DOM — The Tyrant of Terrible Layouts, versus Layoutmaster](https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/dr-dom.png)
 
-Layoutmaster comes to your browser's rescue. It uses a built-in layout engine to compute
-layout without ever touching the DOM. It then returns you the exact coordinates,
-baselines, and paint metadata for every text fragment.
+When that happens, Layoutmaster will be your hero. It will come to your browser's rescue. 
+Beating at its heart is a microkernel-driven layout engine that's so fast and so versatile,
+it can power an entire city. And it lets you do layout without paying taxes to DR. DOM ever 
+again.
 
-You can do this as many times as you want, as fast as you want.
+And you can do this as many times as you want, as fast as you want.
 
 How fast? Picture this:
+ 
+- 320,000 words. 
+- Four novels back to back.
+- A MASSIVE **343,912px**, 50-story high masonry wall.
 
-A massive 343,912px masonry wall. 320,000 words. Four novels back to back.
+This is the stuff that makes your new MacBook Pro M5 secretly weep behind its shiny armor. 
+Yet the master casually lays it out in just...
 
-Layoutmaster lays it out in just 882ms while running on a —
+**882ms**
 
-Base Pixel 10 phone!
+on a... 
 
-So -- let the master handle layout, leave DOM at home, and your browser *will* thank you.
+**Base Pixel 10 phone!**
 
-> **Try it live:** [layoutmaster.dev](https://cosmiciron.github.io/layoutmaster/)
->
-> **Watch the dancing text demo:**
->
-> <a href="https://layoutmaster.dev/demo.mp4">
->   <img src="https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/video-cover.png"
->     alt="Layoutmaster dancing text demo: live text layout wrapping around animated video silhouettes in real time"
->     width="480">
-> </a>
+*BAM!*
 
-Now you are probably thinking — how is this possible? Is this even legal?
+## See the Master in Action
+
+### Dancing Text
+
+<a href="https://layoutmaster.dev/demo.mp4">
+   <img src="https://raw.githubusercontent.com/cosmiciron/layoutmaster/main/demos/assets/video-cover.png"
+     alt="Layoutmaster dancing text demo: live text layout wrapping around animated video silhouettes in real time"
+     width="480">
+</a>
+
+### Live Interactive Demo
+
+[cosmiciron.github.io/layoutmaster](https://cosmiciron.github.io/layoutmaster/)
+
+## The Hero's Secret Origin
+
+I hear you thinking — how is this possible? 
+
+*Is this even legal?*
 
 Two words: *game engines*.
 
 For decades, while layout technology stayed pretty much stale, game engine technology
-advanced enormously. Layoutmaster comes from that lineage — it is the world's first layout engine
-with game engine DNA. That is where the insane speed comes from.
+advanced enormously. Layoutmaster comes from that lineage. It is —
 
-Put simply, the master does not see text as sequential streams of characters or layout as a
-pile of complex conditionals. It sees actors, collisions, terrain, constraints, viewports,
-and deterministic updates.
+*The world's first layout engine with game engine DNA.*
+
+That — is where the insane speed comes from.
+
+Put simply, the master does not see text as sequential streams of characters or layout 
+as a pile of complex conditionals. It sees actors, collisions, terrain, constraints, 
+viewports, and deterministic updates.
 
 Under its tiny browser API is a deterministic 2D spatial simulation engine for layout —
 content enters a "world", collides with constraints, flows through regions, avoids terrain,
 splits across viewports, and settles into exact coordinates.
 
-And that — is where the master gets its superpowers.
+That is where the master gets its superpowers.
 
 ## The Six Mantras
 
@@ -58,9 +79,8 @@ And that — is where the master gets its superpowers.
 
 These are the six mantras (APIs if you like, but the master prefers mantras) of the
 Layoutmaster. Do not be deceived by their overwhelming simplicity. These six verbs can
-solve a world of complex layout challenges and unlock possibilities you could only dream
-before - precisely none of which browsers could do without rebuilding DOMs, thrashing
-layout, and making everyone miserable.
+solve a world of complex layout challenges and unlock possibilities you could only dream of
+before - precisely none of which browsers could do without rebuilding DOMs.
 
 ```js
 import {
@@ -79,8 +99,7 @@ I know, you count seven. We will get to that later. Just trust the master.
 ### `form` - given space, how does this lay out, and how tall does it get?
 
 The most fundamental question in layout. You have content and a width. You want
-to know what happens. `form()` gives you the pieces and the height. No
-rendering required. No DOM consulted. No feelings hurt.
+to know what happens. `form()` gives you the pieces and the height.
 
 ```js
 const result = form("Layout is data.", {
@@ -99,8 +118,7 @@ console.log(result.pieces);
 ### `fit` - given bounded space, what fits, and what remains?
 
 Boxes have lids. `fit()` is for when overflow matters: what consumed the space,
-what could not, and what needs to go somewhere else. The master accounts for
-every character. Nothing disappears quietly.
+what could not, and what needs to go somewhere else.
 
 ```js
 const result = fit(longText, {
@@ -130,16 +148,12 @@ const narrow = chapter.form({ width: 260 });
 const wide = chapter.form({ width: 420 });
 ```
 
-That is what the Book Masonry demo uses. Each card's title and body become planned
-layout intent; resize the wall, and the master solves fresh geometry without
-re-authoring the same content from scratch.
-
 ### `flow` - given content that overflows, where does it continue?
 
 Magazines and newspapers have known for centuries that content does not always
 fit in one box. `flow()` carries text through multiple regions and tells you
-exactly what landed where. Multi-column layouts, split panels, magazine spreads
-- the master handles the handoff.
+exactly what landed where. Perfect for multi-column layouts, split panels, 
+magazine spreads.
 
 ```js
 const result = flow(longText, [
@@ -152,9 +166,8 @@ console.log(result.placements.map((p) => p.pieces));
 
 ### `pour` - given a shape instead of a rectangle, fill it.
 
-Not every layout surface is a box. `pour()` fills text inside any shape - circles,
-polygons, image silhouettes, arbitrary geometry. Hand it a shape, hand it text.
-The engine solves it. You paint it.
+Not every layout surface is a box. `pour()` fills text like water inside ANY 
+shape - circles, polygons, image silhouettes, arbitrary geometry. 
 
 ```js
 const shape = exclusion.circle({ x: 40, y: 40, radius: 140 });
@@ -169,10 +182,9 @@ console.log(result.pieces);
 
 ### `produce` - given a document, give me pages.
 
-This is the big one. Hand the master a document and it comes back with
-publishing-grade pages, each carrying its own pieces, line guides, and occupied
-height. One call. Every page solved. The HTML Atlas demo - 370 pages of a
-novel, laid out and painted as real HTML - runs on this single function.
+Hand the master a document and it comes back with publishing-grade pages, each 
+carrying its own pieces, line guides, and occupied height. One call. Every page 
+solved. 
 
 ```js
 const result = produce({
@@ -192,9 +204,10 @@ console.log(result.pages.length);
 
 Here is that "seventh" element.
 
-Remember, the highest virtue is like water. Text in Layoutmaster is like water. It fills,
-it bends, it flows, and it navigates around any obstacle you place in its path.
-Those obstacles are called exclusions - and they are one of the master's finest tricks.
+Remember, *the highest virtue is like water*. Text in Layoutmaster is like water. 
+It fills, it bends, it flows, and it navigates around any obstacle you place in 
+its path. Those obstacles are called exclusions - and they are one of the master's 
+finest tricks.
 
 Exclusions are reusable spatial geometry. Build them from primitives or sample
 them directly from image and video alpha channels. Pass them as obstacles to
@@ -217,53 +230,59 @@ and line/capsule helpers merged into one obstacle. That makes them a good fit
 for stick figures, mascots, diagrams, dragons, and other programmable shapes
 where speed matters more than perfect contours.
 
-The dancing text demo builds exclusion assemblies from video frames -
-671 cached frames from a single mp4 - and animates them through `form()` at
-24fps. The text renegotiates its path on every frame around the actual shape
-of the figure in motion.
+The dancing text demo builds exclusion assemblies from video frames and animates 
+them through `form()` with smooth framerate. The text renegotiates its path on 
+every frame around the actual shape of the figure in motion.
 
-No CSS tricks. No pre-authored columns. No browser screaming at you in distress.
+No CSS tricks. No pre-authored columns. Uses 1% of your CPU. No browser screaming 
+at you in distress.
 
-## Performance and Footprint
+## Performance
 
-Browser layout is fast, very fast. The people who claim their stuff is 600 times faster are lying, big time.
+Browser layout is actually very fast. Those who claim their stuff is 600 times faster 
+are lying, big time.
 
-But Layoutmaster is just as fast, creating usual layouts just as beautifully and quickly as the browser would, so
-you can use it as a replacement for browser DOM-based layout on regular stuff without guilt. 
+But Layoutmaster is just *as fast*, creating usual layouts just as beautifully and quickly 
+as the browser would, so you can use it as a replacement for browser DOM-based layout on 
+regular stuff without guilt. 
 
-Mind you, the browser's layout engine is written in C++ with direct access to font machinery and rendering internals. So the mere
-fact that the master hangs with it nicely tells you it is punching above its weight.
+And mind you, the browser's layout engine is written in C++ with direct access to font 
+machinery and rendering internals. So the mere fact that the master hangs with it nicely 
+tells you it is punching above its weight.
 
-But David would not have become a legend if all he had done was throw one rock.
+But *David would not have become a legend* if all he had done was throw one rock.
 
 ### The Atlas Test
 
-The HTML Atlas demo takes a long manuscript (~80,000 words) and turns it into a wall of real HTML
-pages. Not canvas. Not screenshots. Searchable, selectable, highlightable text.
+The HTML Atlas demo takes a long manuscript (~80,000 words) and turns it into a wall of
+real HTML pages. Not canvas. Not screenshots. 
 
-Measured on a MacBook Pro M4 in Safari:
+*Searchable, selectable, highlightable text.*
 
 ```txt
 Layoutmaster:
-Oasis: The Fabric of Fate | 334 page(s) | 6838 piece(s) | produce 363.0 ms | render 10.0 ms
+334 page(s) | 6838 piece(s) | produce 363.0 ms | render 10.0 ms
 
 DOM + W/O:
-364 pages | 6484 piece(s) | parse 3.0 ms | paginate 3115.0 ms | wall 17.0 ms
+364 pages | 6484 piece(s) | paginate 3115.0 ms | wall 17.0 ms
 ```
 
-What you are looking at is what happens when the task becomes a little more serious than just
-wrapping text into paragraphs: pagination, headers and footers, widow/orphan control, and
-on-the-fly page number calculations.
+This is what happens when the task becomes a little more serious than just
+wrapping text into paragraphs: 
 
-The master is already more than 8 times faster. And it is barely in second gear. Its VMPrint
-engine is made for stuff ten times more complicated than this, but let's not go there - it
-would turn into an unfair fight.
+- pagination
+- headers and footers
+- widow/orphan control
+- on-the-fly page number calculations
+
+The master is more than **8 times faster** yet it is barely in second gear. Its 
+[VMPrint Engine](https://github.com/cosmiciron/vmprint) is made for stuff ten times more 
+complicated than this. But let's not go there - it would turn into an unfair fight.
 
 ### The Resize Test
 
-The second test is not about a benchmark table. It is about what happens when the
-layout has to keep changing while the user is changing the available space. So we
-recorded it.
+This test is not about a benchmark table. It is about what happens when the layout has to 
+keep changing while the user is changing the available space. So I recorded it.
 
 > **Watch the resize stress test:**
 >
@@ -272,35 +291,42 @@ recorded it.
 >     alt="Layoutmaster versus DOM masonry resize stress test" width="480">
 > </a>
 
-The test is a masonry wall made from the same book content. Each chapter becomes
-a live card.
+The test is a masonry wall made from the same book content. Each chapter becomes a live card.
 
 Layoutmaster uses `fit()` to solve the text pieces, packs the cards,
 and paints the returned geometry. The browser version uses ordinary DOM/CSS flow.
 
-As shown in the video, Layoutmaster keeps recomputing the whole wall in
-roughly the same bounded range - around 400ms for the 300+ card
-case - and snaps into the new geometry as the window changes. Resize it slowly,
-resize it quickly, resize it violently: the solve remains explicit. Given a width,
-the engine returns a wall.
+As shown in the video, Layoutmaster keeps recomputing the whole wall in roughly the same 
+bounded range - around 400ms for the 300+ card case - and snaps into the new geometry as the
+window changes. 
 
-The browser version does it in 4,000ms, which isn't so bad. Then it falls apart
-when you grab its window and resize. The layout goes into a frenzy and cannot settle
-until some 20+ seconds later. Try harder, it can take even minutes to recover.
+Resize it slowly, resize it quickly, resize it violently: the solve remains explicit. Given 
+a width, the engine returns a wall.
+
+The browser version does it in 4,000ms, which isn't so bad. Then it falls apart when you grab 
+its window and resize. The layout goes into a frenzy and cannot settle until some 20+ seconds 
+later. Try harder, it can take even minutes to recover.
 
 That's the whole point — when layout becomes highly dynamic and intense, it can overwhelm the
-browser. That's why we propose a different kind of solution:
+browser. That's why you should leave the job to the specialist — 
 
-Leave the job to the specialist -- let Layoutmaster handle the layout for the browser, and
-let the browser handle everything else.
+Let Layoutmaster handle the layout for the browser, and let the browser handle everything else.
 
-At this point you probably picture the master as a burly man holding a Gatling gun torn from
-a tank. 
+## Footprint
 
-Nope. The package packs to about 246 kB on npm - 179 KiB gzip at runtime, the embedded
-engine included. No other dependencies.
+At this point you probably picture the master as a burly man smoking a cigar and holding a 
+Gatling gun torn from a tank. 
 
-So like the master (another one) says: *Smaller in number are we, but larger in mind*.
+Nope. 
+
+The package packs to about 246 kB on npm - 179 KiB gzip at runtime, the embedded
+engine included. 
+
+**No other dependencies.**
+
+So like the master (the other one) says: 
+
+*Smaller in number are we, but larger in mind*.
 
 ## Install
 
@@ -310,7 +336,7 @@ npm install @layoutmaster/layoutmaster
 
 *Layoutmaster is specifically built for the browser so it requires the Canvas
 API to be available. If you need non-browser solutions, head over to the sibling
-project VMPrint.*
+project [VMPrint](https://github.com/cosmiciron/vmprint).*
 
 ## Repo Map
 
@@ -360,8 +386,7 @@ Current demos:
 - `dancing-text`: animated exclusion fields from video frames
 
 The demos use browser import maps, so serve them from the repo root. Opening
-the files directly from disk is an excellent way to meet the less charming parts
-of browser module loading.
+the files directly from disk won't work well.
 
 ## Helpers
 
