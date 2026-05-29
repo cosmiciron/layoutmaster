@@ -43,12 +43,12 @@
   <main>
     <section class="panel">
       <h1>Exclusion Image</h1>
-      <p class="desc">Load an image and Layoutmaster turns its alpha into an exclusion field, then forms text around the silhouette.</p>
-      <p class="desc">Use a PNG or WebP with a real alpha channel for the cleanest silhouette.</p>
+      <p class="desc">The bundled sample loads automatically. Layoutmaster turns its alpha into an exclusion field, then forms text around the silhouette.</p>
+      <p class="desc">Use another PNG or WebP when you want to test a different alpha channel.</p>
 
       <div class="group">Source</div>
-      <label>File <input type="file" id="file-input" accept="image/*"></label>
-      <label>URL <input type="text" id="url-input" placeholder="or paste a URL"></label>
+      <label>Replace file <input type="file" id="file-input" accept="image/*"></label>
+      <label>Replace URL <input type="text" id="url-input" placeholder="or paste a URL"></label>
 
       <div class="group">Size</div>
       <div class="row">
@@ -77,7 +77,7 @@
       <div class="group">Text</div>
       <textarea id="text-input" rows="6"></textarea>
 
-      <div id="status" class="status">Load an image to build an exclusion.</div>
+      <div id="status" class="status">Loading bundled image...</div>
       <div id="perf" class="perf"></div>
     </section>
     <section id="surface"></section>

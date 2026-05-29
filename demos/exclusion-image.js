@@ -29,6 +29,7 @@ const MIN_IMAGE_SIZE       = 72;
 const IMAGE_BAND_HEIGHT = 6;
 const IMAGE_TIERS       = 3;
 const IMAGE_GAP         = 8;
+const DEFAULT_IMAGE_URL = "./assets/pinup.png";
 
 const DEFAULT_TEXT = `The loaded image becomes an exclusion assembly: a compact set of weighted rectangles derived from the image alpha channel.
 
@@ -269,6 +270,19 @@ function inspectImage(url, crossOrigin = false) {
   img.src = url;
 }
 
+function loadImageUrl(url, label = "image", crossOrigin = false) {
+  if (prevObjectUrl) {
+    URL.revokeObjectURL(prevObjectUrl);
+    prevObjectUrl = null;
+  }
+  currentUrl = url;
+  fileInput.value = "";
+  urlInput.value = url.startsWith("./") ? "" : url;
+  clearAssembly();
+  setStatus(`Loading ${label}...`);
+  inspectImage(url, crossOrigin);
+}
+
 widthInput.addEventListener("input", () => {
   if (ratioLock.checked && aspectRatio) {
     heightInput.value = Math.round(num(widthInput) / aspectRatio);
@@ -340,17 +354,7 @@ fileInput.addEventListener("change", () => {
 urlInput.addEventListener("change", () => {
   const url = urlInput.value.trim();
   if (!url) return;
-  if (prevObjectUrl) {
-    URL.revokeObjectURL(prevObjectUrl);
-    prevObjectUrl = null;
-  }
-
-  currentUrl      = url;
-  fileInput.value = "";
-
-  clearAssembly();
-  setStatus("Loading image...");
-  inspectImage(url, true);
+  loadImageUrl(url, "remote image", true);
 });
 
 textInput.addEventListener("input", scheduleRender);
@@ -358,3 +362,4 @@ fontFamilyInput.addEventListener("change", scheduleRender);
 fontSizeInput.addEventListener("input", scheduleRender);
 
 scheduleRender();
+loadImageUrl(DEFAULT_IMAGE_URL, "bundled image");

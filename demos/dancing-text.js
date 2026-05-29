@@ -28,7 +28,7 @@ const stage = document.getElementById("stage");
 
 const STAGE_WIDTH = 1020;
 const MIN_STAGE_HEIGHT = 760;
-const DEFAULT_FIGURE_TARGET_HEIGHT = 440;
+const DEFAULT_FIGURE_TARGET_HEIGHT = 360;
 const DEFAULT_FONT_FAMILY = 'Georgia, "Times New Roman", serif';
 const DEFAULT_FONT_SIZE = 16;
 const LINE_HEIGHT = 1.48;
@@ -36,10 +36,12 @@ const POUR_LINE_HEIGHT = 1.42;
 const MIN_SAMPLE_FPS = 6;
 const MAX_SAMPLE_FPS = 24;
 const MAX_DELTA_PERCENT = 12;
-const DEFAULT_SMOOTHNESS = 60;
+const DEFAULT_SMOOTHNESS = 0;
 const FORM_BAND_HEIGHT = 6;
 const FORM_TIERS = 3;
 const FORM_GAP = 10;
+const DEFAULT_VIDEO_URL = "./assets/dancing-text-tiny.mp4";
+const DEFAULT_VIDEO_NAME = "dancing-text-tiny.mp4";
 
 const DEFAULT_TEXT = `Realtime layout should feel a little magical. One moment the passage is open and still, and the next a figure cuts into it like a live element, forcing every line to renegotiate its path. The important part is not the animation alone. The important part is that the animation is data.
 
@@ -77,6 +79,8 @@ let buildRevision = 0;
 let isPourMode = false;
 let hasBuiltFrames = false;
 let extractionDirty = false;
+let currentVideoFile = null;
+let currentVideoName = "";
 
 const dancerState = {
   x: 360,
@@ -96,7 +100,7 @@ function setStatus(message, isError = false) {
 }
 
 function getReadyStatusMessage() {
-  return videoInput.files?.[0] ? `Ready to build "${videoInput.files[0].name}".` : "";
+  return currentVideoFile ? `Ready to build "${currentVideoName}".` : "";
 }
 
 function clamp(value, min, max) {
@@ -174,7 +178,7 @@ function updateModeCopy() {
 }
 
 function syncBuildButtonState() {
-  buildButton.disabled = !videoInput.files?.[0] || !extractionDirty;
+  buildButton.disabled = !currentVideoFile || !extractionDirty;
 }
 
 function markExtractionDirty() {
@@ -417,7 +421,7 @@ function endDrag(event) {
 }
 
 async function buildDanceFromVideo() {
-  const file = videoInput.files?.[0];
+  const file = currentVideoFile;
   if (!file) {
     setStatus("Choose an MP4 first.", true);
     return;
@@ -460,7 +464,7 @@ async function buildDanceFromVideo() {
     dancerState.y = 170;
     playButton.disabled = false;
     playButton.textContent = isPlaying ? "Pause" : "Play";
-    setStatus(`Built ${frames.length} cached animation frames from "${file.name}".`);
+    setStatus(`Built ${frames.length} cached animation frames from "${currentVideoName}".`);
     clearProgress("Build complete");
     scheduleForm();
   } catch (error) {
@@ -474,6 +478,34 @@ async function buildDanceFromVideo() {
     if (thisBuild === buildRevision) {
       syncBuildButtonState();
     }
+  }
+}
+
+async function loadBundledVideo() {
+  buildButton.disabled = true;
+  playButton.disabled = true;
+  setStatus(`Loading bundled video "${DEFAULT_VIDEO_NAME}"...`);
+  try {
+    const response = await fetch(DEFAULT_VIDEO_URL);
+    if (!response.ok) {
+      throw new Error(`Failed to load bundled video: ${response.status}`);
+    }
+    const blob = await response.blob();
+    currentVideoFile = typeof File === "function"
+      ? new File([blob], DEFAULT_VIDEO_NAME, { type: blob.type || "video/mp4" })
+      : blob;
+    currentVideoName = DEFAULT_VIDEO_NAME;
+    hasBuiltFrames = false;
+    extractionDirty = true;
+    setStatus(getReadyStatusMessage());
+    syncBuildButtonState();
+    await buildDanceFromVideo();
+  } catch (error) {
+    console.error(error);
+    currentVideoFile = null;
+    currentVideoName = "";
+    setStatus(error instanceof Error ? error.message : String(error), true);
+    syncBuildButtonState();
   }
 }
 
@@ -525,6 +557,9 @@ stage.addEventListener("pointercancel", endDrag);
 buildButton.addEventListener("click", buildDanceFromVideo);
 playButton.addEventListener("click", togglePlayback);
 videoInput.addEventListener("change", () => {
+  const file = videoInput.files?.[0] || null;
+  currentVideoFile = file;
+  currentVideoName = file?.name || "";
   hasBuiltFrames = false;
   extractionDirty = true;
   formDurations = [];
@@ -556,3 +591,4 @@ updateFigureSizeLabel();
 updateModeCopy();
 syncBuildButtonState();
 requestAnimationFrame(tick);
+loadBundledVideo();

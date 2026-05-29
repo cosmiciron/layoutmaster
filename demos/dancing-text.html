@@ -86,23 +86,23 @@
   <main>
     <section class="panel">
       <h1>Dancing Text</h1>
-      <p class="desc">Build a moving figure from an mp4, drag it around, and switch between <code>form()</code> and <code>pour()</code> as the text tracks each cached frame.</p>
-      <p class="desc">Best results come from videos with a solid, high-contrast background behind the subject.</p>
+      <p class="desc">A bundled mp4 builds automatically. Drag the moving figure around, and switch between <code>form()</code> and <code>pour()</code> as the text tracks each cached frame.</p>
+      <p class="desc">Use another video when you want to test a different high-contrast subject.</p>
 
       <div class="group">Video</div>
-      <label>MP4 file <input id="video-input" type="file" accept="video/mp4,video/*"></label>
+      <label>Replace MP4 <input id="video-input" type="file" accept="video/mp4,video/*"></label>
       <div class="group">Build</div>
       <div class="row">
         <label for="smoothness-input">Smoothness</label>
-        <span id="smoothness-value" class="value">60%</span>
+        <span id="smoothness-value" class="value">0%</span>
       </div>
-      <input id="smoothness-input" type="range" min="0" max="100" step="5" value="60">
+      <input id="smoothness-input" type="range" min="0" max="100" step="5" value="0">
 
       <div class="row">
         <label for="figure-size-input">Figure height</label>
-        <span id="figure-size-value" class="value">440 px</span>
+        <span id="figure-size-value" class="value">360 px</span>
       </div>
-      <input id="figure-size-input" type="range" min="260" max="620" step="10" value="440">
+      <input id="figure-size-input" type="range" min="260" max="620" step="10" value="360">
       <div class="button-row">
         <button id="build-button" type="button">Build</button>
         <button id="play-button" type="button" disabled>Pause</button>
@@ -155,7 +155,7 @@
           </div>
         </div>
         <div id="stage">
-          <div class="empty-state">Build the figure from the uploaded video.</div>
+          <div class="empty-state">Building the bundled video sample...</div>
         </div>
       </section>
     </section>

@@ -28,6 +28,7 @@ const BAND_HEIGHT = 1;
 const TIERS = 1;
 const GAP = 0;
 const DEFAULT_TEXT = textInput.value.trim();
+const DEFAULT_IMAGE_URL = "./assets/pinup.png";
 
 let currentUrl = null;
 let prevObjectUrl = null;
@@ -149,7 +150,7 @@ function updateResultStatus(result) {
 function renderPreview() {
   if (!currentUrl || !naturalWidth || !naturalHeight) {
     clearStage();
-    setStatus("Load a PNG to begin.");
+    setStatus("Loading bundled PNG...");
     resetStatusOutputs();
     return;
   }
@@ -304,6 +305,15 @@ function handleLoadedImage(url) {
   image.src = url;
 }
 
+function loadImageUrl(url, label = "Image") {
+  currentUrl = url;
+  naturalWidth = 0;
+  naturalHeight = 0;
+  invalidatePour();
+  setStatus(`Loading ${label}...`);
+  handleLoadedImage(url);
+}
+
 fileInput.addEventListener("change", () => {
   const file = fileInput.files?.[0];
   if (!file) {
@@ -314,7 +324,7 @@ fileInput.addEventListener("change", () => {
   }
   currentUrl = URL.createObjectURL(file);
   prevObjectUrl = currentUrl;
-  setStatus("Image loaded.");
+  setStatus(`Loading ${file.name}...`);
   handleLoadedImage(currentUrl);
 });
 
@@ -361,3 +371,4 @@ imageToggle.addEventListener("change", () => {
 
 updateScaleMeta();
 renderPreview();
+loadImageUrl(DEFAULT_IMAGE_URL, "bundled PNG");

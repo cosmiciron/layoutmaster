@@ -55,10 +55,10 @@
     <section class="panel">
       <h1>Pour Image</h1>
       <p class="desc">Turn a PNG alpha silhouette into a container, then pour authored text directly into its interior instead of wrapping around it.</p>
-      <p class="desc">Use a PNG with a real alpha channel; flat backgrounds will be treated as opaque image data.</p>
+      <p class="desc">The bundled sample loads automatically; use your own PNG when you want to test another silhouette.</p>
 
       <div class="group">Source</div>
-      <label>PNG file <input type="file" id="file-input" accept="image/png,image/*"></label>
+      <label>Replace PNG <input type="file" id="file-input" accept="image/png,image/*"></label>
 
       <div class="group">Scale</div>
       <label>Resize image
@@ -93,7 +93,7 @@ When a PNG can become a readable vessel, image and language stop negotiating thr
       </label>
 
       <div class="group">Status</div>
-      <div id="status" class="status">Load a PNG to begin.</div>
+      <div id="status" class="status">Loading bundled PNG...</div>
       <div class="status-grid">
         <div class="status-stat">
           <div class="status-stat-label">Consumed</div>
