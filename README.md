@@ -73,12 +73,12 @@ splits across viewports, and settles into exact coordinates.
 
 That is where the master gets its superpowers.
 
-## The Five Mantras
+## The Four Mantras
 
-`form()`, `fit()`, `plan()`, `flow()`, and `pour()`
+`form()`, `fit()`, `flow()`, and `pour()`
 
-These are the five mantras (APIs if you like, but the master prefers mantras) of the
-Layoutmaster. Do not be deceived by their overwhelming simplicity. These five verbs can
+These are the four mantras (APIs if you like, but the master prefers mantras) of the
+Layoutmaster. Do not be deceived by their overwhelming simplicity. These four verbs can
 solve a world of complex layout challenges and unlock possibilities you could only dream of
 before - precisely none of which browsers could do without rebuilding DOMs.
 
@@ -86,14 +86,13 @@ before - precisely none of which browsers could do without rebuilding DOMs.
 import {
   form,
   fit,
-  plan,
   flow,
   pour,
   exclusion
 } from "@layoutmaster/layoutmaster";
 ```
 
-I know, you count six. We will get to that later. Just trust the master.
+I know, you count five. We will get to that later. Just trust the master.
 
 ### `form` - given space, how does this lay out, and how tall does it get?
 
@@ -127,24 +126,6 @@ const result = fit(longText, {
 
 console.log(result.content.consumed.text);
 console.log(result.content.remaining.text);
-```
-
-### `plan` - given repeated intent, solve it without starting over.
-
-Sometimes you are not asking one layout question. You are asking the same layout
-question again and again at different widths, heights, or targets. `plan()`
-captures the content and base intent once, then lets you call `form()`, `fit()`,
-or `flow()` from that plan.
-
-```js
-const chapter = plan(longText, {
-  fontFamily: "Georgia, serif",
-  fontSize: 14,
-  lineHeight: 1.45
-});
-
-const narrow = chapter.form({ width: 260 });
-const wide = chapter.form({ width: 420 });
 ```
 
 ### `flow` - given content that overflows, where does it continue?
@@ -181,7 +162,7 @@ console.log(result.pieces);
 
 ## Be Water, My Friend
 
-Here is that "sixth" element.
+Here is that "fifth" element.
 
 Remember, *the highest virtue is like water*. Text in Layoutmaster is like water. 
 It fills, it bends, it flows, and it navigates around any obstacle you place in 
@@ -271,7 +252,7 @@ Gatling gun torn from a tank.
 
 Nope. 
 
-The package packs to about 244 kB on npm - about 207 KiB gzip at runtime, the embedded
+The package packs to about 243 kB on npm - about 206 KiB gzip at runtime, the embedded
 engine included. 
 
 **No other dependencies.**

@@ -2,7 +2,6 @@ export {
   fit,
   form,
   flow,
-  plan,
   pour
 } from "./internal/api.js";
 

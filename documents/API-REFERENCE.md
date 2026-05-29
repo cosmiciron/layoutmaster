@@ -11,9 +11,9 @@ Browser image sampling, video extraction, and HTML painting helpers live under
 
 Current clean build footprint:
 
-- npm tarball: about 244 kB
+- npm tarball: about 243 kB
 - unpacked package: about 1.3 MB across 18 files
-- shipped runtime JavaScript: about 1.1 MB raw, 207 KiB gzip
+- shipped runtime JavaScript: about 1.1 MB raw, 206 KiB gzip
 - engine type declarations: about 172 kB raw, 30 kB gzip
 
 ## Runtime
@@ -34,7 +34,6 @@ unavailable.`
 import {
   form,
   fit,
-  plan,
   flow,
   pour,
   exclusion,
@@ -133,7 +132,7 @@ const result = form(text, {
 
 ## Content Inputs
 
-`form()`, `fit()`, `plan()`, `flow()`, and `pour()` take string content.
+`form()`, `fit()`, `flow()`, and `pour()` take string content.
 
 Most strings are plain text. If the string is structured JSON, Layoutmaster treats
 it as mixed-style text:
@@ -192,64 +191,6 @@ interface FormResult {
 
 `form()` uses an open internal height. It is the "how tall would this be?"
 function.
-
-## `plan(content?, options?)`
-
-Use `plan()` when the same content will be solved repeatedly.
-
-`plan()` captures content plus base options and returns a planned layout object.
-The planned object can then produce `form()`, `fit()`, or `flow()` results with
-additional target options. It is useful for responsive UI, masonry cards, repeated
-measurement at several widths, or any workload where the content stays the same
-while the available space changes.
-
-```js
-const planned = plan("Layout is data.", {
-  fontFamily: "Georgia, serif",
-  fontSize: 18,
-  lineHeight: 1.4
-});
-
-const narrow = planned.form({ width: 260 });
-const wide = planned.form({ width: 420 });
-const clipped = planned.fit({ width: 320, height: 120 });
-```
-
-```ts
-interface PlannedLayout {
-  readonly size: number;
-  form(options?: LayoutmasterTargetInput, handler?: FormResultHandler): FormResult;
-  fit(options?: LayoutmasterTargetInput, handler?: FitResultHandler): FitResult;
-  flow(targets?: LayoutmasterTargetInput[], handler?: FlowResultHandler): FlowResult;
-  clear(): void;
-}
-```
-
-For an array of content inputs, `plan()` returns a collection:
-
-```js
-const cards = plan([title, body, caption], {
-  fontFamily: "Georgia, serif",
-  fontSize: 14,
-  lineHeight: 1.45
-});
-
-const results = cards.formAll({ width: 280 });
-```
-
-```ts
-interface PlannedLayoutCollection {
-  readonly items: PlannedLayout[];
-  readonly size: number;
-  formAll(options?: LayoutmasterTargetInput, handler?: (result: FormResult[]) => void): FormResult[];
-  fitAll(options?: LayoutmasterTargetInput, handler?: (result: FitResult[]) => void): FitResult[];
-  clear(): void;
-}
-```
-
-`clear()` drops cached solved results from the plan. It does not mutate your
-source content. One-shot APIs remain available; `plan()` is for repeated layout
-intent, not a required precompile step.
 
 ## `fit(content?, options?, handler?)`
 

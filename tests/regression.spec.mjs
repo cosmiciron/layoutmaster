@@ -24,7 +24,6 @@ const {
   form,
   fit,
   flow,
-  plan,
   pour,
   exclusion,
   debugBuildHiddenDocument
@@ -445,42 +444,6 @@ test("layoutmaster projects pieces with the engine line-height policy", () => {
     region.pieces.map((piece) => Number(piece.height.toFixed(3))),
     new Array(4).fill(Number(lineHeightPx.toFixed(3)))
   );
-});
-
-test("layoutmaster plan reuses solved layouts for repeated constraints", () => {
-  const planned = plan("Measure twice, layout once. ".repeat(12), {
-    fontFamily: "Arial",
-    fontSize: 14,
-    lineHeight: 1.35,
-    lineHeightMode: "css"
-  });
-
-  const first = planned.fit({ width: 180, height: 400 });
-  const second = planned.fit({ height: 400, width: 180 });
-
-  assert.equal(planned.size, 1);
-  assert.deepEqual(
-    second.pieces.map((piece) => piece.text),
-    first.pieces.map((piece) => piece.text)
-  );
-  assert.equal(second, first, "expected repeated planned constraints to reuse the same read-only result");
-  assert.ok(Object.isFrozen(second));
-  assert.ok(Object.isFrozen(second.pieces));
-});
-
-test("layoutmaster plan bounds cached solved layouts", () => {
-  const planned = plan("Measure many times without hoarding every answer. ".repeat(8), {
-    fontFamily: "Arial",
-    fontSize: 14,
-    lineHeight: 1.35,
-    lineHeightMode: "css"
-  });
-
-  for (let index = 0; index < 160; index += 1) {
-    planned.form({ width: 180 + index });
-  }
-
-  assert.equal(planned.size, 128);
 });
 
 test("layoutmaster exclusions alter the returned wrap plan", () => {

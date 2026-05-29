@@ -1,4 +1,4 @@
-import { plan } from "@layoutmaster/layoutmaster";
+import { fit, form } from "@layoutmaster/layoutmaster";
 import sampleDocument from "./assets/html-atlas-big-326-pages.js";
 
 const MIN_CARD_WIDTH = 230;
@@ -73,8 +73,8 @@ function runDemo(cards = baseCards, statusPrefix = "") {
 
 function renderLayoutmasterMode(cards, totalStartedAt, statusPrefix = "") {
   const layout = resolveResponsiveLayout();
-  const planned = createLayoutmasterPlans(cards);
-  const solvedCards = solveLayoutmasterCards(planned.cards, layout.cardWidth);
+  const cached = createLayoutmasterSources(cards);
+  const solvedCards = solveLayoutmasterCards(cached.cards, layout.cardWidth);
   const packedCards = packCards(solvedCards, layout);
   renderLayoutmasterWall(packedCards, layout);
   const wallHeight = Math.max(0, ...packedCards.map((card) => card.y + card.height));
@@ -86,7 +86,7 @@ function renderLayoutmasterMode(cards, totalStartedAt, statusPrefix = "") {
     "Layoutmaster pieces",
     `${cards.length} card(s)`,
     `${layout.columnCount} column(s)`,
-    `unique ${planned.titleCount} title / ${planned.bodyCount} body`,
+    `unique ${cached.titleCount} title / ${cached.bodyCount} body`,
     `total ${formatMs(totalMs)}`,
     `wall ${Math.round(wallHeight)} px`
   ].filter(Boolean).join(" | ");
@@ -132,50 +132,74 @@ function repeatCards(chapters, repeat) {
   return cards;
 }
 
-function createLayoutmasterPlans(cards) {
-  const titlePlans = new Map();
-  const bodyPlans = new Map();
-  const plannedCards = cards.map((card) => {
+function createLayoutmasterSources(cards) {
+  const titleSources = new Map();
+  const bodySources = new Map();
+  const cachedCards = cards.map((card) => {
     const bodyText = card.paragraphs.join("\n\n");
-    let titlePlan = titlePlans.get(card.title);
-    if (!titlePlan) {
-      titlePlan = plan(card.title, {
-        fontFamily: TITLE_FONT,
-        fontSize: 18,
-        lineHeight: 1.18,
-        lineHeightMode: "css"
-      });
-      titlePlans.set(card.title, titlePlan);
+    let titleSource = titleSources.get(card.title);
+    if (!titleSource) {
+      titleSource = {
+        text: card.title,
+        cache: new Map(),
+        options: {
+          fontFamily: TITLE_FONT,
+          fontSize: 18,
+          lineHeight: 1.18,
+          lineHeightMode: "css"
+        }
+      };
+      titleSources.set(card.title, titleSource);
     }
-    let bodyPlan = bodyPlans.get(bodyText);
-    if (!bodyPlan) {
-      bodyPlan = plan(bodyText, {
-        height: 40000,
-        fontFamily: BODY_FONT,
-        fontSize: 12,
-        lineHeight: 1.45,
-        lineHeightMode: "css"
-      });
-      bodyPlans.set(bodyText, bodyPlan);
+    let bodySource = bodySources.get(bodyText);
+    if (!bodySource) {
+      bodySource = {
+        text: bodyText,
+        cache: new Map(),
+        options: {
+          height: 40000,
+          fontFamily: BODY_FONT,
+          fontSize: 12,
+          lineHeight: 1.45,
+          lineHeightMode: "css"
+        }
+      };
+      bodySources.set(bodyText, bodySource);
     }
     return {
       ...card,
-      titlePlan,
-      bodyPlan
+      titleSource,
+      bodySource
     };
   });
   return {
-    cards: plannedCards,
-    titleCount: titlePlans.size,
-    bodyCount: bodyPlans.size
+    cards: cachedCards,
+    titleCount: titleSources.size,
+    bodyCount: bodySources.size
   };
 }
 
-function solveLayoutmasterCards(plannedCards, cardWidth) {
+function solveCached(source, mode, options) {
+  const key = `${mode}:${JSON.stringify(options)}`;
+  if (source.cache.has(key)) return source.cache.get(key);
+  const result = mode === "form"
+    ? form(source.text, {
+        ...source.options,
+        ...options
+      })
+    : fit(source.text, {
+        ...source.options,
+        ...options
+      });
+  source.cache.set(key, result);
+  return result;
+}
+
+function solveLayoutmasterCards(cachedCards, cardWidth) {
   const contentWidth = cardWidth - CARD_PADDING_X;
-  return plannedCards.map((card, index) => {
-    const title = card.titlePlan.form({ width: contentWidth });
-    const body = card.bodyPlan.fit({ width: contentWidth });
+  return cachedCards.map((card) => {
+    const title = solveCached(card.titleSource, "form", { width: contentWidth });
+    const body = solveCached(card.bodySource, "fit", { width: contentWidth });
     const bodyOffsetY = CARD_PADDING_TOP + title.height + TITLE_GAP;
     const pieces = [
       ...offsetPieces(title.pieces, CARD_PADDING_X / 2, CARD_PADDING_TOP),
