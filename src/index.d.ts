@@ -332,27 +332,10 @@ export interface PourResult {
   performance: LayoutmasterPerformance;
 }
 
-export interface ProducePage {
-  index: number;
-  width: number;
-  height: number;
-  occupiedHeight: number;
-  pieces: LayoutmasterPiece[];
-  lines: LayoutmasterLineGuide[];
-}
-
-export interface ProduceOptions extends LayoutmasterRequest {}
-
-export interface ProduceResult {
-  pages: ProducePage[];
-  performance: LayoutmasterPerformance;
-}
-
 export type FormResultHandler = (result: FormResult) => void;
 export type FitResultHandler = (result: FitResult) => void;
 export type FlowResultHandler = (result: FlowResult) => void;
 export type PourResultHandler = (result: PourResult) => void;
-export type ProduceResultHandler = (result: ProduceResult) => void;
 export type PlannedFormAllResultHandler = (result: FormResult[]) => void;
 export type PlannedFitAllResultHandler = (result: FitResult[]) => void;
 
@@ -385,7 +368,5 @@ export declare function pour(content?: LayoutmasterContentInput, shape?: Layoutm
 export declare function pour(content?: LayoutmasterContentInput, shape?: LayoutmasterExclusion, handler?: PourResultHandler): PourResult;
 export declare function plan(content?: LayoutmasterContentInput, options?: LayoutmasterTargetInput): PlannedLayout;
 export declare function plan(content: LayoutmasterContentInput[], options?: LayoutmasterTargetInput): PlannedLayoutCollection;
-export declare function produce(source: unknown, options?: ProduceOptions, handler?: ProduceResultHandler): ProduceResult;
-export declare function produce(source: unknown, handler?: ProduceResultHandler): ProduceResult;
 export declare const exclusion: LayoutmasterExclusionNamespace;
 export declare function debugBuildHiddenDocument(content?: LayoutmasterContentInput, options?: LayoutmasterRequest, mode?: "form" | "fit"): unknown;

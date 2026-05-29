@@ -53,7 +53,7 @@ afternoon.
 ## Getting Pieces
 
 `form()`, `fit()`, `flow()`, and `pour()` return pieces directly or by
-placement. `produce()` returns pieces per page.
+placement.
 
 ```js
 import { form } from "@layoutmaster/layoutmaster";
@@ -66,22 +66,6 @@ const result = form("Pieces are layout results.", {
 });
 
 console.log(result.pieces);
-```
-
-Paginated documents look the same, just one level down:
-
-```js
-import { produce } from "@layoutmaster/layoutmaster";
-
-const result = produce({
-  elements: [
-    { type: "p", content: "A document page is still painted from pieces." }
-  ]
-});
-
-for (const page of result.pages) {
-  console.log(page.index, page.width, page.height, page.pieces.length);
-}
 ```
 
 Structured content can carry styles and app metadata:
@@ -330,7 +314,3 @@ better.
 - middle panel: generated pieces
 - right panel: HTML painted from pieces
 - SVG chrome: piece boxes and line baselines copied from engine results
-
-`demos/html-atlas.html` is the paginated reference. It calls `produce()` once,
-then renders returned pages and pieces into a selectable, searchable atlas.
-Zoom and thumbnails are UI. Page geometry stays engine-owned.

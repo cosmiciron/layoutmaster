@@ -25,7 +25,6 @@ const {
   fit,
   flow,
   plan,
-  produce,
   pour,
   exclusion,
   debugBuildHiddenDocument
@@ -890,52 +889,6 @@ test("layoutmaster APIs accept structured text JSON strings", () => {
   });
   assert.ok(poured.pieces.length > 0, "expected pour() to render structured text pieces");
   assert.equal(typeof poured.content.complete, "boolean");
-});
-
-test("layoutmaster produce returns engine-paginated pages with projected pieces", () => {
-  const source = {
-    layout: {
-      pageSize: { width: 180, height: 110 },
-      margins: { top: 10, right: 12, bottom: 10, left: 12 },
-      fontFamily: "Times New Roman",
-      fontSize: 14,
-      lineHeight: 1.25,
-      hyphenation: "off"
-    },
-    fonts: {
-      regular: "Times New Roman"
-    },
-    styles: {
-      p: {
-        marginBottom: 8,
-        allowLineSplit: true,
-        orphans: 1,
-        widows: 1
-      }
-    },
-    elements: [
-      {
-        type: "p",
-        content: "Produce exposes full engine pagination as page-wrapped pieces. ".repeat(12),
-        properties: {
-          sourceId: "produce-body",
-          _demoRole: "body"
-        }
-      }
-    ]
-  };
-
-  const result = produce(source);
-
-  assert.ok(result.pages.length > 1, "expected produce() to preserve engine pagination");
-  assert.equal(result.pages[0].width, 180);
-  assert.equal(result.pages[0].height, 110);
-  assert.ok(result.pages.some((page) => page.pieces.length > 0), "expected pages to include projected pieces");
-  assert.ok(
-    result.pages.flatMap((page) => page.pieces).some((piece) => piece._demoRole === "body"),
-    "expected produce() pieces to keep underscore metadata"
-  );
-  assertPerformanceShape(result.performance, "produce");
 });
 
 test("layoutmaster polygon pour remains usable at smaller font sizes", () => {

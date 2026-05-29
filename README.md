@@ -73,12 +73,12 @@ splits across viewports, and settles into exact coordinates.
 
 That is where the master gets its superpowers.
 
-## The Six Mantras
+## The Five Mantras
 
-`form()`, `fit()`, `plan()`, `flow()`, `pour()`, and `produce()`
+`form()`, `fit()`, `plan()`, `flow()`, and `pour()`
 
-These are the six mantras (APIs if you like, but the master prefers mantras) of the
-Layoutmaster. Do not be deceived by their overwhelming simplicity. These six verbs can
+These are the five mantras (APIs if you like, but the master prefers mantras) of the
+Layoutmaster. Do not be deceived by their overwhelming simplicity. These five verbs can
 solve a world of complex layout challenges and unlock possibilities you could only dream of
 before - precisely none of which browsers could do without rebuilding DOMs.
 
@@ -89,12 +89,11 @@ import {
   plan,
   flow,
   pour,
-  produce,
   exclusion
 } from "@layoutmaster/layoutmaster";
 ```
 
-I know, you count seven. We will get to that later. Just trust the master.
+I know, you count six. We will get to that later. Just trust the master.
 
 ### `form` - given space, how does this lay out, and how tall does it get?
 
@@ -180,29 +179,9 @@ const result = pour(longText, shape, {
 console.log(result.pieces);
 ```
 
-### `produce` - given a document, give me pages.
-
-Hand the master a document and it comes back with publishing-grade pages, each 
-carrying its own pieces, line guides, and occupied height. One call. Every page 
-solved. 
-
-```js
-const result = produce({
-  elements: [
-    { type: "p", content: "A document can become engine-authored pages." }
-  ]
-}, {
-  width: 612,
-  height: 792,
-  margins: { top: 72, right: 72, bottom: 72, left: 72 }
-});
-
-console.log(result.pages.length);
-```
-
 ## Be Water, My Friend
 
-Here is that "seventh" element.
+Here is that "sixth" element.
 
 Remember, *the highest virtue is like water*. Text in Layoutmaster is like water. 
 It fills, it bends, it flows, and it navigates around any obstacle you place in 
@@ -252,33 +231,6 @@ tells you it is punching above its weight.
 
 But *David would not have become a legend* if all he had done was throw one rock.
 
-### The Atlas Test
-
-The HTML Atlas demo takes a long manuscript (~80,000 words) and turns it into a wall of
-real HTML pages. Not canvas. Not screenshots. 
-
-*Searchable, selectable, highlightable text.*
-
-```txt
-Layoutmaster:
-334 page(s) | 6838 piece(s) | produce 363.0 ms | render 10.0 ms
-
-DOM + W/O:
-364 pages | 6484 piece(s) | paginate 3115.0 ms | wall 17.0 ms
-```
-
-This is what happens when the task becomes a little more serious than just
-wrapping text into paragraphs: 
-
-- pagination
-- headers and footers
-- widow/orphan control
-- on-the-fly page number calculations
-
-The master is more than **8 times faster** yet it is barely in second gear. Its 
-[VMPrint Engine](https://github.com/cosmiciron/vmprint) is made for stuff ten times more 
-complicated than this. But let's not go there - it would turn into an unfair fight.
-
 ### The Resize Test
 
 This test is not about a benchmark table. It is about what happens when the layout has to 
@@ -319,7 +271,7 @@ Gatling gun torn from a tank.
 
 Nope. 
 
-The package packs to about 246 kB on npm - 179 KiB gzip at runtime, the embedded
+The package packs to about 244 kB on npm - about 207 KiB gzip at runtime, the embedded
 engine included. 
 
 **No other dependencies.**
@@ -380,8 +332,6 @@ Current demos:
 - `exclusion`: live primitive exclusion fields
 - `exclusion-assembly`: animated primitive assembly rig with hideable visual layer
 - `exclusion-image`: image alpha as wrap geometry
-- `html-atlas`: `produce()` rendered as a searchable, selectable paginated atlas
-- `html-atlas-dom`: DOM pagination baseline with widow/orphan pass enabled
 - `masonry-book`: chapter cards packed from Layoutmaster `fit()` pieces
 - `dancing-text`: animated exclusion fields from video frames
 

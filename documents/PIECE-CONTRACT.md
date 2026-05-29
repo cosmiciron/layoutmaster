@@ -3,7 +3,7 @@
 Pieces are the main thing Layoutmaster gives back.
 
 `form()`, `fit()`, `flow()`, and `pour()` return pieces directly or by
-placement. `produce()` returns them per page. A piece is an engine-authored text
+placement. A piece is an engine-authored text
 fragment: where it goes, what it says, and what paint metadata came along for
 the ride.
 
@@ -152,10 +152,9 @@ They are not layout inputs.
 
 ## Lines Versus Pieces
 
-`result.lines` gives line-level geometry. For `produce()`, use `page.lines`.
+`result.lines` gives line-level geometry.
 
-`result.pieces` gives text-fragment geometry. For `produce()`, use
-`page.pieces`.
+`result.pieces` gives text-fragment geometry.
 
 Line guides are great for overlays, carets, and diagnostics. They do not replace
 pieces, and pieces should not derive new line geometry in wrapper or demo code.

@@ -201,15 +201,6 @@ function createEngineInputBundle(request, fragment, layout, fonts, styles, eleme
   };
 }
 
-function createLetterPageDefaults(options = {}) {
-  return {
-    width: 612,
-    height: 792,
-    margins: { top: 72, right: 72, bottom: 72, left: 72 },
-    ...options
-  };
-}
-
 function createEngineInputsForRequest(mode, input = {}) {
   const request = input;
   const styles = buildParagraphStyles(request);
@@ -470,36 +461,6 @@ export function computePourSnapshotSync(field, request) {
   });
   result.performance = toPerformanceSummary(engineReport.profile);
   return result;
-}
-
-export function computeProduceSnapshotSync(documentInput) {
-  const runner = createEmbeddedEngineRunner(documentInput);
-  const { pages, engineReport } = runner.run();
-  const regions = extractRegionResults(pages, engineReport.interactionMap, null, {
-    layout: runner.config.layout
-  });
-
-  return {
-    pages: regions.map((region, index) => {
-      const page = pages[index] || {};
-      return {
-        index: Number(page.index ?? region.index ?? index),
-        width: Number(page.width || 0),
-        height: Number(page.height || 0),
-        occupiedHeight: region.height,
-        pieces: region.pieces,
-        lines: region.lines
-      };
-    }),
-    performance: toPerformanceSummary(engineReport.profile)
-  };
-}
-
-export function createDocumentFromProduceElements(source, options = {}) {
-  const elements = Array.isArray(source) ? source : (Array.isArray(source?.elements) ? source.elements : []);
-  const content = JSON.stringify({ elements });
-  const request = normalizeRequest(content, createLetterPageDefaults(options), "fit");
-  return createEngineInputsForRequest("fit", request).document;
 }
 
 export function createFitResult(snapshot) {

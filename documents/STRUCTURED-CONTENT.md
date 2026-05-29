@@ -40,11 +40,6 @@ The public shape is intentionally small:
 This is here to make mixed-style text practical. It is not a grand universal
 document format. No tiny throne has been built for it.
 
-`produce()` is the page-minded exception. It accepts full document objects,
-element objects, element arrays, or JSON strings containing those shapes. If you
-give `produce()` only elements, Layoutmaster wraps them in a document using
-letter-page defaults plus your options.
-
 ## Styles
 
 Put text style under `properties.style`:

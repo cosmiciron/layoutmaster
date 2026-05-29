@@ -11,9 +11,9 @@ Browser image sampling, video extraction, and HTML painting helpers live under
 
 Current clean build footprint:
 
-- npm tarball: about 264 kB
-- unpacked package: about 1.4 MB across 18 files
-- shipped runtime JavaScript: about 1.1 MB raw, 193 KiB gzip
+- npm tarball: about 244 kB
+- unpacked package: about 1.3 MB across 18 files
+- shipped runtime JavaScript: about 1.1 MB raw, 207 KiB gzip
 - engine type declarations: about 172 kB raw, 30 kB gzip
 
 ## Runtime
@@ -37,7 +37,6 @@ import {
   plan,
   flow,
   pour,
-  produce,
   exclusion,
   debugBuildHiddenDocument
 } from "@layoutmaster/layoutmaster";
@@ -342,71 +341,6 @@ interface PourResult {
 The shape is the container. The returned pieces are still normal text pieces,
 just solved inside that geometry.
 
-## `produce(source, options?, handler?)`
-
-Use `produce()` when you want pages.
-
-This is the API behind the HTML Atlas demo: one engine run, many returned pages,
-each with its own pieces and line guides.
-
-Accepted sources:
-
-- a full document object with `layout` and `elements`
-- an object with `elements`
-- an array of elements
-- a JSON string containing any of those
-
-Full document input:
-
-```js
-const result = produce({
-  documentVersion: "1.1",
-  layout: {
-    pageSize: { width: 612, height: 792 },
-    margins: { top: 72, right: 72, bottom: 72, left: 72 },
-    fontFamily: "Georgia",
-    fontSize: 16,
-    lineHeight: 1.4
-  },
-  elements: [
-    { type: "p", content: "A page-aware document." }
-  ]
-});
-```
-
-Elements-only input:
-
-```js
-const result = produce({
-  elements: [
-    { type: "p", content: "Structured elements can be paginated too." }
-  ]
-}, {
-  width: 612,
-  height: 792,
-  margins: { top: 72, right: 72, bottom: 72, left: 72 }
-});
-```
-
-```ts
-interface ProducePage {
-  index: number;
-  width: number;
-  height: number;
-  occupiedHeight: number;
-  pieces: LayoutmasterPiece[];
-  lines: LayoutmasterLineGuide[];
-}
-
-interface ProduceResult {
-  pages: ProducePage[];
-  performance: LayoutmasterPerformance;
-}
-```
-
-Render `page.pieces`. Inspect `page.lines`. Do not re-paginate in the browser
-unless you enjoy maintaining two layout engines and explaining why they disagree.
-
 ## Options
 
 All layout calls accept plain option objects:
@@ -450,9 +384,6 @@ Defaults:
 
 `fit()`, `flow()`, and `pour()` need bounded height after normalization.
 `form()` does not.
-
-For elements-only `produce()` calls, Layoutmaster starts from letter-page defaults:
-`612 x 792` with `72` point margins, then applies your options.
 
 ## Exclusions
 

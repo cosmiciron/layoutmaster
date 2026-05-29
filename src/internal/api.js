@@ -1,9 +1,7 @@
 import {
   computeFlowSnapshotSync,
-  computeProduceSnapshotSync,
   computePourSnapshotSync,
   computeSnapshotSync,
-  createDocumentFromProduceElements,
   createFitResult,
   createFormResult,
   invokeResultHandler,
@@ -25,49 +23,6 @@ function isPlainObject(value) {
 }
 
 const PLANNED_RESULT_CACHE_LIMIT = 128;
-
-function parseProduceSource(source) {
-  if (typeof source === "string") {
-    const trimmed = source.trim();
-    if (!trimmed) {
-      throw new Error("[layoutmaster] produce() expects a full document JSON string or structured elements JSON.");
-    }
-    try {
-      return JSON.parse(trimmed);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`[layoutmaster] produce() could not parse JSON input: ${message}`);
-    }
-  }
-  if (Array.isArray(source) || isPlainObject(source)) {
-    return source;
-  }
-  throw new Error("[layoutmaster] produce() expects a full document object, elements object, elements array, or JSON string.");
-}
-
-function isFullDocumentSource(source) {
-  return isPlainObject(source) && Array.isArray(source.elements) && isPlainObject(source.layout);
-}
-
-function isElementsSource(source) {
-  return Array.isArray(source) || (isPlainObject(source) && Array.isArray(source.elements));
-}
-
-function resolveProduceOptions(optionsOrHandler, maybeHandler) {
-  const handler = typeof optionsOrHandler === "function" ? optionsOrHandler : maybeHandler;
-  const options = typeof optionsOrHandler === "function" ? {} : (optionsOrHandler || {});
-  if (options != null && !isPlainObject(options)) {
-    throw new Error("[layoutmaster] produce() options must be a plain object when provided.");
-  }
-  return { options, handler };
-}
-
-function normalizeFullDocumentSource(source) {
-  return {
-    documentVersion: "1.1",
-    ...source
-  };
-}
 
 function stableCacheKey(value) {
   if (value == null || typeof value !== "object") {
@@ -319,24 +274,6 @@ export function pour(content = "", shape, optionsOrHandler, maybeHandler) {
   }, "fit");
 
   const result = createFitResult(computePourSnapshotSync(field, request));
-  invokeResultHandler(result, handler);
-  return result;
-}
-
-export function produce(source, optionsOrHandler, maybeHandler) {
-  const { options, handler } = resolveProduceOptions(optionsOrHandler, maybeHandler);
-  const parsedSource = parseProduceSource(source);
-  const documentInput = isFullDocumentSource(parsedSource)
-    ? normalizeFullDocumentSource(parsedSource)
-    : isElementsSource(parsedSource)
-      ? createDocumentFromProduceElements(parsedSource, options)
-      : null;
-
-  if (!documentInput) {
-    throw new Error("[layoutmaster] produce() expects a document with layout/elements or a structured elements payload.");
-  }
-
-  const result = computeProduceSnapshotSync(documentInput);
   invokeResultHandler(result, handler);
   return result;
 }

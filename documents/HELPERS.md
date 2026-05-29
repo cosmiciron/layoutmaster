@@ -16,7 +16,6 @@ different defaults. They are source, not scripture.
 Some workflows are valuable but browser-shaped:
 
 - painting solved pieces into HTML
-- painting paginated `produce()` results into a page surface
 - sampling image alpha through canvas
 - extracting animated exclusion frames from video
 
