@@ -556,6 +556,7 @@ class CanvasTextDelegate {
     const letterSpacing = Number(options.letterSpacing || 0);
     const unitCount = Array.from(text).length;
     const width = raw.width + (unitCount > 1 ? letterSpacing * (unitCount - 1) : 0);
+    const rightInkOverhang = Math.max(0, Number(raw.actualBoundingBoxRight || 0) - Number(raw.width || 0));
     context.restore();
 
     const verticalMetrics = this.getVerticalMetrics(font);
@@ -563,6 +564,7 @@ class CanvasTextDelegate {
     return {
       width,
       glyphs: [],
+      rightInkOverhang,
       ascent: cssMetrics?.ascent ?? resolveMetricAscent(raw, verticalMetrics.ascent / 10) * (1000 / Math.max(1, fontSize)),
       descent: cssMetrics?.descent ?? resolveMetricDescent(raw, verticalMetrics.descent / 10) * (1000 / Math.max(1, fontSize))
     };

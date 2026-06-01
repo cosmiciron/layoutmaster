@@ -360,7 +360,8 @@ export class TextProcessor extends FontProcessor {
         const ctxScriptClass = populateSegment?.scriptClass || 'none';
         const ctxLineHeight = Number(populateSegment?.style?.lineHeight || this.config.layout.lineHeight || 0);
         const ctxLineHeightMode = this.config.layout.lineHeightMode || 'print';
-        const cacheKey = `${fontKey}-${measurementFontSize}-${letterSpacing}-${ctxScriptClass}-${ctxDirection}-${ctxLineHeightMode}-${ctxLineHeight}-${text}`;
+        const ctxReserveItalicRunEndInk = (populateSegment as any)?.reserveItalicRunEndInk ? 'italic-boundary' : 'none';
+        const cacheKey = `${fontKey}-${measurementFontSize}-${letterSpacing}-${ctxScriptClass}-${ctxDirection}-${ctxLineHeightMode}-${ctxLineHeight}-${ctxReserveItalicRunEndInk}-${text}`;
 
         const cached = this.runtime.measurementCache.get(cacheKey);
         if (cached) {
@@ -386,7 +387,15 @@ export class TextProcessor extends FontProcessor {
                 lineHeight: ctxLineHeight,
                 lineHeightMode: ctxLineHeightMode
             });
-            const width = measured.width;
+            const normalizedStyle = LayoutUtils.normalizeFontStyle(populateSegment?.style?.fontStyle);
+            const measuredRightInkOverhang = Math.max(0, Number(measured.rightInkOverhang || 0));
+            const fallbackItalicRunEndGuard = Math.min(1.25, Math.max(0.5, Number(measurementFontSize || 12) * 0.06));
+            const italicRunEndGuard = normalizedStyle === 'italic' && !!(populateSegment as any)?.reserveItalicRunEndInk && /\S$/u.test(text)
+                ? (measuredRightInkOverhang > 0 ? measuredRightInkOverhang : fallbackItalicRunEndGuard)
+                : 0;
+            // Italic ink can extend beyond the advance width. Reserve that run-end ink
+            // so the following styled run does not visually consume the inter-word gap.
+            const width = measured.width + italicRunEndGuard;
             const glyphs = measured.glyphs;
             const shapedGlyphs = measured.shapedGlyphs;
             const { ascent, descent } = measured;
@@ -694,6 +703,37 @@ export class TextProcessor extends FontProcessor {
         });
     }
 
+    private shouldReserveItalicRunEndInk(tokens: ReturnType<typeof buildRichWrapTokens>, index: number): boolean {
+        const token = tokens[index];
+        if (!token || token.kind !== 'segment') return false;
+        const current = token.segment;
+        if (LayoutUtils.normalizeFontStyle(current.style?.fontStyle) !== 'italic') return false;
+        if (!/\S$/u.test(current.text || '')) return false;
+
+        for (let nextIndex = index + 1; nextIndex < tokens.length; nextIndex++) {
+            const nextToken = tokens[nextIndex];
+            if (!nextToken || nextToken.kind !== 'segment') return false;
+            const next = nextToken.segment;
+            const sameRun =
+                current.fontFamily === next.fontFamily &&
+                current.direction === next.direction &&
+                this.styleSignatureCache.areStylesEquivalent(current.style, next.style);
+            if (!sameRun) return true;
+            if ((next.text || '').trim().length > 0) return false;
+        }
+
+        return false;
+    }
+
+    private markItalicRunEndInkGuards(tokens: ReturnType<typeof buildRichWrapTokens>): void {
+        for (let index = 0; index < tokens.length; index++) {
+            const token = tokens[index];
+            if (token?.kind === 'segment' && this.shouldReserveItalicRunEndInk(tokens, index)) {
+                (token.segment as any).reserveItalicRunEndInk = true;
+            }
+        }
+    }
+
     /**
      * Specialized word-wrapper for rich text segments.
      */
@@ -752,8 +792,8 @@ export class TextProcessor extends FontProcessor {
             const cacheKey = `${familyName}|${resolvedWeight}|${resolvedStyle}|${fontSize}`;
             const cached = richFontInfoCache.get(cacheKey);
             if (cached) return cached;
-            const resolved = resolveRichFontInfo(seg, defaultSize, this.config.layout.fontFamily, (resolvedFamilyName, weight) =>
-                this.resolveLoadedFamilyFont(resolvedFamilyName, weight)
+            const resolved = resolveRichFontInfo(seg, defaultSize, this.config.layout.fontFamily, (resolvedFamilyName, weight, style) =>
+                this.resolveLoadedFamilyFont(resolvedFamilyName, weight, style)
             );
             richFontInfoCache.set(cacheKey, resolved);
             return resolved;
@@ -793,6 +833,7 @@ export class TextProcessor extends FontProcessor {
                 session.recordProfile?.('flowWordSegmentMs', durationMs);
             } : undefined
         });
+        this.markItalicRunEndInkGuards(tokens);
         session?.recordProfile?.('flowBuildTokensCalls', 1);
         if (session) session.recordProfile?.('flowBuildTokensMs', performance.now() - buildTokensT0);
         const wrapStreamT0 = session ? performance.now() : 0;
