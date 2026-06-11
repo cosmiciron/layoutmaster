@@ -231,6 +231,45 @@ function copyUnderscoreFields(target, source) {
   }
 }
 
+function buildSourceMetadataLookup(fragment) {
+  const lookup = new Map();
+  for (const paragraph of fragment?.paragraphs || []) {
+    const sourceId = typeof paragraph?.sourceId === "string" ? paragraph.sourceId : "";
+    if (!sourceId || !Array.isArray(paragraph.metadataRuns)) continue;
+    const metadataRuns = paragraph.metadataRuns.filter((run) =>
+      Number.isFinite(Number(run?.start))
+      && Number.isFinite(Number(run?.end))
+      && isPlainObject(run?.metadata)
+    );
+    lookup.set(sourceId, metadataRuns);
+    if (!sourceId.startsWith("author:")) {
+      lookup.set(`author:${sourceId}`, metadataRuns);
+    }
+  }
+  return lookup;
+}
+
+function applySourceMetadataToPieces(pieces, fragment) {
+  const lookup = buildSourceMetadataLookup(fragment);
+  if (lookup.size === 0) return pieces;
+
+  for (const piece of pieces) {
+    const sourceId = typeof piece?._sourceId === "string" ? piece._sourceId : "";
+    const sourceStart = Number(piece?._sourceStart);
+    const sourceEnd = Number(piece?._sourceEnd);
+    if (!sourceId || !Number.isFinite(sourceStart) || !Number.isFinite(sourceEnd)) continue;
+
+    for (const run of lookup.get(sourceId) || []) {
+      const runStart = Number(run.start);
+      const runEnd = Number(run.end);
+      if (sourceEnd <= runStart || sourceStart >= runEnd) continue;
+      copyUnderscoreFields(piece, run.metadata);
+    }
+  }
+
+  return pieces;
+}
+
 function createPieceFromSegment({
   rawSegment,
   rawBox,
@@ -630,7 +669,7 @@ export function extractRegionResults(pages, interactionMap, fragment, options = 
 
     return {
       index: pageIndex,
-      pieces: pageLayout.pieces,
+      pieces: applySourceMetadataToPieces(pageLayout.pieces, fragment),
       lines: pageLayout.lines,
       height: computePageOccupiedHeight(page),
       renderedText: pageLayout.pieces.map((piece) => String(piece.text || "")).join("")

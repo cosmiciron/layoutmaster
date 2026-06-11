@@ -1,32 +1,18 @@
-export interface ContextShapedGlyph {
-    id: number;
-    codePoints: number[];
-    xAdvance: number;
-    xOffset: number;
-    yOffset: number;
+export interface VmprintOutputStream {
+    write(chunk: Uint8Array | string): void;
+    end(): void;
+    waitForFinish(): Promise<void>;
 }
 
-export interface ContextFontRegistrationOptions {
-    standardFontPostScriptName?: string;
-}
-
-export interface ContextTextOptions {
-    width?: number;
-    align?: 'left' | 'center' | 'right' | 'justify';
-    lineBreak?: boolean;
-    characterSpacing?: number;
-    height?: number;
-    ascent: number;
-    link?: string;
-}
-
-export interface ContextImageOptions {
-    width?: number;
-    height?: number;
-    mimeType?: string;
+export interface ContextPageOptions {
+    size?: string | [number, number];
+    margins?: { top: number; right: number; bottom: number; left: number };
 }
 
 export interface Context {
+    addPage(options?: ContextPageOptions): void;
+    end(): void;
+    pipe(stream: VmprintOutputStream): void;
     registerFont(id: string, buffer: Uint8Array, options?: ContextFontRegistrationOptions): Promise<void>;
     font(family: string, size?: number): this;
     fontSize(size: number): this;
@@ -68,4 +54,46 @@ export interface Context {
         glyphs: ContextShapedGlyph[]
     ): this;
     image(source: string | Uint8Array, x: number, y: number, options?: ContextImageOptions): this;
+    getSize(): { width: number; height: number };
+}
+
+export interface ContextShapedGlyph {
+    id: number;
+    codePoints: number[];
+    xAdvance: number;
+    xOffset: number;
+    yOffset: number;
+}
+
+export interface ContextFontRegistrationOptions {
+    standardFontPostScriptName?: string;
+}
+
+export interface ContextTextOptions {
+    width?: number;
+    align?: 'left' | 'center' | 'right' | 'justify';
+    lineBreak?: boolean;
+    characterSpacing?: number;
+    height?: number;
+    ascent: number;
+    link?: string;
+}
+
+export interface ContextImageOptions {
+    width?: number;
+    height?: number;
+    mimeType?: string;
+}
+
+export type ContextPageSize =
+    | 'A4'
+    | 'LETTER'
+    | [number, number]
+    | { width: number; height: number };
+
+export interface ContextFactoryOptions {
+    size: ContextPageSize;
+    margins: { top: number; left: number; right: number; bottom: number };
+    bufferPages: boolean;
+    autoFirstPage: boolean;
 }

@@ -88,15 +88,34 @@ export function settleObserverGeometryAtCheckpoint<TPage, TCheckpoint extends Re
         };
     }
 
+    console.log(
+        '[DIAG:settle] geometry detected. frontier sourceId=%s actorIndex=%s cursorY=%s',
+        observation.earliestAffectedFrontier.sourceId,
+        observation.earliestAffectedFrontier.actorIndex,
+        observation.earliestAffectedFrontier.cursorY
+    );
+
     recordUpdateSummary(source, 'geometry', observation.contentOnlyActors, observation.earliestAffectedFrontier);
 
     const checkpoint = resolveSafeCheckpoint(observation.earliestAffectedFrontier);
     if (!checkpoint) {
+        console.log(
+            '[DIAG:settle] NO CHECKPOINT FOUND for frontier sourceId=%s actorIndex=%s',
+            observation.earliestAffectedFrontier.sourceId,
+            observation.earliestAffectedFrontier.actorIndex
+        );
         return {
             settled: false,
             reactiveResettlementCycles
         };
     }
+
+    console.log(
+        '[DIAG:settle] checkpoint found id=%s actorIndex=%s cursorY=%s â†’ restoring',
+        checkpoint.id,
+        checkpoint.actorIndex,
+        checkpoint.frontier.cursorY
+    );
 
     const signature = buildReactiveResettlementSignature({
         kind: 'observer',

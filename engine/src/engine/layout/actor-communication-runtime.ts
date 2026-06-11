@@ -126,6 +126,7 @@ export class ActorCommunicationRuntime<
             || typeof actor.observeCommittedState === 'function'
             || typeof actor.observeCommittedSignals === 'function';
         if (!hasCommittedUpdater) return;
+        if (actor.participatesInCommittedSignalObservation?.() === false) return;
 
         this.observerRegistry.set(actor.actorId, actor);
         const subscriptions = actor.getCommittedSignalSubscriptions?.()
@@ -577,12 +578,20 @@ export class ActorCommunicationRuntime<
 
         const specific = this.observerTopicSubscriptions.get(normalizedTopic);
         if (!specific || specific.size === 0) {
+            // [DIAG] no subscriptions for this topic
+            if (normalizedTopic.startsWith('script:message:')) {
+                console.log('[DIAG:awaken] topic=%s has NO subscribers. subscriptions=%d', normalizedTopic, this.observerTopicSubscriptions.size);
+            }
             return;
         }
 
         for (const actorId of specific) {
             if (this.awakenedObserverIds.has(actorId)) continue;
             this.awakenedObserverIds.add(actorId);
+            // [DIAG]
+            if (normalizedTopic.startsWith('script:message:')) {
+                console.log('[DIAG:awaken] topic=%s → awakened actorId=%s', normalizedTopic, actorId);
+            }
             this.callbacks.recordProfile('actorActivationAwakenCalls', 1);
             this.callbacks.recordProfile('actorActivationSignalWakeCalls', 1);
         }

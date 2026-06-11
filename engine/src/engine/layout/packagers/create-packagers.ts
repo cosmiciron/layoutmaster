@@ -12,14 +12,22 @@ import { WorldPlainPackager, isWorldPlainElement } from './world-plain-packager'
 import { ZonePackager, isZoneMapElement } from './zone-packager';
 import { TocPackager } from './toc-packager';
 import { isTableElement } from '../layout-table';
+import { isListElement } from '../normalized-list';
 import type { FlowBox } from '../layout-core-types';
 import type { NormalizedFlowBlock } from '../normalized-flow-block';
 import { createElementPackagerIdentity } from './packager-identity';
+import { ScriptedFlowBoxPackager } from './scripted-flow-box-packager';
+import { ScriptRuntimeHost } from '../script-runtime-host';
+import { ListPackager } from './list-packager';
 
 type ElementShaper = {
     shapeElement(element: Element, options: { path: number[] }): FlowBox;
     normalizeFlowBlock(element: Element, options: { path: number[] }): NormalizedFlowBlock;
     shapeNormalizedFlowBlock(block: NormalizedFlowBlock): FlowBox;
+};
+
+type ScriptHostProvider = LayoutProcessor & {
+    getActiveScriptRuntimeHost(): ScriptRuntimeHost | null;
 };
 
 /**
@@ -38,13 +46,15 @@ export function buildPackagerForElement(
     index: number,
     processor: LayoutProcessor,
     elements?: Element[],
-    externalFactory?: ExternalPackagerFactory
+    externalFactory?: ExternalPackagerFactory,
+    identityPath?: number[]
 ): PackagerUnit {
     if (externalFactory) {
         const result = externalFactory(item, index, processor);
         if (result !== null) return result;
     }
-    const identity = createElementPackagerIdentity(item, [index]);
+    const path = Array.isArray(identityPath) && identityPath.length ? identityPath : [index];
+    const identity = createElementPackagerIdentity(item, path);
     if (item.type === 'story') {
         return new StoryPackager(item, processor, index, undefined, undefined, identity);
     }
@@ -57,12 +67,15 @@ export function buildPackagerForElement(
     if (isZoneMapElement(item)) {
         return new ZonePackager(item, processor, identity);
     }
+    if (isListElement(item)) {
+        return new ListPackager(item, processor, identity);
+    }
     const shaper = processor as unknown as ElementShaper;
     if (isTableElement(item)) {
-        const flowBox = shaper.shapeElement(item, { path: [index] });
+        const flowBox = shaper.shapeElement(item, { path });
         return new SpatialGridPackager(processor, flowBox, identity);
     }
-    const normalizedFlowBlock = shaper.normalizeFlowBlock(item, { path: [index] });
+    const normalizedFlowBlock = shaper.normalizeFlowBlock(item, { path });
     const flowBox = shaper.shapeNormalizedFlowBlock(normalizedFlowBlock);
     if (item.type === 'toc') {
         return new TocPackager(processor, flowBox, identity);
@@ -70,6 +83,14 @@ export function buildPackagerForElement(
     const dropCap = item.dropCap;
     if (dropCap && dropCap.enabled) {
         return new DropCapPackager(processor, item, index, dropCap, identity);
+    }
+    const scriptHost = (processor as unknown as ScriptHostProvider).getActiveScriptRuntimeHost();
+    const sourceId = typeof item.properties?.sourceId === 'string' ? item.properties.sourceId : null;
+    const hasMessageHandler =
+        (typeof item.properties?.onMessage === 'string' && item.properties.onMessage.length > 0)
+        || !!(scriptHost && scriptHost.hasElementHandler(sourceId, 'onMessage'));
+    if (scriptHost && hasMessageHandler) {
+        return new ScriptedFlowBoxPackager(processor, flowBox, scriptHost, item, identity, path, elements || [item]);
     }
     const flowPackager = ((item.properties?.space ?? item.properties?.spatialField) as { kind?: string } | undefined)?.kind === 'contain'
         ? new ContainedFlowPackager(processor, flowBox, identity)

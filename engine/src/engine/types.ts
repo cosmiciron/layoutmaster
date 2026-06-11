@@ -7,6 +7,7 @@ export type ImageFitMode = 'contain' | 'fill';
 export type PageReservationSelector = 'first' | 'odd' | 'even' | 'all';
 export type VmprintDocumentVersion = '1.1';
 export type VmprintIRVersion = '1.0';
+export type ScriptMethodSource = string | string[];
 export type SimulationProgressionPolicy = 'until-settled' | 'fixed-tick-count';
 export type SimulationStopReason = 'settled' | 'fixed-tick-count' | 'page-limit';
 
@@ -27,6 +28,13 @@ export interface SimulationProgressionConfig {
     policy?: SimulationProgressionPolicy;
     maxTicks?: number;
     tickRateHz?: number;
+}
+
+export interface LayoutScriptingConfig {
+    methods?: Record<string, ScriptMethodSource>;
+    vars?: Record<string, unknown>;
+    onBeforeLayout?: string;
+    onAfterSettle?: string;
 }
 
 export type ShapedGlyph = {
@@ -176,6 +184,8 @@ export interface Element {
     zoneLayout?: ZoneLayoutOptions;
     /** Strip track model. Preferred on AST 1.1+. */
     stripLayout?: StripLayoutOptions;
+    /** Native list layout model. Preferred on `type: "list"` elements. */
+    list?: ListLayoutOptions;
     /** Drop-cap configuration. */
     dropCap?: DropCapSpec;
     /** Story-local full-width span directive. */
@@ -239,6 +249,54 @@ export interface TableLayoutOptions {
     headerCellStyle?: Record<string, any>;
 }
 
+export type ListKind = 'unordered' | 'ordered';
+export type ListMarkerStyle =
+    | 'disc'
+    | 'bullet'
+    | 'circle'
+    | 'square'
+    | 'decimal'
+    | 'arabic-indic'
+    | 'extended-arabic-indic'
+    | 'devanagari'
+    | 'thai'
+    | 'cjk-decimal'
+    | 'cjk-ideographic'
+    | 'hiragana'
+    | 'katakana'
+    | 'lower-alpha'
+    | 'upper-alpha'
+    | 'lower-roman'
+    | 'upper-roman';
+
+export interface ListLayoutOptions {
+    kind?: ListKind;
+    markerStyle?: ListMarkerStyle;
+    markerText?: string;
+    markerTextStyle?: ElementStyle;
+    start?: number;
+    indent?: number;
+    markerWidth?: number;
+    markerGap?: number;
+    itemSpacing?: number;
+    nestedListSpacingBefore?: number;
+    nestedListSpacingAfter?: number;
+    levels?: ListLevelOptions[];
+}
+
+export interface ListLevelOptions {
+    kind?: ListKind;
+    markerStyle?: ListMarkerStyle;
+    markerText?: string;
+    markerTextStyle?: ElementStyle;
+    indent?: number;
+    markerWidth?: number;
+    markerGap?: number;
+    itemSpacing?: number;
+    nestedListSpacingBefore?: number;
+    nestedListSpacingAfter?: number;
+}
+
 /**
  * Layout options for a `zone-map` element.
  * Column widths are resolved via `solveTrackSizing` (same solver as tables).
@@ -288,6 +346,8 @@ export interface ElementProperties extends Record<string, any> {
     semanticRole?: string;
     reflowKey?: string;
     keepWithNext?: boolean;
+    onResolve?: string;
+    onMessage?: string;
     marginTop?: number;
     marginBottom?: number;
     paginationContinuation?: Record<string, any>;
@@ -309,7 +369,7 @@ export interface ElementProperties extends Record<string, any> {
     spatialField?: SpatialFieldDirective;
     /**
      * Preferred public name for simple built-in declarative movement.
-     * Kept intentionally narrow so small motion stays declarative.
+     * Kept intentionally narrow so small motion does not require scripting.
      */
     motion?: ElementSimulationDirective;
     pageOverrides?: {
@@ -602,6 +662,7 @@ export interface LayoutConfig {
             includeTitle?: boolean;
         };
     };
+    scripting?: LayoutScriptingConfig;
     preloadFontFamilies?: string[];
     runtimeHints?: {
         /**
@@ -624,6 +685,10 @@ export interface DocumentInput {
     header?: PageRegionDefinition;
     footer?: PageRegionDefinition;
     printPipeline?: LayoutConfig['printPipeline'];
+    methods?: Record<string, ScriptMethodSource>;
+    scriptVars?: Record<string, unknown>;
+    onBeforeLayout?: string;
+    onAfterSettle?: string;
     debug?: boolean;
 }
 

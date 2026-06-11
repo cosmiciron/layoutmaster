@@ -33,6 +33,8 @@
     "clean": "npm run clean:engine",
     "clean:engine": "rimraf ./engine/dist",
     "serve": "node ./scripts/serve.mjs",
+    "sync:shared-engine": "node scripts/sync-shared-engine.mjs",
+    "sync:shared-engine:check": "node scripts/sync-shared-engine.mjs --check",
     "test": "npm run test:regression",
     "test:all": "npm run test:regression && npm run test:engine-integrity",
     "test:engine-integrity": "npm run build:engine && node --test tests/engine-integrity.spec.mjs",

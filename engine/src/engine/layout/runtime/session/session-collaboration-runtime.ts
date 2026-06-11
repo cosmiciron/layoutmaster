@@ -1,5 +1,6 @@
 import type { Box, Page, PageReservationSelector } from '../../../types';
 import type { PageRegionSummary } from '../../page-region-summary';
+import type { ScriptRegionRef } from '../../script-region-query';
 import type { EventDispatcher } from '../../event-dispatcher';
 import type {
     LayoutProfileMetrics,
@@ -98,6 +99,14 @@ export class SessionCollaborationRuntime {
 
     getPageRegionSummaries(): readonly PageRegionSummary[] {
         return this.lifecycleRuntime.getPageRegionSummaries();
+    }
+
+    getScriptRegions(): readonly ScriptRegionRef[] {
+        return this.lifecycleRuntime.getScriptRegions();
+    }
+
+    findScriptRegionByName(name: string): ScriptRegionRef | null {
+        return this.lifecycleRuntime.findScriptRegionByName(name);
     }
 
     recordPageCapture(record: PageCaptureRecord): void {

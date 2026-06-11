@@ -20,7 +20,7 @@ import {
 import { tryHyphenateSegmentToFit as hyphenateSegmentToFit } from './text-hyphenation';
 import { applyAdvancedJustification as applyJustification } from './text-justification';
 import { parseEmbeddedImagePayloadCached } from '../image-data';
-import type { TextDelegate, TextMeasurer } from '../text-types';
+import type { TextDelegate, TextMeasurer } from '../../contracts';
 
 export class TextProcessor extends FontProcessor {
 
@@ -439,7 +439,7 @@ export class TextProcessor extends FontProcessor {
         const match = LayoutUtils.resolveFontMatch(familyName, weight, style, this.textDelegate);
         const cached = this.textDelegate.getCachedFace(match.config.src, this.runtime.textDelegateState);
         if (!cached) {
-            throw new Error(`[TextProcessor] Font "${match.config.name}" is not available for this layout run. Ensure the requested family is registered and preloaded.`);
+            throw new Error(`[TextProcessor] Font "${match.config.name}" is not loaded. Call waitForFonts() before layout.`);
         }
 
         return cached;

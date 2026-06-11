@@ -331,3 +331,12 @@ export class LayoutUtils {
         };
     }
 }
+
+export function createScriptMessageTopic(sourceId: string): string {
+    const normalizedSourceId = LayoutUtils.normalizeAuthorSourceId(sourceId) || String(sourceId || '').trim();
+    return `script:message:${normalizedSourceId}`;
+}
+
+export function createScriptMessageAckTopic(messageId: string): string {
+    return `script:message-ack:${String(messageId || '').trim()}`;
+}

@@ -8,6 +8,7 @@ import type { FragmentTransition, PageCaptureRecord, PageCaptureState, PageFinal
 import type { PageExclusionIntent, PageReservationIntent, RegionReservation, SpatialExclusion } from './session-spatial-types';
 import type { PackagerUnit } from '../../packagers/packager-types';
 import type { PageRegionSummary } from '../../page-region-summary';
+import type { ScriptRegionRef } from '../../script-region-query';
 import type { SimulationArtifactKey, SimulationArtifactMap } from '../../simulation-report';
 import type { SessionCollaborationRuntime } from './session-collaboration-runtime';
 
@@ -16,6 +17,7 @@ export type SessionCollaboratorHostDeps = {
     recordProfile(metric: RuntimeProfileMetric, delta: number): void;
     recordKeepWithNextPrepare(actorKind: string, durationMs: number): void;
     publishActorSignal(signal: ActorSignalDraft): ActorSignal;
+    getActorSignals(topic?: string): readonly ActorSignal[];
     getPaginationLoopState(): PaginationLoopState | null;
     getActorSignalSequence(): number;
     getKeepWithNextPlan(actorId: string, signature?: string | null): KeepWithNextFormationPlan | undefined;
@@ -28,6 +30,7 @@ export type SessionCollaboratorHostDeps = {
     getRegisteredActors(): readonly PackagerUnit[];
     getFragmentTransitionSourceIds(): readonly string[];
     getFragmentTransitionsBySource(sourceActorId: string): readonly FragmentTransition[];
+    resolveChunkOriginWorldY(chunkIndex: number, chunkHeight: number): number;
     notifyActorSpawn(actor: PackagerUnit): void;
 };
 
@@ -44,6 +47,10 @@ export class SessionCollaboratorHost implements CollaboratorHost {
 
     publishActorSignal(signal: ActorSignalDraft): ActorSignal {
         return this.deps.publishActorSignal(signal);
+    }
+
+    getActorSignals(topic?: string): readonly ActorSignal[] {
+        return this.deps.getActorSignals(topic);
     }
 
     getActorSignalSequence(): number {
@@ -150,6 +157,14 @@ export class SessionCollaboratorHost implements CollaboratorHost {
         return this.deps.getFragmentTransitionsBySource(sourceActorId);
     }
 
+    getScriptRegions(): readonly ScriptRegionRef[] {
+        return this.deps.collaborationRuntime.getScriptRegions();
+    }
+
+    findScriptRegionByName(name: string): ScriptRegionRef | null {
+        return this.deps.collaborationRuntime.findScriptRegionByName(name);
+    }
+
     allocateLogicalPageNumber(usesLogicalNumbering: boolean): number | null {
         return this.deps.collaborationRuntime.allocateLogicalPageNumber(usesLogicalNumbering);
     }
@@ -168,6 +183,10 @@ export class SessionCollaboratorHost implements CollaboratorHost {
 
     recordPageFinalization(state: PageFinalizationState): void {
         this.deps.collaborationRuntime.recordPageFinalization(state);
+    }
+
+    resolveChunkOriginWorldY(chunkIndex: number, chunkHeight: number): number {
+        return this.deps.resolveChunkOriginWorldY(chunkIndex, chunkHeight);
     }
 
     createPageCaptureState(params: PageCaptureStateParams): PageCaptureState {

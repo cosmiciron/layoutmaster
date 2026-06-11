@@ -82,17 +82,6 @@ export function getRichSegments(
     return getRichSegmentsAtOffset(element, inheritedStyle, params, cursor, inheritedLinkTarget);
 }
 
-function getUnderscoreProperties(properties: Element['properties'] | undefined): Record<string, unknown> {
-    if (!properties || typeof properties !== 'object' || Array.isArray(properties)) return {};
-    const custom: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(properties)) {
-        if (key.startsWith('_') && key !== '_sourceSliceStart') {
-            custom[key] = value;
-        }
-    }
-    return custom;
-}
-
 function getRichSegmentsAtOffset(
     element: Element,
     inheritedStyle: any,
@@ -114,7 +103,6 @@ function getRichSegmentsAtOffset(
     const currentStyle = { ...inheritedStyle, ...explicitlyDefinedStyle, ...(element.properties?.style || {}) };
     const ownLinkTarget = typeof element.properties?.linkTarget === 'string' ? element.properties.linkTarget : undefined;
     const currentLinkTarget = ownLinkTarget || inheritedLinkTarget;
-    const customProperties = getUnderscoreProperties(element.properties);
 
     if (isInlineImageElement(element)) {
         const imagePayload = element.image;
@@ -126,7 +114,6 @@ function getRichSegmentsAtOffset(
             text: INLINE_OBJECT_CHAR,
             sourceStart,
             sourceEnd,
-            ...customProperties,
             style: currentStyle,
             fontFamily: currentStyle.fontFamily,
             ...(currentLinkTarget ? { linkTarget: currentLinkTarget } : {}),
@@ -146,7 +133,6 @@ function getRichSegmentsAtOffset(
             text: INLINE_OBJECT_CHAR,
             sourceStart,
             sourceEnd,
-            ...customProperties,
             style: currentStyle,
             fontFamily: currentStyle.fontFamily,
             ...(currentLinkTarget ? { linkTarget: currentLinkTarget } : {}),
@@ -167,7 +153,6 @@ function getRichSegmentsAtOffset(
             text,
             sourceStart,
             sourceEnd,
-            ...customProperties,
             style: currentStyle,
             fontFamily: currentStyle.fontFamily,
             ...(currentLinkTarget ? { linkTarget: currentLinkTarget } : {})
@@ -188,7 +173,6 @@ function getRichSegmentsAtOffset(
             text,
             sourceStart,
             sourceEnd,
-            ...customProperties,
             style: currentStyle,
             fontFamily: currentStyle.fontFamily,
             ...(currentLinkTarget ? { linkTarget: currentLinkTarget } : {})

@@ -44,89 +44,6 @@ type ContinuationArtifactsCallbacks = {
     normalizeAuthorSourceId: (value: unknown) => string | null;
 };
 
-function createReflowableContinuationFragment(
-    base: FlowBox,
-    linesA: RichLine[],
-    partBStyle: ElementStyle,
-    partBMeta: BoxMeta,
-    callbacks: SplitFlowBoxCallbacks
-): FlowBox | null {
-    const sourceElement = base._sourceElement;
-    if (!sourceElement || base._materializationMode !== 'reflowable') return null;
-
-    const renderedText = callbacks.getJoinedLineText(linesA);
-    const sourceText = callbacks.getElementText(sourceElement);
-    const consumedChars = callbacks.resolveConsumedSourceChars(sourceText, renderedText);
-    const remainingChars = Math.max(0, sourceText.length - consumedChars);
-    if (remainingChars <= 0) return null;
-
-    let continuationElement: Element;
-    if (Array.isArray(sourceElement.children) && sourceElement.children.length > 0) {
-        continuationElement = {
-            ...sourceElement,
-            content: '',
-            children: callbacks.sliceElements(
-                sourceElement.children,
-                consumedChars,
-                consumedChars + remainingChars
-            )
-        };
-    } else {
-        continuationElement = {
-            ...sourceElement,
-            content: sourceText.slice(consumedChars),
-            children: []
-        };
-    }
-
-    const beforeTrimLength = callbacks.getElementText(continuationElement).length;
-    const trimmed = callbacks.trimLeadingContinuationWhitespace(continuationElement);
-    const trimDelta = Math.max(0, beforeTrimLength - callbacks.getElementText(trimmed).length);
-    const sourceSliceStart = Math.max(
-        0,
-        Number(sourceElement.properties?._sourceSliceStart || 0) + consumedChars + trimDelta
-    );
-    const properties = {
-        ...(trimmed.properties || {}),
-        style: partBStyle,
-        _sourceSliceStart: sourceSliceStart,
-        _isFirstLine: false,
-        _isLastLine: true,
-        _isFirstFragmentInLine: true,
-        _isLastFragmentInLine: true
-    };
-    const element = {
-        ...trimmed,
-        properties
-    };
-    const normalized = base._normalizedFlowBlock
-        ? {
-            ...base._normalizedFlowBlock,
-            element,
-            meta: partBMeta,
-            style: partBStyle,
-            marginTop: 0
-        }
-        : undefined;
-
-    return {
-        ...base,
-        meta: partBMeta,
-        style: partBStyle,
-        lines: undefined,
-        content: undefined,
-        glyphs: undefined,
-        properties,
-        measuredContentHeight: base.heightOverride ?? 0,
-        marginTop: 0,
-        _materializationMode: 'reflowable',
-        _materializationContextKey: undefined,
-        _sourceElement: element,
-        _unresolvedElement: element,
-        _normalizedFlowBlock: normalized
-    };
-}
-
 function normalizeContinuationSpec(value: unknown): PaginationContinuationSpec | null {
     if (!value || typeof value !== 'object') return null;
     return value as PaginationContinuationSpec;
@@ -301,7 +218,7 @@ export function splitFlowBoxWithCallbacks(
     });
     partA.marginBottom = 0;
 
-    const partB = createReflowableContinuationFragment(box, linesA, partBStyle, partBMeta, callbacks) ?? callbacks.rebuildFlowBox(box, linesB, partBStyle, partBMeta, {
+    const partB = callbacks.rebuildFlowBox(box, linesB, partBStyle, partBMeta, {
         ...box.properties,
         _lineOffsets: Array.isArray(box.properties?._lineOffsets) ? box.properties._lineOffsets.slice(linesA_Count, totalLines) : undefined,
         _lineWidths: Array.isArray(box.properties?._lineWidths) ? box.properties._lineWidths.slice(linesA_Count, totalLines) : undefined,

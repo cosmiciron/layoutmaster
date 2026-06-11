@@ -5,6 +5,7 @@ import type { ContinuationArtifacts, FlowBox } from '../../layout-core-types';
 import type { PackagerContext, PackagerReshapeResult } from '../../packagers/packager-types';
 import type { PackagerUnit } from '../../packagers/packager-types';
 import type { PageRegionSummary } from '../../page-region-summary';
+import type { ScriptRegionRef } from '../../script-region-query';
 import type { SimulationArtifactKey, SimulationArtifactMap } from '../../simulation-report';
 import type { CollaboratorConstraintField } from './session-constraint-types';
 import type { PageSurface, PaginationLoopState, SplitAttempt } from './session-lifecycle-types';
@@ -12,15 +13,33 @@ import type { FragmentTransition, PageCaptureRecord, PageCaptureState, PageFinal
 import type { PageExclusionIntent, PageReservationIntent, RegionReservation, SpatialExclusion } from './session-spatial-types';
 
 export type RuntimeProfileMetric =
+    | 'createCalls'
+    | 'createMs'
+    | 'docQueryCalls'
+    | 'documentChangedCalls'
+    | 'documentChangedMs'
+    | 'handlerCalls'
+    | 'handlerMs'
+    | 'insertCalls'
     | 'keepWithNextEarlyExitCalls'
     | 'keepWithNextPlanCalls'
     | 'keepWithNextPlanMs'
     | 'keepWithNextPreparedActors'
+    | 'loadCalls'
+    | 'loadMs'
+    | 'messageHandlerCalls'
+    | 'messageSendCalls'
+    | 'readyCalls'
+    | 'readyMs'
+    | 'removeCalls'
     | 'refreshCalls'
     | 'refreshMs'
+    | 'replayRequests'
+    | 'replaceCalls'
     | 'reservationArtifactMs'
     | 'reservationCommitProbeCalls'
-    | 'reservationCommitProbeMs';
+    | 'reservationCommitProbeMs'
+    | 'setContentCalls';
 
 export type PageCaptureStateParams = {
     pageIndex: number;
@@ -86,12 +105,18 @@ export interface CollaboratorHost {
     getFragmentTransitionSourceIds(): readonly string[];
     getFragmentTransitionsBySource(sourceActorId: string): readonly FragmentTransition[];
 
+    // Script reads
+    getScriptRegions(): readonly ScriptRegionRef[];
+    findScriptRegionByName(name: string): ScriptRegionRef | null;
+    getActorSignals(topic?: string): readonly ActorSignal[];
+
     // Page finalization (PageRegionCollaborator)
     allocateLogicalPageNumber(usesLogicalNumbering: boolean): number | null;
     resetLogicalPageNumbering(startAt: number): void;
     notifyActorSpawn(actor: PackagerUnit): void;
     recordPageCapture(record: PageCaptureRecord): void;
     recordPageFinalization(state: PageFinalizationState): void;
+    resolveChunkOriginWorldY(chunkIndex: number, chunkHeight: number): number;
     createPageCaptureState(params: PageCaptureStateParams): PageCaptureState;
 }
 

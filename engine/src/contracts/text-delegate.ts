@@ -1,24 +1,4 @@
-export interface FontConfig {
-    name: string;
-    family: string;
-    weight: number;
-    style: 'normal' | 'italic';
-    src: string;
-    unicodeRange?: string;
-    enabled: boolean;
-    fallback: boolean;
-}
-
-export interface FallbackFontSource {
-    src: string;
-    name: string;
-    unicodeRange?: string;
-}
-
-export interface TextDelegateState {
-    faceCache: Record<string, unknown>;
-    loadingPromises: Record<string, Promise<unknown>>;
-}
+import type { FallbackFontSource, FontConfig } from './font-manager';
 
 export type VerticalTextMetrics = {
     ascent: number;
@@ -47,6 +27,11 @@ export type MeasuredTextResult = {
     ascent: number;
     descent: number;
 };
+
+export interface TextDelegateState {
+    faceCache: Record<string, unknown>;
+    loadingPromises: Record<string, Promise<unknown>>;
+}
 
 export interface TextDelegate {
     measure(text: string, font: any, fontSize: number, options?: MeasureTextOptions): MeasuredTextResult;

@@ -153,6 +153,52 @@ function hasTextContent(element) {
   return getElementText(element).length > 0;
 }
 
+function cloneMetadataValue(value) {
+  if (Array.isArray(value)) {
+    return value.map(cloneMetadataValue);
+  }
+  if (isPlainObject(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, childValue]) => [key, cloneMetadataValue(childValue)])
+    );
+  }
+  return value;
+}
+
+function collectUnderscoreMetadata(properties) {
+  if (!isPlainObject(properties)) return {};
+  return Object.fromEntries(
+    Object.entries(properties)
+      .filter(([key]) => key.startsWith("_"))
+      .map(([key, value]) => [key, cloneMetadataValue(value)])
+  );
+}
+
+function collectElementMetadataRuns(element, inheritedMetadata = {}, cursor = { value: 0 }) {
+  if (!isPlainObject(element)) return [];
+  const metadata = {
+    ...inheritedMetadata,
+    ...collectUnderscoreMetadata(element.properties)
+  };
+  const runs = [];
+
+  if (Array.isArray(element.children) && element.children.length > 0) {
+    for (const child of element.children) {
+      runs.push(...collectElementMetadataRuns(child, metadata, cursor));
+    }
+    return runs;
+  }
+
+  const text = String(element.content || "");
+  const start = cursor.value;
+  const end = start + text.length;
+  cursor.value = end;
+  if (end > start && Object.keys(metadata).length > 0) {
+    runs.push({ start, end, metadata });
+  }
+  return runs;
+}
+
 function buildAstFragmentAndElements(source) {
   const rawElements = Array.isArray(source) ? source : (Array.isArray(source?.elements) ? source.elements : []);
   const elements = rawElements.map((element, index) => {
@@ -172,6 +218,7 @@ function buildAstFragmentAndElements(source) {
     const properties = isPlainObject(element.properties) ? element.properties : {};
     const sourceId = String(properties.sourceId || "");
     const text = getElementText(element);
+    const metadataRuns = collectElementMetadataRuns(element);
     if (paragraphs.length > 0) {
       const prev = paragraphs[paragraphs.length - 1];
       prev.separatorAfter = "\n\n";
@@ -180,7 +227,7 @@ function buildAstFragmentAndElements(source) {
     }
     const start = cursor;
     const end = start + text.length;
-    paragraphs.push({ sourceId, text, start, end, separatorAfter: "", separatorLength: 0 });
+    paragraphs.push({ sourceId, text, start, end, separatorAfter: "", separatorLength: 0, metadataRuns });
     cursor = end;
   }
 

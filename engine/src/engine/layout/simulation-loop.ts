@@ -1,6 +1,7 @@
 import type { Page, SimulationStopReason } from '../types';
 import type { PageCaptureRecord } from './runtime/session/session-state-types';
 import type {
+    ExternalMessage,
     SimulationDiagnosticSnapshot,
     SimulationRunner,
     SimulationUpdateSummary
@@ -97,6 +98,14 @@ export class SimulationLoop {
         return () => {
             this.listeners.delete(listener);
         };
+    }
+
+    sendExternalMessage(targetSourceId: string, message: ExternalMessage): boolean {
+        return this.runner.sendExternalMessage(targetSourceId, message);
+    }
+
+    hasExternalMessageAck(messageId: string): boolean {
+        return this.runner.hasExternalMessageAck(messageId);
     }
 
     getState(): SimulationLoopState {

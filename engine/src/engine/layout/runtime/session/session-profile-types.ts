@@ -1,6 +1,25 @@
 export type LayoutProfileMetrics = {
+    handlerCalls: number;
+    handlerMs: number;
+    loadCalls: number;
+    loadMs: number;
+    createCalls: number;
+    createMs: number;
+    readyCalls: number;
+    readyMs: number;
     refreshCalls: number;
     refreshMs: number;
+    documentChangedCalls: number;
+    documentChangedMs: number;
+    replayRequests: number;
+    replayPasses: number;
+    docQueryCalls: number;
+    setContentCalls: number;
+    replaceCalls: number;
+    insertCalls: number;
+    removeCalls: number;
+    messageSendCalls: number;
+    messageHandlerCalls: number;
     speculativeBranchCalls: number;
     speculativeBranchMs: number;
     speculativeBranchAcceptedCalls: number;

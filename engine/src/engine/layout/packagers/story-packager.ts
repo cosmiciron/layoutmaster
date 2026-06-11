@@ -139,6 +139,9 @@ type PlacedFloatBlock = {
     topY: number;
     bottomY: number;
     isAbsolute: boolean;
+    actor?: PackagerUnit;
+    availableWidth?: number;
+    marginLeft?: number;
 };
 
 type PlacedElement = PlacedTextElement | PlacedImageElement | PlacedFloatBlock;
@@ -263,6 +266,7 @@ export class StoryPackager implements PackagerUnit {
     private normalizedStory;
     private readonly processor: LayoutProcessor;
     private readonly storyIndex: number;
+    private readonly identityPath: number[];
     private storyActorEntries: StoryActorEntry[];
     /** Obstacles carried over from the preceding page (already started there). */
     private readonly initialObstacles: CarryOverObstacle[];
@@ -316,9 +320,17 @@ export class StoryPackager implements PackagerUnit {
         this.actorKind = resolvedIdentity.actorKind;
         this.fragmentIndex = resolvedIdentity.fragmentIndex;
         this.continuationOf = resolvedIdentity.continuationOf;
+        this.identityPath = Array.isArray(resolvedIdentity.path) && resolvedIdentity.path.length ? resolvedIdentity.path : [storyIndex];
         this.storyActorEntries = this.normalizedStory.children.map((child) => ({
             ...child,
-            actor: buildPackagerForElement(child.element, child.childIndex, this.processor)
+            actor: buildPackagerForElement(
+                child.element,
+                child.childIndex,
+                this.processor,
+                undefined,
+                undefined,
+                this.childIdentityPath(child.childIndex)
+            )
         }));
     }
 
@@ -503,7 +515,7 @@ export class StoryPackager implements PackagerUnit {
         if (columnConfig.columns > 1) {
             return this.splitColumns(result as MultiColumnPourResult, availableWidth, availableHeight);
         }
-        return this.splitResult(result as FullPourResult, availableHeight, availableWidth, context.margins);
+        return this.splitResult(result as FullPourResult, availableHeight, availableWidth, context);
     }
 
     // -- Core pour ------------------------------------------------------------
@@ -622,6 +634,52 @@ export class StoryPackager implements PackagerUnit {
             }
         }
 
+        const placeOpaquePackagerInFullFlow = (
+            pkg: PackagerUnit,
+            childIndex: number
+        ): void => {
+            cursorY = storyMap.topBottomClearY(cursorY);
+            const remainingHeight = Number.POSITIVE_INFINITY;
+            const opaqueContext: PackagerContext = {
+                ...this.createLocalFrameContext(
+                    context,
+                    availableWidth,
+                    {
+                        cursorY,
+                        margins: { ...margins },
+                        pageHeight: Number.POSITIVE_INFINITY
+                    },
+                    cursorY,
+                    remainingHeight
+                ),
+                spatialMap: storyMap
+            };
+            pkg.prepare(availableWidth, remainingHeight, opaqueContext);
+            const emitted = (pkg.emitBoxes(availableWidth, remainingHeight, opaqueContext) || []) as Box[];
+            for (const b of emitted) b.y = (b.y || 0) + cursorY;
+            for (const b of emitted) allBoxes.push(b);
+            const requiredHeight = pkg.getRequiredHeight();
+            placedElements.push({
+                kind: 'float-block',
+                childIndex,
+                allBoxes: emitted,
+                topY: cursorY,
+                bottomY: cursorY + requiredHeight,
+                isAbsolute: false,
+                actor: pkg,
+                availableWidth,
+                marginLeft: margins.left
+            });
+            cursorY += requiredHeight;
+        };
+
+        if (this.deferredLeadingPackager) {
+            placeOpaquePackagerInFullFlow(this.deferredLeadingPackager, -1);
+            if (probeFrontierExceeded(cursorY)) {
+                return finishEarlyProbe();
+            }
+        }
+
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             const layout = child.layout;
@@ -676,7 +734,10 @@ export class StoryPackager implements PackagerUnit {
                     allBoxes: emitted,
                     topY: effectiveY,
                     bottomY: effectiveY + dims.h,
-                    isAbsolute: true
+                    isAbsolute: true,
+                    actor: pkg,
+                    availableWidth: dims.w,
+                    marginLeft: margins.left + layout.x
                 });
                 if (probeFrontierExceeded(cursorY)) {
                     return finishEarlyProbe();
@@ -781,7 +842,10 @@ export class StoryPackager implements PackagerUnit {
                         allBoxes: emitted,
                         topY: cursorY,
                         bottomY: cursorY + dims.h,
-                        isAbsolute: false
+                        isAbsolute: false,
+                        actor: pkg,
+                        availableWidth: dims.w,
+                        marginLeft: margins.left + floatX
                     });
                     // Float blocks do NOT advance cursorY — text flows alongside them.
                     if (probeFrontierExceeded(cursorY)) {
@@ -800,7 +864,7 @@ export class StoryPackager implements PackagerUnit {
 
                 cursorY = storyMap.topBottomClearY(cursorY);
                 const flowBox = (this.processor as any).shapeElement(
-                    child.element, { path: [this.storyIndex, child.childIndex] }
+                    child.element, { path: this.childIdentityPath(child.childIndex) }
                 );
                 const marginTop = Math.max(0, flowBox.marginTop);
                 const marginBottom = Math.max(0, flowBox.marginBottom);
@@ -815,6 +879,15 @@ export class StoryPackager implements PackagerUnit {
                     topY: boxY, bottomY: boxY + imgH, isFloat: false, isAbsolute: false
                 });
                 cursorY = boxY + imgH + marginBottom;
+                if (probeFrontierExceeded(cursorY)) {
+                    return finishEarlyProbe();
+                }
+                continue;
+            }
+
+            const pkg = child.actor;
+            if (!(pkg instanceof FlowBoxPackager)) {
+                placeOpaquePackagerInFullFlow(pkg, child.childIndex);
                 if (probeFrontierExceeded(cursorY)) {
                     return finishEarlyProbe();
                 }
@@ -867,7 +940,7 @@ export class StoryPackager implements PackagerUnit {
         const containmentOverflow = resolveSpatialFieldOverflow(spatialDirective);
         const clipProperties = new SpatialFieldGeometryCapability(element).buildClipProperties();
         const shaped = (this.processor as any).shapeElement(
-            element, { path: [this.storyIndex, childIndex] }
+            element, { path: this.childIdentityPath(childIndex) }
         );
         const effectiveWidth = usesContainmentLanes
             ? resolveContainedHostWidth(element, availableWidth)
@@ -884,7 +957,7 @@ export class StoryPackager implements PackagerUnit {
         const placed = reflowTextElementAgainstSpatialField({
             processor: this.processor,
             element,
-            path: [this.storyIndex, childIndex],
+            path: this.childIdentityPath(childIndex),
             sourceFlowBox: shaped,
             availableWidth: effectiveWidth,
             currentY: cursorY,
@@ -1277,9 +1350,11 @@ export class StoryPackager implements PackagerUnit {
             childIndex: number,
             onSplit: (continuation: PackagerUnit) => void
         ): boolean => {
+            let workingPkg = pkg;
             opaqueLoop: while (true) {
                 const region = regions[regionIndex];
                 const regionStartY = resolveRegionStartY(regions, region.index);
+                const regionMap = this.createRegionMap(region, allObstacles);
                 const remainingHeight = Math.max(0, region.h - cursorY);
                 const colContext: PackagerContext = {
                     ...this.createLocalFrameContext(
@@ -1292,18 +1367,19 @@ export class StoryPackager implements PackagerUnit {
                         },
                         regionStartY + cursorY,
                         remainingHeight
-                    )
+                    ),
+                    spatialMap: regionMap
                 };
-                const boxes = (pkg.emitBoxes(region.w, remainingHeight, colContext) || []) as Box[];
+                const boxes = (workingPkg.emitBoxes(region.w, remainingHeight, colContext) || []) as Box[];
                 for (const b of boxes) b.y = (b.y || 0) + cursorY;
-                const cursorAfter = cursorY + pkg.getRequiredHeight();
+                const cursorAfter = cursorY + workingPkg.getRequiredHeight();
                 if (cursorAfter <= region.h + 0.1) {
                     for (const b of boxes) allBoxes.push(b);
                     cursorY = cursorAfter;
                     return true;
                 }
 
-                const split = pkg.reshape(remainingHeight, colContext);
+                const split = workingPkg.reshape(remainingHeight, colContext);
                 if (split.currentFragment && split.continuationFragment) {
                     const partABoxes = (split.currentFragment.emitBoxes(region.w, remainingHeight, colContext) || []) as Box[];
                     for (const b of partABoxes) {
@@ -1311,6 +1387,10 @@ export class StoryPackager implements PackagerUnit {
                         allBoxes.push(b);
                     }
                     cursorY += split.currentFragment.getRequiredHeight();
+                    if (goNextRegion()) {
+                        workingPkg = split.continuationFragment;
+                        continue opaqueLoop;
+                    }
                     onSplit(split.continuationFragment);
                     hasOverflow = true;
                     nextChildIndex = childIndex + 1;
@@ -1610,7 +1690,7 @@ export class StoryPackager implements PackagerUnit {
                     const regionMap = this.createRegionMap(region, allObstacles);
                     const top = regionMap.topBottomClearY(cursorY);
                     const flowBox = (this.processor as any).shapeElement(
-                        child.element, { path: [this.storyIndex, child.childIndex] }
+                        child.element, { path: this.childIdentityPath(child.childIndex) }
                     );
                     const marginTop = Math.max(0, flowBox.marginTop);
                     const marginBottom = Math.max(0, flowBox.marginBottom);
@@ -1828,14 +1908,16 @@ export class StoryPackager implements PackagerUnit {
         result: FullPourResult,
         splitH: number,
         availableWidth: number,
-        margins: { left: number; right: number; top: number; bottom: number }
+        context: PackagerContext
     ): PackagerReshapeResult {
         const children = this.storyElement.children ?? [];
+        const margins = context.margins;
 
         const partABoxes: Box[] = [];
         let partAHeight = 0;
         let partBStartChildIdx = children.length; // default: all in partA
         let partBContinuationElement: Element | null = null;
+        let partBContinuationPackager: PackagerUnit | null = null;
         const carryOverVisuals: CarryOverVisual[] = [];
 
         const recordPartAHeight = (candidateBottom: number): void => {
@@ -1902,9 +1984,58 @@ export class StoryPackager implements PackagerUnit {
                     }
                     continue;
                 }
+                if (elem.actor && elem.bottomY > splitH + 0.1) {
+                    const remainingHeight = Math.max(0, splitH - elem.topY);
+                    if (remainingHeight > 0.1) {
+                        const spatialMap = new SpatialMap();
+                        for (const obstacle of result.registeredObstacles) {
+                            spatialMap.register({ ...obstacle });
+                        }
+                        const opaqueWidth = Number.isFinite(elem.availableWidth)
+                            ? Math.max(0, Number(elem.availableWidth))
+                            : availableWidth;
+                        const opaqueContext: PackagerContext = {
+                            ...this.createLocalFrameContext(
+                                context,
+                                opaqueWidth,
+                                {
+                                    cursorY: elem.topY,
+                                    margins: { ...margins, left: Number(elem.marginLeft ?? margins.left) },
+                                    pageHeight: splitH
+                                },
+                                elem.topY,
+                                remainingHeight
+                            ),
+                            spatialMap
+                        };
+                        const split = elem.actor.reshape(remainingHeight, opaqueContext);
+                        if (split.currentFragment && split.continuationFragment) {
+                            const fragmentBoxes = (split.currentFragment.emitBoxes(opaqueWidth, remainingHeight, opaqueContext) || []) as Box[];
+                            for (const box of fragmentBoxes) {
+                                partABoxes.push({
+                                    ...box,
+                                    y: Number(box.y || 0) + elem.topY,
+                                    properties: { ...(box.properties || {}) },
+                                    meta: box.meta ? { ...box.meta } : box.meta
+                                });
+                            }
+                            const fragmentHeight = split.currentFragment.getRequiredHeight();
+                            recordPartAHeight(elem.topY + fragmentHeight);
+                            partBContinuationPackager = split.continuationFragment;
+                            partBStartChildIdx = elem.childIndex >= 0 ? elem.childIndex + 1 : 0;
+                            break;
+                        }
+                    }
+
+                    if (partABoxes.length === 0) {
+                        return { currentFragment: null, continuationFragment: this };
+                    }
+                    partBStartChildIdx = elem.childIndex >= 0 ? elem.childIndex : 0;
+                    break;
+                }
                 // Floats are included in partA if the anchor is within the split zone.
                 if (elem.topY <= splitH) {
-                    for (const b of elem.allBoxes) partABoxes.push({ ...b });
+                    for (const b of elem.allBoxes) partABoxes.push(cloneBox(b));
                     recordPartAHeight(elem.bottomY);
                 }
                 continue;
@@ -1995,7 +2126,12 @@ export class StoryPackager implements PackagerUnit {
         // from partBStartChildIdx, which includes all future story-absolute
         // images by their original index order.
 
-        if (partBChildren.length === 0 && carryOvers.length === 0 && carryOverVisuals.length === 0) {
+        if (
+            partBChildren.length === 0
+            && carryOvers.length === 0
+            && carryOverVisuals.length === 0
+            && !partBContinuationPackager
+        ) {
             // Nothing left for partB.
             return { currentFragment: partA, continuationFragment: null };
         }
@@ -2012,7 +2148,7 @@ export class StoryPackager implements PackagerUnit {
             carryOvers,
             this.storyYOffset + splitH,
             createContinuationIdentity(this),
-            null,
+            partBContinuationPackager,
             carryOverVisuals
         );
 
@@ -2087,7 +2223,7 @@ export class StoryPackager implements PackagerUnit {
         actor?: PackagerUnit
     ): Box {
         const flowBox = (this.processor as any).shapeElement(
-            element, { path: [this.storyIndex, childIndex] }
+            element, { path: this.childIdentityPath(childIndex) }
         );
         const session = this.processor.getCurrentLayoutSession();
         const visualAssemblyMembers = (
@@ -2133,6 +2269,10 @@ export class StoryPackager implements PackagerUnit {
         };
     }
 
+    private childIdentityPath(childIndex: number): number[] {
+        return [...this.identityPath, Math.max(0, Math.floor(Number(childIndex) || 0))];
+    }
+
     private findHostedActorIndex(targetActor: PackagerUnit): number {
         return this.storyActorEntries.findIndex((entry) => entry.actor.actorId === targetActor.actorId);
     }
@@ -2142,7 +2282,14 @@ export class StoryPackager implements PackagerUnit {
         this.normalizedStory = normalizeStoryElement(this.storyElement);
         this.storyActorEntries = this.normalizedStory.children.map((child, index) => ({
             ...child,
-            actor: previousActors[index] ?? buildPackagerForElement(child.element, child.childIndex, this.processor)
+            actor: previousActors[index] ?? buildPackagerForElement(
+                child.element,
+                child.childIndex,
+                this.processor,
+                undefined,
+                undefined,
+                this.childIdentityPath(child.childIndex)
+            )
         }));
     }
 
@@ -2213,7 +2360,24 @@ export class StoryPackager implements PackagerUnit {
             };
         }
 
-        return (this.processor as any).trimLeadingContinuationWhitespace(continuation) as Element;
+        const beforeTrimLength = (this.processor as any).getElementText(continuation).length;
+        const trimmed = (this.processor as any).trimLeadingContinuationWhitespace(continuation) as Element;
+        const trimDelta = Math.max(
+            0,
+            beforeTrimLength - (this.processor as any).getElementText(trimmed).length
+        );
+        const sourceSliceStart = Math.max(
+            0,
+            Number(element.properties?._sourceSliceStart || 0) + consumedChars + trimDelta
+        );
+
+        return {
+            ...trimmed,
+            properties: {
+                ...(trimmed.properties || {}),
+                _sourceSliceStart: sourceSliceStart
+            }
+        } as Element;
     }
 
     private createNestedPackagerContext(

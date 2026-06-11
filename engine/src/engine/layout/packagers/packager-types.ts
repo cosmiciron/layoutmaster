@@ -1,10 +1,11 @@
 import { Box } from '../../types';
 import type { SimulationProgressionConfig } from '../../types';
-import type { LayoutProcessor } from '../layout-core';
+import { LayoutProcessor } from '../layout-core';
 import { FlowBox } from '../layout-core-types';
 import type { ActorSignal, ActorSignalDraft } from '../actor-event-bus';
 import type { AsyncThoughtHandle, AsyncThoughtRequest } from '../async-thought-host';
 import type { SpatialExclusion } from '../runtime/session/session-spatial-types';
+import type { SpatialMap } from './spatial-map';
 
 export interface LayoutBox extends Box { }
 
@@ -29,7 +30,7 @@ export type ObservationResult = {
 };
 
 export interface PackagerContext {
-    processor: LayoutProcessor;
+    processor: any; // We'll cast to LayoutProcessor
     pageIndex: number;
     cursorY: number;
     simulationTick?: number;
@@ -59,6 +60,12 @@ export interface PackagerContext {
      * actors continue to wrap at their natural style-based content width.
      */
     contentWidthOverride?: number;
+    /**
+     * Host-owned spatial field for compound actors that can disassemble and
+     * reassemble their internal pieces against the same scanline lanes used by
+     * ordinary story text.
+     */
+    spatialMap?: SpatialMap;
     publishActorSignal(signal: ActorSignalDraft): ActorSignal;
     readActorSignals(topic?: string): readonly ActorSignal[];
     requestAsyncThought?(request: AsyncThoughtRequest): AsyncThoughtHandle | undefined;
@@ -207,6 +214,12 @@ export interface PackagerUnit {
      * If absent, the runtime falls back to observeCommittedSignals().
      */
     updateCommittedState?(context: PackagerContext): ObservationResult | null | undefined;
+
+    /**
+     * Return false for actors that expose updateCommittedState() only for direct
+     * runtime intents and should not participate in checkpoint observer sweeps.
+     */
+    participatesInCommittedSignalObservation?(): boolean;
 
     /**
      * @deprecated Use observeCommittedState() or updateCommittedState().

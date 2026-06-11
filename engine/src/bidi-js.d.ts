@@ -1,1 +1,4 @@
-declare module 'bidi-js';
+declare module 'bidi-js' {
+    const defaultExport: () => any;
+    export default defaultExport;
+}

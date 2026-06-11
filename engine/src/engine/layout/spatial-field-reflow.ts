@@ -54,6 +54,7 @@ type SpatialFieldReflowOptions = {
     minUsableSlotWidth?: number;
     rejectSubMinimumSlots?: boolean;
     microLanePolicy?: ResolvedMicroLanePolicy;
+    slotLeadingInset?: number;
 };
 
 /**
@@ -86,17 +87,21 @@ export function reflowTextElementAgainstSpatialField(options: SpatialFieldReflow
     const queryZIndex = Number.isFinite(Number(style.zIndex))
         ? Number(style.zIndex)
         : (Number.isFinite(Number(authoredStyle?.zIndex)) ? Number(authoredStyle?.zIndex) : 0);
+    const richSegments = resolveCachedSpatialRichSegments(anyProcessor, flowBox, options.element, style);
+    if (!Array.isArray(richSegments) || richSegments.length === 0) return null;
     const fontSize = Number(style.fontSize || anyProcessor.config.layout.fontSize);
     const lineHeightRatio = Number(style.lineHeight || anyProcessor.config.layout.lineHeight);
-    const uniformLH = lineHeightRatio * fontSize;
-    const nominalTextBandHeight = Math.max(1, fontSize);
+    const maxRichFontSize = richSegments.reduce((max, segment) => Math.max(
+        max,
+        Number((segment as { fontSize?: unknown })?.fontSize || segment?.style?.fontSize || fontSize)
+    ), fontSize);
+    const uniformLH = lineHeightRatio * maxRichFontSize;
+    const nominalTextBandHeight = Math.max(1, maxRichFontSize);
     const nominalLeading = Math.max(0, uniformLH - nominalTextBandHeight);
     const containmentBandInset = nominalLeading / 2;
     const font = anyProcessor.resolveMeasurementFontForStyle(style);
     const letterSpacing = Number(style.letterSpacing || 0);
     const textIndent = Number(style.textIndent || 0);
-    const richSegments = resolveCachedSpatialRichSegments(anyProcessor, flowBox, options.element, style);
-    if (!Array.isArray(richSegments) || richSegments.length === 0) return null;
     const paddingLeft = LayoutUtils.validateUnit(style.paddingLeft ?? style.padding ?? 0);
     const paddingRight = LayoutUtils.validateUnit(style.paddingRight ?? style.padding ?? 0);
     const paddingTop = LayoutUtils.validateUnit(style.paddingTop ?? style.padding ?? 0);
@@ -120,6 +125,9 @@ export function reflowTextElementAgainstSpatialField(options: SpatialFieldReflow
     const explicitContainedHostHeight = laneMode === 'contain'
         ? resolveExplicitContainedHostHeight(flowBox, style, spatialDirective)
         : null;
+    const slotLeadingInset = laneMode === 'contain'
+        ? Math.max(0, Number(options.slotLeadingInset || 0))
+        : 0;
     const strictLineBoxContainment = laneMode === 'contain'
         && (spatialDirective as { strictLineBoxContainment?: unknown } | undefined)?.strictLineBoxContainment === true;
     const maxVisibleContainedContentHeight = explicitContainedHostHeight !== null
@@ -219,7 +227,7 @@ export function reflowTextElementAgainstSpatialField(options: SpatialFieldReflow
             : rawIntervals;
         const intervals = normalizedIntervals.filter((interval) =>
             laneMode === 'contain'
-                ? Math.max(0, interval.w) >= minUsableSlotWidth
+                ? Math.max(0, interval.w - slotLeadingInset) >= minUsableSlotWidth
                 : Math.max(0, interval.w - insetH) >= minUsableSlotWidth
         );
         if (laneMode === 'contain' && rawIntervals.length === 0) {
@@ -230,10 +238,6 @@ export function reflowTextElementAgainstSpatialField(options: SpatialFieldReflow
             }
         }
         if (rawIntervals.length > 0 && intervals.length === 0 && rejectSubMinimumSlots) {
-            if (laneMode === 'contain') {
-                accumulatedYBonus += uniformLH;
-                return resolver();
-            }
             const clearY = options.spatialMap.bandClearY(lineY, uniformLH, queryZIndex, options.opticalUnderhang === true);
             if (clearY > lineY) {
                 accumulatedYBonus += clearY - lineY;
@@ -258,16 +262,33 @@ export function reflowTextElementAgainstSpatialField(options: SpatialFieldReflow
         const resolvedSlots = laneMode === 'contain'
             ? (usableIntervals as ContainmentInterval[])
                 .map((interval) => ({
-                    width: Math.max(0, interval.w),
-                    xOffset: interval.x,
+                    width: Math.max(0, interval.w - slotLeadingInset),
+                    xOffset: interval.x + Math.min(slotLeadingInset, Math.max(0, interval.w)),
                     yOffset,
                     anchor: resolveContainmentAnchor(interval)
                 }))
+                .filter((slot) => slot.width > 0.5)
             : usableIntervals.map((interval) => ({
                 width: Math.max(0, interval.w - insetH),
                 xOffset: interval.x,
                 yOffset
             }));
+        if (resolvedSlots.length === 0) {
+            if (laneMode === 'contain') {
+                const maxY = options.spatialMap.maxObstacleBottom();
+                if (geometryQueryY + geometryQueryHeight <= maxY + 0.1) {
+                    accumulatedYBonus += uniformLH;
+                    return resolver();
+                }
+                physicalLineCount++;
+                const fallbackWidth = Math.max(0, contentWidth - slotLeadingInset);
+                lineSlotWidths.push(fallbackWidth);
+                selectedSlotXOffsets.push(slotLeadingInset);
+                selectedContainmentAnchors.push('left');
+                return { width: fallbackWidth, xOffset: slotLeadingInset, yOffset };
+            }
+            return { width: contentWidth, xOffset: 0, yOffset };
+        }
 
         const containmentResolution = laneMode === 'contain'
             ? resolveContainmentSlotsForLine(

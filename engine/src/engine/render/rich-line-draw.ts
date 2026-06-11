@@ -1,4 +1,4 @@
-import type { Context, ContextShapedGlyph } from './render-context';
+import type { Context } from '../../contracts';
 import { RendererLineItem, RendererLineSegment, RendererRichLine } from './types';
 
 type DrawRichLineSegmentsOptions = {
@@ -159,7 +159,7 @@ export const drawRichLineSegments = (
                 drawX,
                 finalY,
                 segAscender,
-                seg.shapedGlyphs as ContextShapedGlyph[]
+                seg.shapedGlyphs as import('../../contracts').ContextShapedGlyph[]
             );
         } else {
             const dX = drawX || 0;

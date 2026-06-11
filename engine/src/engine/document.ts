@@ -16,7 +16,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-const ROOT_KEYS = new Set(['documentVersion', 'layout', 'fonts', 'styles', 'elements', 'header', 'footer', 'printPipeline', 'debug']);
+const ROOT_KEYS = new Set(['documentVersion', 'layout', 'fonts', 'styles', 'elements', 'header', 'footer', 'printPipeline', 'methods', 'scriptVars', 'onBeforeLayout', 'onAfterSettle', 'debug']);
 const PAGE_RESERVATION_SELECTOR_VALUES = new Set(['first', 'odd', 'even', 'all']);
 const LAYOUT_KEYS = new Set([
     'pageSize',
@@ -65,7 +65,7 @@ const MARGINS_KEYS = new Set(['top', 'right', 'bottom', 'left']);
 const PAGE_TEMPLATE_KEYS = new Set(['pageIndex', 'selector', 'pageSize', 'orientation', 'margins']);
 const OPTICAL_SCALING_KEYS = new Set(['enabled', 'cjk', 'korean', 'thai', 'devanagari', 'arabic', 'cyrillic', 'latin', 'default']);
 const WORLD_PLAIN_KEYS = new Set(['style', 'frameOverflow', 'worldBehavior', 'rootFlowMode', 'traversalInteractionDefault']);
-const ELEMENT_KEYS = new Set(['type', 'name', 'content', 'children', 'image', 'table', 'slots', 'columns', 'gutter', 'balance', 'zones', 'zoneLayout', 'stripLayout', 'dropCap', 'columnSpan', 'placement', 'properties']);
+const ELEMENT_KEYS = new Set(['type', 'name', 'content', 'children', 'image', 'table', 'list', 'slots', 'columns', 'gutter', 'balance', 'zones', 'zoneLayout', 'stripLayout', 'dropCap', 'columnSpan', 'placement', 'properties']);
 const ZONE_DEFINITION_KEYS = new Set(['id', 'region', 'elements', 'style']);
 const ZONE_REGION_KEYS = new Set(['x', 'y', 'width', 'height']);
 const STRIP_SLOT_KEYS = new Set(['id', 'elements', 'style']);
@@ -78,6 +78,8 @@ const ELEMENT_PROPERTIES_KEYS = new Set([
     'semanticRole',
     'reflowKey',
     'keepWithNext',
+    'onResolve',
+    'onMessage',
     'marginTop',
     'marginBottom',
     'paginationContinuation',
@@ -96,6 +98,8 @@ const CONTINUATION_MARKER_KEYS = new Set(['type', 'content', 'style', 'propertie
 const SOURCE_RANGE_KEYS = new Set(['lineStart', 'colStart', 'lineEnd', 'colEnd']);
 const IMAGE_PAYLOAD_KEYS = new Set(['data', 'mimeType', 'fit']);
 const TABLE_LAYOUT_KEYS = new Set(['headerRows', 'repeatHeader', 'columnGap', 'rowGap', 'columns', 'cellStyle', 'headerCellStyle']);
+const LIST_LEVEL_KEYS = new Set(['kind', 'markerStyle', 'markerText', 'markerTextStyle', 'indent', 'markerWidth', 'markerGap', 'itemSpacing', 'nestedListSpacingBefore', 'nestedListSpacingAfter']);
+const LIST_LAYOUT_KEYS = new Set(['kind', 'markerStyle', 'markerText', 'markerTextStyle', 'start', 'indent', 'markerWidth', 'markerGap', 'itemSpacing', 'nestedListSpacingBefore', 'nestedListSpacingAfter', 'levels']);
 const ZONE_LAYOUT_KEYS = new Set(['columns', 'gap', 'frameOverflow', 'worldBehavior']);
 const STRIP_LAYOUT_KEYS = new Set(['tracks', 'gap']);
 const TABLE_COLUMN_KEYS = new Set(['mode', 'value', 'fr', 'min', 'max', 'basis', 'minContent', 'maxContent', 'grow', 'shrink']);
@@ -814,6 +818,61 @@ function validateTableLayoutOptions(value: unknown, path: string, documentPath: 
     }
 }
 
+function validateListLayoutOptions(value: unknown, path: string, documentPath: string): void {
+    const options = assertPlainObjectAt(value, path, documentPath);
+    assertAllowedKeys(options, LIST_LAYOUT_KEYS, path, documentPath);
+
+    validateListLevelOptions(options, path, documentPath);
+    if (options.start !== undefined) assertFiniteNumberAt(options.start, `${path}.start`, documentPath);
+    if (options.levels !== undefined) {
+        if (!Array.isArray(options.levels)) {
+            contractError(documentPath, `${path}.levels`, 'expected an array.');
+        }
+        options.levels.forEach((entry, index) =>
+            validateListLevelOptions(entry, `${path}.levels[${index}]`, documentPath)
+        );
+    }
+}
+
+function validateListLevelOptions(value: unknown, path: string, documentPath: string): void {
+    const options = assertPlainObjectAt(value, path, documentPath);
+    assertAllowedKeys(options, path.endsWith(']') ? LIST_LEVEL_KEYS : LIST_LAYOUT_KEYS, path, documentPath);
+
+    assertEnumAt(options.kind, ['unordered', 'ordered'], `${path}.kind`, documentPath);
+    assertEnumAt(
+        options.markerStyle,
+        [
+            'disc',
+            'bullet',
+            'circle',
+            'square',
+            'decimal',
+            'arabic-indic',
+            'extended-arabic-indic',
+            'devanagari',
+            'thai',
+            'cjk-decimal',
+            'cjk-ideographic',
+            'hiragana',
+            'katakana',
+            'lower-alpha',
+            'upper-alpha',
+            'lower-roman',
+            'upper-roman'
+        ],
+        `${path}.markerStyle`,
+        documentPath
+    );
+    if (options.indent !== undefined) assertFiniteNumberAt(options.indent, `${path}.indent`, documentPath);
+    if (options.markerWidth !== undefined) assertFiniteNumberAt(options.markerWidth, `${path}.markerWidth`, documentPath);
+    if (options.markerGap !== undefined) assertFiniteNumberAt(options.markerGap, `${path}.markerGap`, documentPath);
+    if (options.itemSpacing !== undefined) assertFiniteNumberAt(options.itemSpacing, `${path}.itemSpacing`, documentPath);
+    if (options.nestedListSpacingBefore !== undefined) assertFiniteNumberAt(options.nestedListSpacingBefore, `${path}.nestedListSpacingBefore`, documentPath);
+    if (options.nestedListSpacingAfter !== undefined) assertFiniteNumberAt(options.nestedListSpacingAfter, `${path}.nestedListSpacingAfter`, documentPath);
+    if (options.markerText !== undefined) assertStringAt(options.markerText, `${path}.markerText`, documentPath);
+    if (options.markerTextStyle !== undefined) validateStyleObject(options.markerTextStyle, `${path}.markerTextStyle`, documentPath);
+}
+
 function validateZoneDefinition(value: unknown, path: string, documentPath: string): void {
     const zone = assertPlainObjectAt(value, path, documentPath);
     assertAllowedKeys(zone, ZONE_DEFINITION_KEYS, path, documentPath);
@@ -923,6 +982,8 @@ function validateElementProperties(
     if (props.sourceId !== undefined) assertStringAt(props.sourceId, `${path}.sourceId`, documentPath);
     if (props.linkTarget !== undefined) assertStringAt(props.linkTarget, `${path}.linkTarget`, documentPath);
     if (props.semanticRole !== undefined) assertStringAt(props.semanticRole, `${path}.semanticRole`, documentPath);
+    if (props.onResolve !== undefined) assertStringAt(props.onResolve, `${path}.onResolve`, documentPath);
+    if (props.onMessage !== undefined) assertStringAt(props.onMessage, `${path}.onMessage`, documentPath);
     if (props.reflowKey !== undefined) assertStringAt(props.reflowKey, `${path}.reflowKey`, documentPath);
     if (props.sourceSyntax !== undefined) assertStringAt(props.sourceSyntax, `${path}.sourceSyntax`, documentPath);
     if (props.language !== undefined) assertStringAt(props.language, `${path}.language`, documentPath);
@@ -973,6 +1034,9 @@ function validateElementNode(node: unknown, path: string, documentPath: string, 
     if (element.table !== undefined) {
         validateTableLayoutOptions(element.table, `${path}.table`, documentPath);
     }
+    if (element.list !== undefined) {
+        validateListLayoutOptions(element.list, `${path}.list`, documentPath);
+    }
     if (element.zoneLayout !== undefined) {
         validateZoneLayoutOptions(element.zoneLayout, `${path}.zoneLayout`, documentPath);
     }
@@ -1002,6 +1066,17 @@ function validateElementNode(node: unknown, path: string, documentPath: string, 
 
     if (String(element.type).trim() === 'world-plain') {
         contractError(documentPath, `${path}.type`, 'world-plain is authored through layout.worldPlain, not as a regular element.');
+    }
+
+    if (String(element.type).trim() === 'list') {
+        if (element.children !== undefined && !Array.isArray(element.children)) {
+            contractError(documentPath, `${path}.children`, 'expected an array of list-item elements.');
+        }
+        (element.children || []).forEach((child: any, index: number) => {
+            if (String(child?.type || '').trim() !== 'list-item') {
+                contractError(documentPath, `${path}.children[${index}].type`, 'expected "list-item" inside list.');
+            }
+        });
     }
 
     if (element.zones !== undefined) {
@@ -1101,6 +1176,23 @@ function validateDocumentContract(document: DocumentInput, documentPath: string)
     if (document.header !== undefined) validatePageRegionDefinition(document.header, 'header', documentPath);
     if (document.footer !== undefined) validatePageRegionDefinition(document.footer, 'footer', documentPath);
     if (document.printPipeline !== undefined) validatePrintPipeline(document.printPipeline, documentPath);
+    if (document.onBeforeLayout !== undefined) {
+        assertStringAt(document.onBeforeLayout, 'onBeforeLayout', documentPath);
+    }
+    if (document.onAfterSettle !== undefined) {
+        assertStringAt(document.onAfterSettle, 'onAfterSettle', documentPath);
+    }
+    if (document.methods !== undefined) {
+        const methods = assertPlainObjectAt(document.methods, 'methods', documentPath);
+        for (const [methodName, methodValue] of Object.entries(methods)) {
+            if (typeof methodValue === 'string') continue;
+            if (Array.isArray(methodValue) && methodValue.every((entry) => typeof entry === 'string')) continue;
+            contractError(documentPath, `methods.${methodName}`, 'expected a string or string array.');
+        }
+    }
+    if (document.scriptVars !== undefined) {
+        assertPlainObjectAt(document.scriptVars, 'scriptVars', documentPath);
+    }
 }
 
 function deepSortObject<T>(value: T): T {
@@ -1202,6 +1294,9 @@ function normalizeElementNode(element: Element): Element {
     }
     if (element.table !== undefined) {
         normalized.table = deepSortObject(element.table as any);
+    }
+    if (element.list !== undefined) {
+        normalized.list = deepSortObject(element.list as any);
     }
     if (element.zoneLayout !== undefined) {
         const normalizedZoneLayout = deepSortObject(element.zoneLayout as any) as Record<string, unknown>;
@@ -1489,23 +1584,46 @@ export function parseDocumentSourceText(source: string, documentPath: string = '
         throw new Error(`[document] Document source "${documentPath}" must parse to a root object.`);
     }
 
+    const bodyObject = parsedBody as Record<string, unknown>;
+    const forbiddenScriptBodyKeys = ['methods', 'scriptVars', 'onBeforeLayout', 'onAfterSettle']
+        .filter((key) => bodyObject[key] !== undefined);
+    if (forbiddenScriptBodyKeys.length > 0) {
+        throw new Error(
+            `[document] Document source "${documentPath}" must declare scripting only in YAML front matter; `
+            + `found ${forbiddenScriptBodyKeys.join(', ')} inside the JSON body.`
+        );
+    }
+
     if (!isPlainObject(frontMatter)) {
         return parsedBody as unknown as DocumentInput;
     }
 
-    const bodyObject = parsedBody as Record<string, unknown>;
     const frontMatterObject = frontMatter as Record<string, unknown>;
-    const unsupportedFrontMatterKeys = Object.keys(frontMatterObject).filter((key) => !ROOT_KEYS.has(key));
-    if (unsupportedFrontMatterKeys.length > 0) {
-        throw new Error(
-            `[document] Document source "${documentPath}" contains unsupported YAML front matter keys: ${unsupportedFrontMatterKeys.join(', ')}.`
-        );
+    const scriptVars: Record<string, unknown> = {
+        ...(isPlainObject(bodyObject.scriptVars) ? bodyObject.scriptVars as Record<string, unknown> : {})
+    };
+
+    for (const [key, value] of Object.entries(frontMatterObject)) {
+        if (ROOT_KEYS.has(key)) continue;
+        scriptVars[key] = value;
     }
 
     const merged = {
         ...bodyObject,
-        ...frontMatterObject
+        ...Object.fromEntries(Object.entries(frontMatterObject).filter(([key]) => ROOT_KEYS.has(key))),
+        methods: {
+            ...(isPlainObject(bodyObject.methods) ? bodyObject.methods as Record<string, unknown> : {}),
+            ...(isPlainObject(frontMatterObject.methods) ? frontMatterObject.methods as Record<string, unknown> : {})
+        }
     } as Record<string, unknown>;
+
+    if (Object.keys(scriptVars).length > 0) {
+        merged.scriptVars = scriptVars;
+    }
+
+    if (!isPlainObject(frontMatterObject.methods) && merged.methods && Object.keys(merged.methods).length === 0) {
+        delete merged.methods;
+    }
 
     return merged as unknown as DocumentInput;
 }
@@ -1573,7 +1691,11 @@ export function normalizeDocumentToIR(document: DocumentInput, documentPath: str
         elements: normalizedElements,
         header: normalizePageRegionDefinition(document.header as Record<string, unknown> | undefined) as any,
         footer: normalizePageRegionDefinition(document.footer as Record<string, unknown> | undefined) as any,
-        printPipeline: document.printPipeline ? deepSortObject(document.printPipeline) as any : undefined
+        printPipeline: document.printPipeline ? deepSortObject(document.printPipeline) as any : undefined,
+        methods: document.methods ? deepSortObject(document.methods) as any : undefined,
+        scriptVars: document.scriptVars ? deepSortObject(document.scriptVars) as any : undefined,
+        onBeforeLayout: document.onBeforeLayout,
+        onAfterSettle: document.onAfterSettle
     };
 }
 
@@ -1642,6 +1764,12 @@ export function toLayoutConfig(document: DocumentIR, debug: boolean): LayoutConf
         header: document.header,
         footer: document.footer,
         printPipeline: document.printPipeline,
+        scripting: document.methods || document.scriptVars || document.onBeforeLayout || document.onAfterSettle ? {
+            methods: document.methods,
+            vars: document.scriptVars,
+            onBeforeLayout: document.onBeforeLayout,
+            onAfterSettle: document.onAfterSettle
+        } : undefined,
         preloadFontFamilies: Array.from(new Set([
             ...collectElementFontFamilies(document.elements),
             ...collectRegionFontFamilies(document.header),

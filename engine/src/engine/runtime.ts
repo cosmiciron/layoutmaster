@@ -15,7 +15,9 @@ export const createEngineRuntime = (options: EngineRuntimeOptions): EngineRuntim
         fontCache: textDelegateState.faceCache,
         bufferCache,
         loadingPromises: textDelegateState.loadingPromises,
-        measurementCache: new Map()
+        measurementCache: new Map(),
+        ...(options.fontManager ? { fontManager: options.fontManager } : {}),
+        ...(options.fontRegistry ? { fontRegistry: options.fontRegistry } : {})
     };
 };
 

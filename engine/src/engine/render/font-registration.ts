@@ -1,4 +1,4 @@
-import type { Context } from './render-context';
+import type { Context } from '../../contracts';
 import { getCachedBuffer, getCachedFont, loadFont } from '../../font-management/font-cache-loader';
 import { LayoutConfig, Page } from '../types';
 import { getStandardFontMetadata } from '../../font-management/sentinel';

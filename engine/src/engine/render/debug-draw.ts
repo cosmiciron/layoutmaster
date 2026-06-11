@@ -1,4 +1,4 @@
-import type { Context } from './render-context';
+import type { Context } from '../../contracts';
 import { Box, DebugRegion } from '../types';
 
 type DebugStyle = {
