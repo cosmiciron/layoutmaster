@@ -1,6 +1,6 @@
 {
   "name": "@layoutmaster/layoutmaster",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Fast DOMless layout with solved pieces, continuations, and exclusions.",
   "author": "cosmiciron",
   "license": "Apache-2.0",
