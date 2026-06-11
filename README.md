@@ -300,6 +300,16 @@ The server starts at `http://127.0.0.1:4173/`. Open
 The public demo site runs the published npm package through an ESM CDN, so it
 matches what package consumers actually install.
 
+To make demos use your local workspace source instead of the published package,
+append `?local` to any demo URL.
+
+Examples:
+
+- `http://127.0.0.1:4173/demos/form.html?local`
+- `http://127.0.0.1:4173/demos/pour-image.html?local`
+
+Without `?local`, demos import `@layoutmaster/layoutmaster` from the CDN.
+
 Current demos:
 
 - `form`: width-bounded fragments and returned pieces
