@@ -33,7 +33,8 @@ const {
 } = projectionModule;
 const {
   createBrowserTextDelegate,
-  getBrowserFallbackFontEntries
+  getBrowserFallbackFontEntries,
+  resolveBrowserMeasurementFontBySrc
 } = browserRuntimeModule;
 
 test("layoutmaster regression fixtures remain stable", async (t) => {
@@ -355,9 +356,15 @@ test("layoutmaster browser runtime prewarms mapped fallback fonts without enabli
   const textDelegate = createBrowserTextDelegate();
   const fallbackFonts = getBrowserFallbackFontEntries();
   const fallbackNames = fallbackFonts.map((font) => font.name);
+  const arimoFont = textDelegate.getFontsByFamily("Arimo").find((font) => font.weight === 700 && font.style === "normal");
+  const tinosFont = textDelegate.getFontsByFamily("Tinos").find((font) => font.weight === 400 && font.style === "normal");
+  const arimoFace = resolveBrowserMeasurementFontBySrc(arimoFont.src);
+  const tinosFace = resolveBrowserMeasurementFontBySrc(tinosFont.src);
 
   assert.ok(fallbackNames.some((name) => name.startsWith("Noto Sans SC ")), "expected CJK browser fallback preload");
   assert.ok(fallbackNames.some((name) => name.startsWith("Noto Sans Arabic ")), "expected Arabic browser fallback preload");
+  assert.equal(arimoFace.browserFamily, "Helvetica, Arial, sans-serif", "expected VMPrint Arimo to resolve to mainstream browser sans");
+  assert.equal(tinosFace.browserFamily, "\"Times New Roman\", serif", "expected VMPrint Tinos to resolve to mainstream browser serif");
   assert.equal(textDelegate.getFallbackFamilies().length, 0, "expected browser mode to avoid fallback-family injection");
   assert.equal(textDelegate.getEnabledFallbackFonts().length, 0, "expected fallback prewarming to stay separate from enabled fallbacks");
 });

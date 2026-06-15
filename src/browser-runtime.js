@@ -36,11 +36,11 @@ const BROWSER_FONT_ALIASES = {
 
 const BROWSER_FONT_FAMILIES = {
   Arimo: {
-    browserFamily: "Arial, sans-serif",
+    browserFamily: "Helvetica, Arial, sans-serif",
     unicodeRange: "U+0000-00FF,U+0100-024F,U+1E00-1EFF"
   },
   Helvetica: {
-    browserFamily: "Arial, sans-serif",
+    browserFamily: "Helvetica, Arial, sans-serif",
     unicodeRange: "U+0000-00FF,U+0100-024F,U+1E00-1EFF"
   },
   Tinos: {
