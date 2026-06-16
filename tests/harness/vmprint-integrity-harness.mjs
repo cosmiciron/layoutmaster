@@ -8,7 +8,9 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const projectsRoot = path.resolve(repoRoot, "..");
 
 const vmprintRoot = path.resolve(process.env.LAYOUTMASTER_VMPRINT_ROOT || path.join(projectsRoot, "vmprint"));
-const vmprintFontManagersRoot = path.resolve(process.env.LAYOUTMASTER_VMPRINT_FONT_MANAGERS_ROOT || path.join(projectsRoot, "vmprint-font-managers"));
+const vmprintFontManagersRoot = path.resolve(
+  process.env.LAYOUTMASTER_VMPRINT_FONT_MANAGERS_ROOT || path.join(vmprintRoot, "font-managers")
+);
 
 const vmprintEngineDistPath = path.join(vmprintRoot, "engine", "dist", "index.mjs");
 const vmprintRegressionDir = path.join(vmprintRoot, "engine", "tests", "fixtures", "regression");
@@ -65,7 +67,7 @@ export function assertVmprintIntegrityPrerequisites() {
   );
   requirePath(
     vmprintLocalFontManagerDistPath,
-    "[layoutmaster-engine-integrity] Local font manager dist is missing. Run `npm run build --workspace=local` in the sibling vmprint-font-managers repo first."
+    "[layoutmaster-engine-integrity] Local font manager dist is missing. Run `npm run build --workspace=@vmprint/local-fonts` in the sibling vmprint monorepo first."
   );
 }
 
@@ -84,7 +86,7 @@ async function loadModules() {
     assert.equal(
       typeof LocalFontManager,
       "function",
-      "[layoutmaster-engine-integrity] Could not load LocalFontManager constructor from vmprint-font-managers/local."
+      "[layoutmaster-engine-integrity] Could not load LocalFontManager constructor from vmprint/font-managers/local."
     );
 
     return {
